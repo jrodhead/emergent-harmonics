@@ -1,0 +1,56 @@
+{
+  "sun": {
+    "fundamental": 160.2,
+    "1st Harmonic": 320.4,
+    "2nd Harmonic": 480.6,
+    "3rd Harmonic": 640.8
+  },
+  "mercury": {
+    "fundamental": 225.84,
+    "1st Harmonic": 451.68,
+    "2nd Harmonic": 677.52,
+    "3rd Harmonic": 903.36
+  },
+  "venus": {
+    "fundamental": 276.24,
+    "1st Harmonic": 552.48,
+    "2nd Harmonic": 828.72,
+    "3rd Harmonic": 1104.96
+  },
+  "earth": {
+    "fundamental": 319.68,
+    "1st Harmonic": 639.36,
+    "2nd Harmonic": 959.04,
+    "3rd Harmonic": 1278.72
+  },
+  "mars": {
+    "fundamental": 440.28,
+    "1st Harmonic": 880.56,
+    "2nd Harmonic": 1320.84,
+    "3rd Harmonic": 1761.12
+  },
+  "jupiter": {
+    "fundamental": 619.2,
+    "1st Harmonic": 1238.4,
+    "2nd Harmonic": 1857.6,
+    "3rd Harmonic": 2476.8
+  },
+  "saturn": {
+    "fundamental": 735.84,
+    "1st Harmonic": 1471.68,
+    "2nd Harmonic": 2207.52,
+    "3rd Harmonic": 2943.36
+  },
+  "uranus": {
+    "fundamental": 979.2,
+    "1st Harmonic": 1958.4,
+    "2nd Harmonic": 2937.6,
+    "3rd Harmonic": 3916.8
+  },
+  "neptune": {
+    "fundamental": 1174.8,
+    "1st Harmonic": 2349.6,
+    "2nd Harmonic": 3524.4,
+    "3rd Harmonic": 4699.2
+  }
+}

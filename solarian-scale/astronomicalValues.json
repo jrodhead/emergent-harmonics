@@ -1,0 +1,71 @@
+{
+  "astronomicalValues": {
+    "sun": {
+      "parentName": "Sagittarius A*",
+      "yearLength": 0,
+      "axisTilt": 7.25,
+      "distanceFromParent": 0,
+      "orbitSpeed": 0
+    },
+    "mercury": {
+      "parentName": "sun",
+      "yearLength": 87.97,
+      "axisTilt": 0.01,
+      "distanceFromParent": 0.39,
+      "orbitSpeed": 47.87
+    },
+    "venus": {
+      "parentName": "sun",
+      "yearLength": 224.7,
+      "axisTilt": 177.36,
+      "distanceFromParent": 0.72,
+      "orbitSpeed": 35.02
+    },
+    "earth": {
+      "parentName": "sun",
+      "orbitalPeriod": {
+        "earthDays": 365.25,
+        "earthHours": null,
+        "earthMinutes": null,
+        "earthSeconds": 31557600
+      },
+      "axisTilt": 23.44,
+      "orbitSpeed": 29.78
+    },
+    "mars": {
+      "parentName": "sun",
+      "yearLength": 687,
+      "axisTilt": 25.19,
+      "distanceFromParent": 1.52,
+      "orbitSpeed": 24.08
+    },
+    "jupiter": {
+      "parentName": "sun",
+      "yearLength": 4331,
+      "axisTilt": 3.13,
+      "distanceFromParent": 5.2,
+      "orbitSpeed": 13.07
+    },
+    "saturn": {
+      "parentName": "sun",
+      "yearLength": 10747,
+      "axisTilt": 26.73,
+      "distanceFromParent": 9.58,
+      "orbitSpeed": 9.69
+    },
+    "uranus": {
+      "parentName": "sun",
+      "yearLength": 30589,
+      "axisTilt": 82.23,
+      "distanceFromParent": 19.18,
+      "orbitSpeed": 6.81
+    },
+    "neptune": {
+      "parentName": "sun",
+      "yearLength": 59800,
+      "axisTilt": 28.32,
+      "distanceFromParent": 30.07,
+      "orbitSpeed": 5.43
+    }
+  }
+}
