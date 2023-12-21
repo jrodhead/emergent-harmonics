@@ -30,7 +30,13 @@
         "earthSeconds": 31557600
       },
       "axisTilt": 23.44,
-      "orbitSpeed": 29.78
+      "orbitSpeed": 29.78,
+      "solarDayLength": {
+        "solarDayInDays": 1,
+        "solarDayInHours": 24,
+        "solarDayInMinutes": 1440,
+        "solarDayInSeconds": 86400
+      }
     },
     "mars": {
       "parentName": "sun",

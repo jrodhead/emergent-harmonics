@@ -1,0 +1,30 @@
+{
+  "root": {
+    "ratioToRoot": "1:1",
+    "ratioMultiplicationFactor": 1
+  },
+  "majorSecond": {
+    "ratioToRoot": "9:8",
+    "ratioMultiplicationFactor": 1.125
+  },
+  "majorThird": {
+    "ratioToRoot": "5:4",
+    "ratioMultiplicationFactor": 1.25
+  },
+  "perfectFourth": {
+    "ratioToRoot": "4:3",
+    "ratioMultiplicationFactor": 1.33333333333
+  },
+  "perfectFifth": {
+    "ratioToRoot": "3:2",
+    "ratioMultiplicationFactor": 1.5
+  },
+  "majorSixth": {
+    "ratioToRoot": "5:3",
+    "ratioMultiplicationFactor": 1.66666666667
+  },
+  "majorSeventh": {
+    "ratioToRoot": "15:8",
+    "ratioMultiplicationFactor": 1.875
+  }
+}

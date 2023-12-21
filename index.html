@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en-US" >
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music System</title>
+  <link rel="stylesheet" href="css/emergentHarmonics.css">
+</head>
+
+<body>
+  <form>
+  <fieldset>
+    <legend>System Control</legend>
+    <label for="notesInDiapason">Notes in Diapason</label>
+    <input type="number" id="notesInDiapason" min="0" max="50"><br>
+    <label for="rootNote">Root Note</label>
+    <input type="number" id="rootNote" min="0" max="500">Hz<br>
+    <label for="diapasonsInSystem">Diapasons in System</label>
+    <input type="number" id="diapasonsInSystem" min="0" max="50">
+  </fieldset>
+
+  <fieldset>
+    <legend>Oscillator Options</legend>
+    <label for="waveType">Wave Type</label>
+    <select name="waveType" id="waveType">
+      <option value="sine" selected>Sine</option>
+      <option value="square">Square</option>
+      <option value="triangle">Triangle</option>
+      <option value="sawtooth">Sawtooth</option>
+      <!--<option value="custom">Custom</option> custom waveforms are possible w/ PeriodicWave...-->
+    </select><br>
+    <label for="ctrlVolume">Volume</label>
+    <input type="range" id="ctrlVolume" min="0" max="1" step=".01">
+    <input type="button" class="mute" value="mute">
+  </fieldset>
+
+  <input
+    type="button"
+    class="generateSystem"
+    value="Generate System"
+    onclick="generateSystem()"
+  >
+
+</form>
+
+<div id="systemTable"></div>
+
+<script src="js/systemConfiguration.js"></script>
+<script src="js/oscillator.js"></script>
+
+</body>
+
+</html>

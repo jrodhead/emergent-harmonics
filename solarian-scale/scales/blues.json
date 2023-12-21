@@ -1,0 +1,26 @@
+{
+  "root": {
+    "ratioToRoot": "1:1",
+    "ratioMultiplicationFactor": 1
+  },
+  "minorThird": {
+    "ratioToRoot": "6:5",
+    "ratioMultiplicationFactor": 1.2
+  },
+  "fourth": {
+    "ratioToRoot": "4:3",
+    "ratioMultiplicationFactor": 1.33333333333
+  },
+  "flatFifth": {
+    "ratioToRoot": "7:5",
+    "ratioMultiplicationFactor": 1.4
+  },
+  "fifth": {
+    "ratioToRoot": "3:2",
+    "ratioMultiplicationFactor": 1.5
+  },
+  "minorSeventh": {
+    "ratioToRoot": "7:4",
+    "ratioMultiplicationFactor": 1.75
+  }
+}

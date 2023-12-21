@@ -1,0 +1,8 @@
+{
+  "root": {"ratioToRoot": "1:1", "ratioMultiplicationFactor": 1},
+  "majorSecond": {"ratioToRoot": "2:1", "ratioMultiplicationFactor": 2},
+  "majorThird": {"ratioToRoot": "4:1", "ratioMultiplicationFactor": 4},
+  "sharpFourth": {"ratioToRoot": "8:1", "ratioMultiplicationFactor": 8},
+  "sharpFifth": {"ratioToRoot": "16:1", "ratioMultiplicationFactor": 16},
+  "majorSeventh": {"ratioToRoot": "32:1", "ratioMultiplicationFactor": 32}
+}

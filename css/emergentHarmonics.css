@@ -1,0 +1,13 @@
+body {
+  line-height:1.7;
+}
+
+table {
+  margin-top:1em;
+}
+
+table,th,td {
+  border:1px solid;
+  border-collapse:collapse;
+  padding:.5em;
+}
