@@ -1,5 +1,5 @@
 /* Adjustments for smaller screens */
-@media screen and (max-width: 1000px) {
+@media screen and (max-width: 390px) {
   input[type="number"],
   input[type="text"],
   select {
