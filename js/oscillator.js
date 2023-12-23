@@ -1,59 +1,44 @@
-/* =======================================================
-Oscillator Configuration
-======================================================= */
+let audioContext = null;
+let oscillators = [];
+const maxSimultaneousNotes = 6;
 
-// create web audio api context
-var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-// create Oscillator node
-var oscillator = audioCtx.createOscillator();
-// create Gain node
-var gainNode = audioCtx.createGain();
-// routing
-oscillator.connect(gainNode);
-gainNode.connect(audioCtx.destination);
+function playSound(frequency) {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
 
-var waveSelect = document.getElementById("waveType");
-waveSelect.oninput = setWaveType;
-function setWaveType() {
-  var waveSelect = document.getElementById("waveType");
-  // set oscillator type to selected wave type
-  var waveType = waveSelect.options[waveSelect.selectedIndex].value;
-  oscillator.type = waveType;
-}
-
-function playNote(thisNote) {
-  setWaveType();
-  // set frequency from selected note
-  oscillator.frequency.setValueAtTime(thisNote, audioCtx.currentTime);
-  oscillator.start(audioCtx.currentTime);
-//  oscillator.stop(audioCtx.currentTime + .3); // BUG: only plays one note when this is enabled but works fine when disabled
-}
-
-/* =======================================================
-Gain Configuration (Volume / Mute)
-======================================================= */
-
-// Volume
-var ctrlVolume = document.getElementById('ctrlVolume');
-var volume = .1; // set volume on load
-document.getElementById('ctrlVolume').value = volume;
-gainNode.gain.setValueAtTime(ctrlVolume.value, audioCtx.currentTime);
-ctrlVolume.oninput = changeVolume;
-function changeVolume() {
-  gainNode.gain.setValueAtTime(ctrlVolume.value, audioCtx.currentTime);
-}
-
-// Mute
-var mute = document.querySelector('.mute');
-mute.onclick = muteOscillator;
-function muteOscillator() {
-  if(mute.id == "") {
-    gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-    mute.id = "activated";
-    mute.value = "Unmute";
-  } else {
-    gainNode.gain.setValueAtTime(ctrlVolume.value, audioCtx.currentTime);
-    mute.id = "";
-    mute.value = "Mute";
+  if (oscillators.length < maxSimultaneousNotes) {
+    const oscillator = audioContext.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+    oscillator.connect(audioContext.destination);
+    oscillator.start();
+    oscillators.push(oscillator);
   }
 }
+
+function stopAllSounds() {
+  oscillators.forEach(oscillator => {
+    oscillator.stop();
+    oscillator.disconnect();
+  });
+  oscillators = [];
+}
+
+function handleNoteEvent(event) {
+  if (!audioContext) {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if (event.target.classList.contains('note')) {
+    const frequency = parseFloat(event.target.querySelector('.note-frequency').textContent);
+
+    if (oscillators.length < maxSimultaneousNotes) {
+      playSound(frequency);
+    }
+  }
+}
+
+document.getElementById('systemTable').addEventListener('touchstart', handleNoteEvent);
+document.getElementById('systemTable').addEventListener('touchend', stopAllSounds);
+document.getElementById('systemTable').addEventListener('click', handleNoteEvent);

@@ -1,13 +1,31 @@
-body {
-  line-height:1.7;
+.grid-container {
+  display: grid;
+  gap: 5px; /* Adjust gap between grid items */
+  padding: 10px;
 }
 
-table {
-  margin-top:1em;
+.diapason {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); /* Adjust min and max width for notes */
+  gap: 5px; /* Adjust gap between grid items */
+  padding: 5px;
+  border: 1px solid #ccc; /* Add border to diapason */
+  background: #000;
 }
 
-table,th,td {
-  border:1px solid;
-  border-collapse:collapse;
-  padding:.5em;
+.note {
+  background: #fff;
+  border: 1px solid #ccc; /* Add borders to notes */
+  padding: 5px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+}
+
+.note-name {
+  font-weight: bold;
+}
+
+.note-frequency {
+  margin-top: 5px;
 }

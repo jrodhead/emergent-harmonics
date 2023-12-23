@@ -1,54 +1,54 @@
 <!DOCTYPE html>
-<html lang="en-US" >
-
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Music System</title>
+  <title>Musical System Generator</title>
   <link rel="stylesheet" href="css/emergentHarmonics.css">
 </head>
-
 <body>
-  <form>
-  <fieldset>
-    <legend>System Control</legend>
-    <label for="notesInDiapason">Notes in Diapason</label>
-    <input type="number" id="notesInDiapason" min="0" max="50"><br>
-    <label for="rootNote">Root Note</label>
-    <input type="number" id="rootNote" min="0" max="500">Hz<br>
-    <label for="diapasonsInSystem">Diapasons in System</label>
-    <input type="number" id="diapasonsInSystem" min="0" max="50">
-  </fieldset>
+  <h1>Musical System Generator</h1>
 
-  <fieldset>
-    <legend>Oscillator Options</legend>
-    <label for="waveType">Wave Type</label>
-    <select name="waveType" id="waveType">
-      <option value="sine" selected>Sine</option>
-      <option value="square">Square</option>
-      <option value="triangle">Triangle</option>
-      <option value="sawtooth">Sawtooth</option>
-      <!--<option value="custom">Custom</option> custom waveforms are possible w/ PeriodicWave...-->
-    </select><br>
-    <label for="ctrlVolume">Volume</label>
-    <input type="range" id="ctrlVolume" min="0" max="1" step=".01">
-    <input type="button" class="mute" value="mute">
-  </fieldset>
+  <form id="systemConfigForm">
+    <label for="diapasons">Number of Diapasons:</label>
+    <input type="number" id="diapasons" name="diapasons" min="1" required><br><br>
 
-  <input
-    type="button"
-    class="generateSystem"
-    value="Generate System"
-    onclick="generateSystem()"
-  >
+    <label for="notes">Number of Notes in Diapason:</label>
+    <input type="number" id="notes" name="notes" min="1" required><br><br>
 
-</form>
+    <label for="rootNote">Root Note Frequency:</label>
+    <input type="number" id="rootNote" name="rootNote" required><br><br>
 
-<div id="systemTable"></div>
+    <input type="submit" value="Generate System">
+  </form>
+  <button id="stopButton">Stop All Sounds</button>
 
-<script src="js/systemConfiguration.js"></script>
-<script src="js/oscillator.js"></script>
+  <div id="systemTable"></div>
 
+  <script src="js/musicalSystemGenerator.js"></script>
+  <script src="js/oscillator.js"></script>
+  <script>
+    // Listen for form submission and trigger the system generation
+    document.getElementById('systemConfigForm').addEventListener('submit', function(event) {
+      event.preventDefault(); // Prevent form submission
+
+      const diapasonsInSystem = parseInt(document.getElementById('diapasons').value);
+      const notesInDiapason = parseInt(document.getElementById('notes').value);
+      const rootNote = parseInt(document.getElementById('rootNote').value);
+
+      // Call the function to generate the musical system using entered values
+      const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote);
+
+      // Render the musical system in a table format or as needed
+      renderSystemTable(musicalSystem);
+    });
+
+    // Your createSystem and renderSystemTable functions go here
+    document.getElementById('notes').value = notesInDiapason;
+    document.getElementById('rootNote').value = rootNote;
+    document.getElementById('diapasons').value = diapasonsInSystem;
+    document.getElementById('stopButton').addEventListener('click', stopAllSounds);
+
+    renderSystemTable(musicalSystem);
+  </script>
 </body>
-
 </html>
