@@ -1,14 +1,29 @@
+body,
+button,
+input {
+  font-size: 2rem;
+}
+
+button,
+input {
+  padding: 1rem;
+}
+
 /* Adjustments for smaller screens */
 @media screen and (min-width: 390px) {
-  input[type="number"],
-  input[type="text"],
-  input[type="submit"],
+  input,
   button,
   select {
-    width: 100dvw; /* Make form elements span the width */
+    width: 100%; /* Make form elements span the width */
     box-sizing: border-box; /* Ensure padding and border are included in the width */
     margin-bottom: 10px; /* Add margin for better spacing */
   }
+}
+
+#systemTable {
+  /* Disable text selection in systemTable */
+  user-select: none;
+  -webkit-user-select: none; /* For older versions of Safari */
 }
 
 .grid-container {
