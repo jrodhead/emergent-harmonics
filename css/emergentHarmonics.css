@@ -1,5 +1,13 @@
 /* Adjustments for smaller screens */
 @media screen and (max-width: 768px) {
+  input[type="number"],
+  input[type="text"],
+  select {
+    width: 100%; /* Make form elements span the width */
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+    margin-bottom: 10px; /* Add margin for better spacing */
+  }
+
   .grid-container {
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Adjust column width */
     gap: 10px; /* Adjust gap between grid items */
