@@ -1,3 +1,16 @@
+/* Adjustments for smaller screens */
+@media screen and (max-width: 768px) {
+  .grid-container {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); /* Adjust column width */
+    gap: 10px; /* Adjust gap between grid items */
+    padding: 15px;
+  }
+
+  .note {
+    padding: 8px; /* Adjust note padding */
+  }
+}
+
 .grid-container {
   display: grid;
   gap: 5px; /* Adjust gap between grid items */
