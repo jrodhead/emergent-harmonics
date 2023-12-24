@@ -26,8 +26,8 @@ function calcFreq(note, diapason, notesInDiapason, rootNote) {
 }
 
 // Usage:
-const diapasonsInSystem = 3;
-const notesInDiapason = 3;
+const diapasonsInSystem = 1;
+const notesInDiapason = 1;
 const rootNote = 440;
 
 const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote);
