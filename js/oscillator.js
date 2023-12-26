@@ -3,8 +3,15 @@ let oscillators = [];
 const maxSimultaneousNotes = 6;
 
 function playSound(frequency) {
+  console.log('Frequency:', frequency);
+
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  if (!isFinite(frequency)) {
+    console.error('Invalid frequency value:', frequency);
+    return;
   }
 
   if (oscillators.length < maxSimultaneousNotes) {
@@ -25,20 +32,10 @@ function stopAllSounds() {
   oscillators = [];
 }
 
-function handleNoteEvent(event) {
-  if (!audioContext) {
-    audioContext = new (window.AudioContext || window.webkitAudioContext)();
-  }
+// Event listener for 'Play Sound' button
+document.getElementById('startButton').addEventListener('click', function() {
+  playSound(440);
+});
 
-  if (event.target.classList.contains('note')) {
-    const frequency = parseFloat(event.target.querySelector('.note-frequency').textContent);
-
-    if (oscillators.length < maxSimultaneousNotes) {
-      playSound(frequency);
-    }
-  }
-}
-
-document.getElementById('systemTable').addEventListener('touchstart', handleNoteEvent);
-document.getElementById('systemTable').addEventListener('touchend', stopAllSounds);
-document.getElementById('systemTable').addEventListener('click', handleNoteEvent);
+// Event listener for 'Stop Sound' button
+document.getElementById('stopButton').addEventListener('click', stopAllSounds);

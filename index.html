@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Musical System Generator</title>
-  <link rel="stylesheet" href="css/emergentHarmonics.css">
+  <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <h1>Musical System Generator</h1>
@@ -24,31 +24,6 @@
 
   <div id="systemTable"></div>
 
-  <script src="js/musicalSystemGenerator.js"></script>
-  <script src="js/oscillator.js"></script>
-  <script>
-    // Listen for form submission and trigger the system generation
-    document.getElementById('systemConfigForm').addEventListener('submit', function(event) {
-      event.preventDefault(); // Prevent form submission
-
-      const diapasonsInSystem = parseInt(document.getElementById('diapasons').value);
-      const notesInDiapason = parseInt(document.getElementById('notes').value);
-      const rootNote = parseInt(document.getElementById('rootNote').value);
-
-      // Call the function to generate the musical system using entered values
-      const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote);
-
-      // Render the musical system in a table format or as needed
-      renderSystemTable(musicalSystem);
-    });
-
-    // Your createSystem and renderSystemTable functions go here
-    document.getElementById('notes').value = notesInDiapason;
-    document.getElementById('rootNote').value = rootNote;
-    document.getElementById('diapasons').value = diapasonsInSystem;
-    document.getElementById('stopButton').addEventListener('click', stopAllSounds);
-
-    renderSystemTable(musicalSystem);
-  </script>
+  <script src="js/main.js" type="module"></script>
 </body>
 </html>
