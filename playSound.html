@@ -3,11 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <title>Play a sound</title>
+  <style>
+    body,
+    button,
+    input {
+      font-size: 3rem;
+      padding: 2rem;
+      margin: .25rem;
+    }
+  </style>
 </head>
 <body>
   <button id="startButton">Play sound</button>
-  <button id="stopButton">Stop sound</button>
+  <button id="stopButton">Stop sounds</button>
 
-  <script src="js/oscillator.js"></script>
+  <script src="js/oscillators.js"></script>
+  <script>
+    // Event listener for 'Play Sound' button
+    document.getElementById('startButton').addEventListener('click', function() {
+      playSound(440);
+    });
+
+    // Event listener for 'Stop Sound' button
+    document.getElementById('stopButton').addEventListener('click', stopAllSounds);
+  </script>
 </body>
 </html>
