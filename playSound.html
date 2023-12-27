@@ -2,31 +2,22 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Play a sound</title>
+  <title>Play notes with your keyboard</title>
   <link rel="stylesheet" href="css/styles.css"></head>
 <body>
-  <form>
-    <fieldset>
-      <legend>Oscillator 1</legend>
-      <label for="osc1Frequency">
-        Frequency:
-      </label>
-      <input type="number" id="osc1Frequency" class="frequencyControl" min="20" max="3500" step=".001" value="440">
-    </fieldset>
-  </form>
+  <h1>Play notes with your keyboard</h1>
 
-  <button id="play">Play</button>
+  <div id="systemTable">
+    <div class="grid-container">
+      <div class="diapason">
+        <button id="A" class="note">A</button>
+        <button id="S" class="note">S</button>
+        <button id="D" class="note">D</button>
+        <button id="F" class="note">F</button>
+      </div>
+    </div>
+  </div>
 
-  <script type="module" src="js/oscillators.js"></script>
   <script type="module" src="js/keyboard.js"></script>
-  <script>
-    document.getElementById('play').addEventListener('mousedown', function() {
-      playSound(osc1Frequency.value);
-    });
-
-    document.getElementById('play').addEventListener('mouseup', function() {
-      stopAllSounds();
-    });
-  </script>
 </body>
 </html>

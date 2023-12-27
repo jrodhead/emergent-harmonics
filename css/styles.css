@@ -12,7 +12,6 @@ fieldset {padding: 1rem; margin: 0;}
 /* Adjustments for smaller screens */
 @media screen and (max-width: 1000px) {
   input,
-  button,
   select {
     width: 100%;
     box-sizing: border-box;
@@ -44,8 +43,7 @@ button#play {
 
 .note {
   background: #fff;
-  border: 1px solid #ccc; /* Add borders to notes */
-  padding: 5px;
+  border: 1px solid #ccc;
   text-align: center;
   display: flex;
   flex-direction: column;
@@ -57,4 +55,9 @@ button#play {
 
 .note-frequency {
   margin-top: 5px;
+}
+
+.active {
+  background: rgb(32, 155, 49);
+  color: rgb(255, 255, 255)
 }
