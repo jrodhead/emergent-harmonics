@@ -7,6 +7,8 @@ input {
   padding: 1rem;
 }
 
+fieldset {padding: 1rem; margin: 0;}
+
 /* Adjustments for smaller screens */
 @media screen and (max-width: 1000px) {
   input,
