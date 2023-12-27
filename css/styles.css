@@ -14,14 +14,15 @@ fieldset {padding: 1rem; margin: 0;}
   input,
   button,
   select {
-    width: 100%; /* Make form elements span the width */
-    box-sizing: border-box; /* Ensure padding and border are included in the width */
-    margin-bottom: 10px; /* Add margin for better spacing */
+    width: 100%;
+    box-sizing: border-box;
+    margin: .5rem 0;
   }
 }
 
-#systemTable {
-  /* Disable text selection in systemTable */
+#systemTable,
+button#play {
+  /* Disable text selection */
   user-select: none;
   -webkit-user-select: none; /* For older versions of Safari */
 }

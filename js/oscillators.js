@@ -1,7 +1,7 @@
 let audioContext = null;
 let oscillators = [];
 
-function playSound(frequency) {
+export function playSound(frequency) {
   console.log('Frequency:', frequency);
 
   if (!audioContext) {
@@ -21,7 +21,7 @@ function playSound(frequency) {
   oscillators.push(oscillator);
 }
 
-function stopAllSounds() {
+export function stopAllSounds() {
   oscillators.forEach(oscillator => {
     oscillator.stop();
     oscillator.disconnect();

@@ -17,7 +17,8 @@
 
   <button id="play">Play</button>
 
-  <script src="js/oscillators.js"></script>
+  <script type="module" src="js/oscillators.js"></script>
+  <script type="module" src="js/keyboard.js"></script>
   <script>
     document.getElementById('play').addEventListener('mousedown', function() {
       playSound(osc1Frequency.value);
