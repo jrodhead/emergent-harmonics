@@ -40,13 +40,13 @@ document.body.addEventListener('keydown', (ev) => {
   if (ev.key === 'Escape') {
     if (ev.repeat) return;
     stopAllSounds();
-    document.body.classList.add('active');
+    document.body.classList.add('stop');
   }
 });
 
 document.body.addEventListener('keyup', (ev) => {
   if (ev.key === 'Escape') {
     if (ev.repeat) return;
-    document.body.classList.remove('active');
+    document.body.classList.remove('stop');
   }
 });

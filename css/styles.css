@@ -61,3 +61,8 @@ button#play {
   background: rgb(32, 155, 49);
   color: rgb(255, 255, 255)
 }
+
+.stop {
+  background: rgb(194, 19, 19);
+  color: rgb(255, 255, 255)
+}
