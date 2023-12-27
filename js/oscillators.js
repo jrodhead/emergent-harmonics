@@ -28,20 +28,3 @@ function stopAllSounds() {
   });
   oscillators = [];
 }
-
-// Assume your notes are represented as elements with the class 'note'
-const notes = document.querySelectorAll('.note');
-
-// Add event listeners to each note
-notes.forEach(note => {
-  note.addEventListener('click', function() {
-    // Extract frequency from the note's data attribute or other source
-    const frequency = parseFloat(this.dataset.frequency); // Adjust how you get the frequency
-
-    // Call the playSound function with the extracted frequency
-    playSound(frequency);
-  });
-});
-
-// Stop all sounds on touchend at the document level
-document.addEventListener('touchend', stopAllSounds);

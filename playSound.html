@@ -4,28 +4,33 @@
   <meta charset="UTF-8">
   <title>Play a sound</title>
   <style>
-    body,
-    button,
-    input {
-      font-size: 3rem;
-      padding: 2rem;
-      margin: .25rem;
-    }
+    fieldset {padding: 1rem; margin: 0;}
+    input[type="range"] {width:100%;}
+    button {padding: 1rem; margin: 1rem 1rem 1rem 0;}
   </style>
 </head>
 <body>
-  <button id="startButton">Play sound</button>
-  <button id="stopButton">Stop sounds</button>
+  <form>
+    <fieldset>
+      <legend>Oscillator 1</legend>
+      <label for="osc1Frequency">
+        Frequency:
+      </label>
+      <input type="number" id="osc1Frequency" class="frequencyControl" min="20" max="3500" step=".001" value="440">Hz
+    </fieldset>
+  </form>
+
+  <button id="play">Play</button>
 
   <script src="js/oscillators.js"></script>
   <script>
-    // Event listener for 'Play Sound' button
-    document.getElementById('startButton').addEventListener('click', function() {
-      playSound(440);
+    document.getElementById('play').addEventListener('mousedown', function() {
+      playSound(osc1Frequency.value);
     });
 
-    // Event listener for 'Stop Sound' button
-    document.getElementById('stopButton').addEventListener('click', stopAllSounds);
+    document.getElementById('play').addEventListener('mouseup', function() {
+      stopAllSounds();
+    });
   </script>
 </body>
 </html>
