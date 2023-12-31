@@ -2,9 +2,33 @@ body {
   font-size: 16px;
 }
 
-button,
-input {
+form {
+  display: grid;
+  width: 400px;
+}
+
+.form-container {
+  display: grid;
+  grid-template-columns: max-content auto;
+  gap: 10px;
+}
+
+label {
+  grid-column: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-right: 10px; /* Adjust padding as needed */
+}
+
+input, select {
+  grid-column: 1;
+  margin-bottom: 1rem;
   padding: 1rem;
+}
+
+button {
+  grid-column: 1;
 }
 
 fieldset {padding: 1rem; margin: 0;}
@@ -13,9 +37,7 @@ fieldset {padding: 1rem; margin: 0;}
 @media screen and (max-width: 1000px) {
   input,
   select {
-    width: 100%;
     box-sizing: border-box;
-    margin: .5rem 0;
   }
 }
 

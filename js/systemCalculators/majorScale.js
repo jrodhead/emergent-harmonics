@@ -1,26 +1,26 @@
-export function calculateMajorScaleFrequencies(rootFrequency, numDiapasons, numNotes) {
-  const ratios = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8]; // Ratios for major scale intervals
-  const frequencies = [];
+// Frequency calculations based on harmonic ratios that are used for the major scale
 
-  for (let diapason = 0; diapason < numDiapasons; diapason++) {
-    const diapasonNotes = [];
-    let frequency = rootFrequency * Math.pow(2, diapason); // Calculate frequency for each diapason
-
-    for (let note = 0; note < numNotes; note++) {
-      diapasonNotes.push(frequency);
-      frequency *= ratios[note % ratios.length]; // Calculate subsequent note frequencies based on ratios
-    }
-
-    frequencies.push(diapasonNotes);
+export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, rootFrequency) {
+  if (notesInDiapason > 7 || notesInDiapason <= 0) {
+    throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). Please provide a number between 1 and 7.`);
   }
 
-  return frequencies;
+  const ratios = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8]; // Ratios for a major scale
+
+  if (notesInDiapason < 7) {
+    ratios.length = notesInDiapason;
+    //// TODO: Priority of notes
+    // Tonic
+    // Tonic to Dominant (5th degree)
+    // Tonic to Subdominant (4th degree)
+    // Tonic to Mediant (3rd degree)
+    // Tonic to Supertonic (2nd degree)
+    // Tonic to Submediant (6th degree)
+    // Tonic to Leading Tone (7th degree)
+  }
+
+  const frequency = rootFrequency * ratios[note % ratios.length] * Math.pow(2, diapason);
+
+  console.log('calculated frequency: ', frequency);
+  return frequency;
 }
-
-// Example usage:
-// const rootNoteFrequency = 440; // Assuming A4 (440 Hz) as the root note
-// const diapasons = 3; // Number of diapasons
-// const notesPerDiapason = 7; // Number of notes in each diapason
-
-// const majorScaleFrequencies = calculateMajorScaleFrequencies(rootNoteFrequency, diapasons, notesPerDiapason);
-// console.log(majorScaleFrequencies);

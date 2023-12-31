@@ -1,16 +1,13 @@
-import { calculateMajorScaleFrequencies } from "./systemCalculators/majorScale.js";
-import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";
-
-export function createSystem(diapasonsInSystem, notesInDiapason, rootNote) {
+export function createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator) {
   let system = [];
 
   for (let diapason = 0; diapason < diapasonsInSystem; diapason++) {
     system[diapason] = [];
     for (let note = 0; note < notesInDiapason; note++) {
-      const frequency = calculateEqualTemperamentNoteFrequency(note, diapason, notesInDiapason, rootNote);
+      const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote);
       system[diapason][note] = {
         noteName: `note${note}-diapason${diapason}`,
-        frequency: frequency
+        frequency: frequency,
       };
     }
   }
