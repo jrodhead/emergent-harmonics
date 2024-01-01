@@ -45,12 +45,12 @@ fieldset {padding: 1rem; margin: 0;}
 button#play {
   /* Disable text selection */
   user-select: none;
-  -webkit-user-select: none; /* For older versions of Safari */
+  -webkit-user-select: none;
 }
 
 .grid-container {
   display: grid;
-  gap: 5px; /* Adjust gap between grid items */
+  gap: 5px;
   padding: 10px;
 }
 

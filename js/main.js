@@ -3,10 +3,10 @@ import { calculateMajorScaleFrequency } from "./systemCalculators/majorScale.js"
 import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";
 
 // Set form defaults
-const rootNote = 440;
+const rootNote = 432;
 const notesInDiapason = 7;
 const diapasonsInSystem = 2;
-const systemCalculator = calculateEqualTemperamentNoteFrequency;
+const systemCalculator = calculateMajorScaleFrequency;
 
 document.getElementById('rootNote').value = rootNote;
 document.getElementById('notes').value = notesInDiapason;

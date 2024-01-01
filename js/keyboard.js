@@ -1,14 +1,14 @@
 import { playSound, stopAllSounds, stopSound } from './oscillators.js';
 
 const keyMap = [
-  { key: 'a', frequency: 261.63, elementId: 'A' },
-  { key: 's', frequency: 293.66, elementId: 'S' },
-  { key: 'd', frequency: 329.63, elementId: 'D' },
-  { key: 'f', frequency: 349.23, elementId: 'F' },
-  { key: 'g', frequency: 392.00, elementId: 'G' },
-  { key: 'h', frequency: 440.00, elementId: 'H' },
-  { key: 'j', frequency: 493.88, elementId: 'J' },
-  { key: 'k', frequency: 523.25, elementId: 'K' }
+  { key: 'a', frequency: 216, elementId: 'A' },
+  { key: 's', frequency: 243, elementId: 'S' },
+  { key: 'd', frequency: 270, elementId: 'D' },
+  { key: 'f', frequency: 288, elementId: 'F' },
+  { key: 'g', frequency: 324, elementId: 'G' },
+  { key: 'h', frequency: 360, elementId: 'H' },
+  { key: 'j', frequency: 405, elementId: 'J' },
+  { key: 'k', frequency: 432, elementId: 'K' }
 ];
 
 const handleKey = (ev, action) => {
