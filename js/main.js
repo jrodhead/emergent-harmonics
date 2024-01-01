@@ -5,14 +5,14 @@ import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equa
 // Set form defaults
 const rootNote = 440;
 const notesInDiapason = 7;
-const diapasonsInSystem = 1;
-const systemCalculator =
-  calculateMajorScaleFrequency;
-  // calculateEqualTemperamentNoteFrequency;
+const diapasonsInSystem = 2;
+const systemCalculator = calculateEqualTemperamentNoteFrequency;
 
 document.getElementById('rootNote').value = rootNote;
 document.getElementById('notes').value = notesInDiapason;
 document.getElementById('diapasons').value = diapasonsInSystem;
+// TODO: select #calculator value based on systemCalculator
+// document.getElementById('calculator').value = systemCalculator; // need to get html option value from js function
 
 // Generate and display system
 

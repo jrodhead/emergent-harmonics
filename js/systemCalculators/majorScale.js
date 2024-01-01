@@ -5,7 +5,16 @@ export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, ro
     throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). Please provide a number between 1 and 7.`);
   }
 
-  const ratios = [1, 9/8, 5/4, 4/3, 3/2, 5/3, 15/8]; // Ratios for a major scale
+  // Ratios for a major scale
+  const ratios = [
+    1,    // Tonic
+    9/8,  // Tonic to Supertonic (2nd degree)
+    5/4,  // Tonic to Mediant (3rd degree)
+    4/3,  // Tonic to Subdominant (4th degree)
+    3/2,  // Tonic to Dominant (5th degree)
+    5/3,  // Tonic to Submediant (6th degree)
+    15/8  // Tonic to to Leading Tone (7th degree)
+  ];
 
   if (notesInDiapason < 7) {
     ratios.length = notesInDiapason;
