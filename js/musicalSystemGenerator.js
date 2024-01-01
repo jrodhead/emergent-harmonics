@@ -6,7 +6,7 @@ export function createSystem(diapasonsInSystem, notesInDiapason, rootNote, syste
     for (let note = 0; note < notesInDiapason; note++) {
       const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote);
       system[diapason][note] = {
-        noteName: `note${note}-diapason${diapason}`,
+        noteName: note,
         frequency: frequency,
       };
     }
@@ -24,7 +24,7 @@ export function renderSystemTable(musicalSystem) {
     for (let note = 0; note < musicalSystem[diapason].length; note++) {
       const { noteName, frequency } = musicalSystem[diapason][note];
       gridHTML += `<div class="note">
-                    <div class="note-name">${noteName}</div>
+                    <div class="note-name">${note}</div> <!-- Display note number -->
                     <div class="note-frequency">${frequency}</div>
                   </div>`;
     }
