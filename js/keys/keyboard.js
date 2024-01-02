@@ -1,21 +1,18 @@
-import { playSound, stopAllSounds, stopSound } from './oscillators.js';
+import { playSound, stopAllSounds, stopSound } from '../oscillators.js';
+import { createKeyMap } from './createKeyMap.js';
+import { majorScalePythagoreanKeyMap } from './majorScalePythagorean.js'; //test
 
-const keyMap = [
-  { key: 'a', frequency: 216, elementId: 'A' },
-  { key: 's', frequency: 243, elementId: 'S' },
-  { key: 'd', frequency: 270, elementId: 'D' },
-  { key: 'f', frequency: 288, elementId: 'F' },
-  { key: 'g', frequency: 324, elementId: 'G' },
-  { key: 'h', frequency: 360, elementId: 'H' },
-  { key: 'j', frequency: 405, elementId: 'J' },
-  { key: 'k', frequency: 432, elementId: 'K' }
-];
+let diapason = majorScalePythagoreanKeyMap;
+const keyMap =
+  // majorScalePythagoreanKeyMap;
+  createKeyMap(diapason);
 
 const handleKey = (ev, action) => {
   const keyData = keyMap.find((item) => item.key === action);
   if (!keyData) return;
 
   const { frequency, elementId } = keyData;
+  console.log (`frequency: ${frequency}, elementId: ${elementId}`)
   const element = document.getElementById(elementId);
 
   if (ev === 'keydown') {

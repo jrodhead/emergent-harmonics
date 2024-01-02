@@ -22,9 +22,9 @@ export function renderSystemTable(musicalSystem) {
   for (let diapason = 0; diapason < musicalSystem.length; diapason++) {
     gridHTML += `<div class="diapason">`;
     for (let note = 0; note < musicalSystem[diapason].length; note++) {
-      const { noteName, frequency } = musicalSystem[diapason][note];
-      gridHTML += `<div class="note">
-                    <div class="note-name">${note}</div> <!-- Display note number -->
+      const { frequency } = musicalSystem[diapason][note];
+      gridHTML += `<div id="${note}" class="note">
+                    <div class="note-name">${note}</div>
                     <div class="note-frequency">${frequency}</div>
                   </div>`;
     }

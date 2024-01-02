@@ -17,7 +17,6 @@ document.getElementById('diapasons').value = diapasonsInSystem;
 // Generate and display system
 
 const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator);
-
 renderSystemTable(musicalSystem);
 
 // Event listener for form submission
@@ -38,6 +37,5 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
   // Add more conditions for other calculators as needed
 
   const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator);
-
   renderSystemTable(musicalSystem);
 });
