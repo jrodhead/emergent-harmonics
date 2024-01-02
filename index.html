@@ -6,31 +6,36 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
   <h1>Musical System Generator</h1>
 
-  <form id="systemConfigForm">
+  <div id="mainGrid">
 
-    <label for="rootNote">Root Note Frequency:</label>
-    <input type="number" id="rootNote" name="rootNote" required>
+    <form id="systemConfigForm">
 
-    <label for="notes">Number of Notes in Diapason:</label>
-    <input type="number" id="notes" name="notes" min="1" required>
+      <label for="rootNote">Root Note Frequency:</label>
+      <input type="number" id="rootNote" name="rootNote" required>
 
-    <label for="diapasons">Number of Diapasons:</label>
-    <input type="number" id="diapasons" name="diapasons" min="1" required>
+      <label for="notes">Number of Notes in Diapason:</label>
+      <input type="number" id="notes" name="notes" min="1" required>
 
-    <label for="calculator">System Calculator:</label>
-    <select id="calculator" name="calculator">
-      <option value="majorScale">Major Scale - Pythagorean</option>
-      <option value="equalTemperament">Equal Temperament</option>
-      <!-- Add other options as needed -->
-    </select>
+      <label for="diapasons">Number of Diapasons:</label>
+      <input type="number" id="diapasons" name="diapasons" min="1" required>
 
-    <input type="submit" value="Generate System">
+      <label for="calculator">System Calculator:</label>
+      <select id="calculator" name="calculator">
+        <option value="majorScale">Major Scale - Pythagorean</option>
+        <option value="equalTemperament">Equal Temperament</option>
+        <!-- Add other options as needed -->
+      </select>
 
-  </form>
+      <input type="submit" value="Generate System">
 
-  <div id="systemTable"></div>
+    </form>
+
+    <div id="systemTable"></div>
+
+  </div>
 
   <script type="module" src="js/main.js"></script>
 

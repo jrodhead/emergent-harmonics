@@ -5,7 +5,7 @@ import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equa
 // Set form defaults
 const rootNote = 432;
 const notesInDiapason = 7;
-const diapasonsInSystem = 2;
+const diapasonsInSystem = 1;
 const systemCalculator = calculateMajorScaleFrequency;
 
 document.getElementById('rootNote').value = rootNote;
