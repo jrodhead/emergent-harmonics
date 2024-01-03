@@ -1,3 +1,8 @@
+/**
+ * Creates a key map for the notes in a diapason, associating notes with keys.
+ * @param {Array} diapason - An array of notes in a diapason.
+ * @returns {Array} - A key map array associating notes with keys.
+ */
 export function createKeyMap(diapason) {
   const keys = 'qwertyuiopasdfghjklzxcvbnm'.split('');
   const keyMap = [];
@@ -18,6 +23,10 @@ export function createKeyMap(diapason) {
   return keyMap;
 }
 
+/**
+ * Renders a table based on the provided key map.
+ * @param {Array} keyMap - An array representing the key map to render.
+ */
 export function renderKeyMapTable(keyMap) {
   let gridHTML = '<div class="grid-container"><div class="diapason">';
 

@@ -3,12 +3,13 @@ import { createKeyMap, renderKeyMapTable } from "./keys/keyMap.js";
 import { calculateMajorScaleFrequency } from "./systemCalculators/majorScale.js";
 import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";
 
-let keyMapGlobal = [];
+let keyMapGlobal = []; // Stores the generated key map for global use
 
 // Event listener for systemConfigForm submit
 document.getElementById('systemConfigForm').addEventListener('submit', function(event) {
   event.preventDefault();
 
+  // Extracting values from the form
   const diapasonsInSystem = parseInt(document.getElementById('diapasons').value);
   const notesInDiapason = parseInt(document.getElementById('notes').value);
   const rootNote = parseInt(document.getElementById('rootNote').value);
@@ -29,11 +30,14 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
       return;
     }
 
+    // Generate the musical system and key map
     const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator);
     const keyMap = createKeyMap(musicalSystem[0]);
+
+    // Render the key map table and update the global key map
     renderKeyMapTable(keyMap);
     keyMapGlobal = keyMap;
   }
 });
 
-export { keyMapGlobal };
+export { keyMapGlobal }; // Exporting the updated key map for global use

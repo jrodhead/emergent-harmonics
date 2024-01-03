@@ -1,5 +1,11 @@
-// Frequency calculations based on harmonic ratios that are used for the major scale
-
+/**
+ * Calculate frequency based on harmonic ratios used for the major scale.
+ * @param {number} note - The note in the scale.
+ * @param {number} diapason - The diapason or octave of the note.
+ * @param {number} notesInDiapason - The total number of notes in a diapason.
+ * @param {number} rootFrequency - The frequency of the root note.
+ * @returns {number|null} - Calculated frequency or null if invalid calculation.
+ */
 export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, rootFrequency) {
   if (notesInDiapason > 7 || notesInDiapason <= 0) {
     throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). Please provide a number between 1 and 7.`);
@@ -13,7 +19,7 @@ export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, ro
     4/3,  // Tonic to Subdominant (4th degree)
     3/2,  // Tonic to Dominant (5th degree)
     5/3,  // Tonic to Submediant (6th degree)
-    15/8  // Tonic to to Leading Tone (7th degree)
+    15/8  // Tonic to Leading Tone (7th degree)
   ];
 
   if (notesInDiapason < 7) {
