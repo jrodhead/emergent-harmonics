@@ -1,25 +1,11 @@
-import { createSystem, renderSystemTable } from "./musicalSystemGenerator.js";
+import { createSystem } from "./musicalSystemGenerator.js";
+import { createKeyMap, renderKeyMapTable } from "./keys/keyMap.js";
 import { calculateMajorScaleFrequency } from "./systemCalculators/majorScale.js";
 import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";
 
-// Set form defaults
-const rootNote = 432;
-const notesInDiapason = 7;
-const diapasonsInSystem = 1;
-const systemCalculator = calculateMajorScaleFrequency;
+let keyMapGlobal = [];
 
-document.getElementById('rootNote').value = rootNote;
-document.getElementById('notes').value = notesInDiapason;
-document.getElementById('diapasons').value = diapasonsInSystem;
-// TODO: select #calculator value based on systemCalculator
-// document.getElementById('calculator').value = systemCalculator; // need to get html option value from js function
-
-// Generate and display system
-
-const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator);
-renderSystemTable(musicalSystem);
-
-// Event listener for form submission
+// Event listener for systemConfigForm submit
 document.getElementById('systemConfigForm').addEventListener('submit', function(event) {
   event.preventDefault();
 
@@ -34,8 +20,12 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
   } else if (selectedCalculator === 'majorScale') {
     systemCalculator = calculateMajorScaleFrequency;
   }
-  // Add more conditions for other calculators as needed
 
   const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator);
-  renderSystemTable(musicalSystem);
+  const keyMap = createKeyMap(musicalSystem[0]);
+  renderKeyMapTable(keyMap);
+
+  keyMapGlobal = keyMap;
 });
+
+export { keyMapGlobal };

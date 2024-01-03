@@ -1,14 +1,8 @@
 import { playSound, stopAllSounds, stopSound } from '../oscillators.js';
-import { createKeyMap } from './createKeyMap.js';
-import { majorScalePythagoreanKeyMap } from './majorScalePythagorean.js'; //test
-
-let diapason = majorScalePythagoreanKeyMap;
-const keyMap =
-  // majorScalePythagoreanKeyMap;
-  createKeyMap(diapason);
+import { keyMapGlobal } from '../main.js';
 
 const handleKey = (ev, action) => {
-  const keyData = keyMap.find((item) => item.key === action);
+  const keyData = keyMapGlobal.find((item) => item.key === action);
   if (!keyData) return;
 
   const { frequency, elementId } = keyData;
@@ -28,7 +22,7 @@ const handleKey = (ev, action) => {
 
 const keyHandler = (ev) => {
   if (ev.repeat) return;
-  const keyData = keyMap.find((item) => item.key === ev.key);
+  const keyData = keyMapGlobal.find((item) => item.key === ev.key);
   if (!keyData) return;
   handleKey(ev.type, ev.key);
 };

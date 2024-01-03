@@ -13,21 +13,26 @@
 
     <form id="systemConfigForm">
 
-      <label for="rootNote">Root Note Frequency:</label>
-      <input type="number" id="rootNote" name="rootNote" required>
-
-      <label for="notes">Number of Notes in Diapason:</label>
-      <input type="number" id="notes" name="notes" min="1" required>
-
-      <label for="diapasons">Number of Diapasons:</label>
-      <input type="number" id="diapasons" name="diapasons" min="1" required>
-
-      <label for="calculator">System Calculator:</label>
-      <select id="calculator" name="calculator">
-        <option value="majorScale">Major Scale - Pythagorean</option>
-        <option value="equalTemperament">Equal Temperament</option>
-        <!-- Add other options as needed -->
-      </select>
+      <div class="formGroup">
+        <label for="rootNote">Root Note Frequency:</label>
+        <input type="number" id="rootNote" name="rootNote" min="20" max="20000" value="216" required>
+      </div>
+      <div class="formGroup">
+        <label for="notes">Number of Notes in Diapason:</label>
+        <input type="number" id="notes" name="notes" min="1" max="26" value="7" required>
+      </div>
+      <div class="formGroup">
+        <label for="diapasons">Number of Diapasons:</label>
+        <input type="number" id="diapasons" name="diapasons" min="1" max="10" value="1" required>
+      </div>
+      <div class="formGroup">
+        <label for="calculator">System Calculator:</label>
+        <select id="calculator" name="calculator">
+          <option value="majorScale" selected>Major Scale - Pythagorean</option>
+          <option value="equalTemperament">Equal Temperament</option>
+          <!-- Add other options as needed -->
+        </select>
+      </div>
 
       <input type="submit" value="Generate System">
 
