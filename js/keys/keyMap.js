@@ -29,8 +29,6 @@ export function renderKeyMapTable(keyMap) {
                   <div class="note-frequency">${frequency}</div>
                 </div>`;
   }
-  gridHTML += '';
-
   gridHTML += '</div></div>';
 
   document.getElementById('systemTable').innerHTML = gridHTML;

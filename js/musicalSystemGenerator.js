@@ -5,10 +5,14 @@ export function createSystem(diapasonsInSystem, notesInDiapason, rootNote, syste
     system[diapason] = [];
     for (let note = 0; note < notesInDiapason; note++) {
       const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote);
-      system[diapason][note] = {
-        noteName: note,
-        frequency: frequency,
-      };
+      if (frequency !== null) {
+        system[diapason][note] = {
+          noteName: note,
+          frequency: frequency,
+        };
+      } else {
+        console.error('Unable to calculate frequency')
+      }
     }
   }
 

@@ -30,6 +30,11 @@ export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, ro
 
   const frequency = rootFrequency * ratios[note % ratios.length] * Math.pow(2, diapason);
 
+  if (!isFinite(frequency) || isNaN(frequency)) {
+    console.error('Invalid frequency value calculated:', frequency);
+    return null; // or handle it according to your application logic
+  }
+
   console.log('calculated frequency: ', frequency);
   return frequency;
 }

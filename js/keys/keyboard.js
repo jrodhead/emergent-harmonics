@@ -17,6 +17,8 @@ const handleKey = (ev, action) => {
     stopSound(action);
     element.classList.remove('active');
     console.log(`${action}Off`);
+  } else {
+    console.error('unable to handle key');
   }
 };
 
