@@ -1,4 +1,4 @@
-import { createSystem } from "./musicalSystemGenerator.js";
+import { createSystem } from "./systemCalculators/musicalSystemGenerator.js";
 import { createKeyMap, renderKeyMapTable } from "./keys/keyMap.js";
 import { calculateMajorScaleFrequency } from "./systemCalculators/majorScale.js";
 import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";

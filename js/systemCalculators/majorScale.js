@@ -5,7 +5,7 @@ export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, ro
     throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). Please provide a number between 1 and 7.`);
   }
 
-  // Ratios for a major scale
+  // Harmonic ratios for the major scale
   const ratios = [
     1,    // Tonic
     9/8,  // Tonic to Supertonic (2nd degree)

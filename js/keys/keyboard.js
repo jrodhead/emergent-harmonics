@@ -1,4 +1,4 @@
-import { playSound, stopAllSounds, stopSound } from '../oscillators.js';
+import { playSound, stopAllSounds, stopSound } from '../audio/oscillators.js';
 import { keyMapGlobal } from '../main.js';
 
 const handleKey = (ev, action) => {
