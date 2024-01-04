@@ -8,7 +8,7 @@
  */
 export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, rootFrequency) {
   if (notesInDiapason > 7 || notesInDiapason <= 0) {
-    throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). Please provide a number between 1 and 7.`);
+    throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). The major scale has 7 notes - please provide a number between 1 and 7.`);
   }
 
   // Harmonic ratios for the major scale

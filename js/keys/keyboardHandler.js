@@ -1,5 +1,6 @@
 import { playSound, stopSound } from '../audio/audioHandler.js';
-import { keyMapGlobal } from '../main.js';
+import { musicalSystemGlobal, keyMapGlobal, updateKeyMapGlobal } from '../main.js';
+import { createKeyMap, renderAlphaKeyMapTable } from "./keyMap.js";
 
 /**
  * Handles key events for sound playback and UI changes.
@@ -49,3 +50,33 @@ const keyHandler = (ev) => {
 // Event listeners for keydown and keyup events
 document.body.addEventListener('keydown', keyHandler);
 document.body.addEventListener('keyup', keyHandler);
+
+// handle numeric keys
+
+const handleNumericKey = (ev, diapasonIndex) => {
+  // On keydown of a numeric key (0-9)
+  if (ev === 'keydown') {
+    console.log(`${diapasonIndex}On`);
+    let newKeyMap = createKeyMap(musicalSystemGlobal[diapasonIndex]);
+    updateKeyMapGlobal(newKeyMap);
+  } else if (ev === 'keyup') {
+    console.log(`${diapasonIndex}Off`);
+    renderAlphaKeyMapTable(keyMapGlobal);
+  }
+};
+
+// Listen for numerical keys
+document.body.addEventListener('keydown', (ev) => {
+  const numericKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const keyIndex = numericKeys.indexOf(ev.key);
+  if (keyIndex !== -1) {
+    handleNumericKey('keydown', keyIndex);
+  }
+});
+document.body.addEventListener('keyup', (ev) => {
+  const numericKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const keyIndex = numericKeys.indexOf(ev.key);
+  if (keyIndex !== -1) {
+    handleNumericKey('keyup', keyIndex);
+  }
+});

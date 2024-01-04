@@ -33,14 +33,16 @@ button {
 
 fieldset {padding: 1rem; margin: 0;}
 
-#systemTable,
+#alphaKeyTable,
+#numericKeyTable,
 button#play {
   /* Disable text selection */
   user-select: none;
   -webkit-user-select: none;
 }
 
-#systemTable {
+#alphaKeyTable,
+#numericKeyTable {
   grid-column: 2;
   width: 1100px;
 }

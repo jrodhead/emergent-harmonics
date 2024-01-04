@@ -4,8 +4,13 @@
  * @returns {Array} - A key map array associating notes with keys.
  */
 export function createKeyMap(diapason) {
+  if (!Array.isArray(diapason)) {
+    console.error('Invalid diapason provided:', diapason);
+    return [];
+  }
+
   const keys = 'qwertyuiopasdfghjklzxcvbnm'.split('');
-  const keyMap = [];
+  let keyMap = [];
 
   for (let i = 0; i < diapason.length; i++) {
     const note = diapason[i];
@@ -27,7 +32,7 @@ export function createKeyMap(diapason) {
  * Renders a table based on the provided key map.
  * @param {Array} keyMap - An array representing the key map to render.
  */
-export function renderKeyMapTable(keyMap) {
+export function renderAlphaKeyMapTable(keyMap) {
   let gridHTML = '<div class="grid-container"><div class="diapason">';
 
   for (let note = 0; note < keyMap.length; note++) {
@@ -40,5 +45,5 @@ export function renderKeyMapTable(keyMap) {
   }
   gridHTML += '</div></div>';
 
-  document.getElementById('systemTable').innerHTML = gridHTML;
+  document.getElementById('alphaKeyTable').innerHTML = gridHTML;
 }
