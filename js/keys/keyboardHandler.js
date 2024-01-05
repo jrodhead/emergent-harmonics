@@ -80,3 +80,37 @@ document.body.addEventListener('keyup', (ev) => {
     handleNumericKey('keyup', keyIndex);
   }
 });
+
+// handle up/down arrow keys
+
+let currentDiapasonIndex = 0; // Assuming the initial diapason index is 0
+
+document.body.addEventListener('keydown', (ev) => {
+  // Handle diapason change with up and down arrow keys
+  if (ev.key === 'ArrowUp') {
+    // Go to the next diapason (current diapason + 1)
+    handleDiapasonChange('next');
+  } else if (ev.key === 'ArrowDown') {
+    // Go to the previous diapason (current diapason - 1)
+    handleDiapasonChange('previous');
+  }
+});
+
+const handleDiapasonChange = (direction) => {
+  if (direction === 'next') {
+    currentDiapasonIndex++;
+  } else if (direction === 'previous') {
+    currentDiapasonIndex--;
+  }
+
+  // Ensure the diapason index stays within valid bounds
+  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= musicalSystemGlobal.length) {
+    currentDiapasonIndex = Math.max(0, Math.min(musicalSystemGlobal.length - 1, currentDiapasonIndex));
+    return;
+  }
+
+  // Update key map based on the new diapason
+  let newKeyMap = createKeyMap(musicalSystemGlobal[currentDiapasonIndex]);
+  updateKeyMapGlobal(newKeyMap);
+  renderAlphaKeyMapTable(keyMapGlobal);
+};
