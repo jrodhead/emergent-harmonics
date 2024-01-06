@@ -1,30 +1,49 @@
+import { currentRootIndex } from './numericKeyHandler.js';
+import { currentDiapasonIndex } from "./arrowKeyHandler.js";
+
 /**
  * Creates a key map for the notes in a diapason, associating notes with keys.
  * @param {Array} diapason - An array of notes in a diapason.
  * @returns {Array} - A key map array associating notes with keys.
  */
-export function createKeyMap(diapason) {
-  if (!Array.isArray(diapason)) {
-    console.error('Invalid diapason provided:', diapason);
+export function createKeyMap(system) {
+  if (!Array.isArray(system) || !system.length || !system[currentRootIndex]) {
+    console.error('Invalid system or root provided:', system);
     return [];
   }
 
   const keys = 'qwertyuiopasdfghjklzxcvbnm'.split('');
   let keyMap = [];
 
-  for (let i = 0; i < diapason.length; i++) {
-    const note = diapason[i];
-    const key = keys[i % keys.length]; // Cycle through keys
-    if (!note) break; // Break loop if there are no more notes
+  const root = system[currentRootIndex];
 
-    keyMap.push({
-      key: key,
-      frequency: note.frequency,
-      elementId: note.noteName,
-    });
+  if (!root || !root.diapasons || !Array.isArray(root.diapasons) || !root.diapasons.length) {
+    console.error('Invalid diapasons in the root:', root && root.diapasons);
+    return [];
   }
 
-  console.log('createKeyMap result: ', keyMap);
+  if (currentDiapasonIndex >= 0 && currentDiapasonIndex < root.diapasons.length) {
+    const notes = root.diapasons[currentDiapasonIndex].notes;
+
+    if (notes && Array.isArray(notes)) {
+      for (let noteIndex = 0; noteIndex < notes.length; noteIndex++) {
+        const note = notes[noteIndex];
+        const key = keys[noteIndex % keys.length]; // Cycle through keys
+
+        keyMap.push({
+          key: key,
+          frequency: note.frequency,
+          elementId: note.noteName,
+        });
+      }
+    } else {
+      console.error('Invalid notes in the diapason:', notes);
+    }
+  } else {
+    console.error('Invalid diapason index:', currentDiapasonIndex);
+  }
+
+  console.log('createKeyMap result:', keyMap);
   return keyMap;
 }
 

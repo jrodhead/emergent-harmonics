@@ -10,29 +10,43 @@
 export function createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator) {
   let system = [];
 
-  // Loop through each diapason
-  for (let diapason = 0; diapason < diapasonsInSystem; diapason++) {
-    system[diapason] = [];
+  // Primary root - create diapasons and notes based on the primary root note
+  let primaryRoot = generateRoot(rootNote, notesInDiapason, diapasonsInSystem, systemCalculator);
+  system.push(primaryRoot);
 
-    // Loop through each note in the diapason
-    for (let note = 0; note < notesInDiapason; note++) {
-      // Calculate the frequency using the provided systemCalculator function
-      const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote);
-
-      // Check if frequency calculation was successful
-      if (frequency !== null) {
-        // Store the note's details in the system array
-        system[diapason][note] = {
-          noteName: note,
-          frequency: frequency,
-        };
-      } else {
-        // Log an error if frequency calculation failed
-        console.error('Unable to calculate frequency for note:', note);
-      }
-    }
+  // Generate new roots from notes in the first diapason of the primary root
+  const firstDiapasonNotes = primaryRoot.diapasons[0].notes;
+  for (let i = 1; i < firstDiapasonNotes.length; i++) {
+    let newRootNote = firstDiapasonNotes[i].frequency;
+    let newRoot = generateRoot(newRootNote, notesInDiapason, diapasonsInSystem, systemCalculator);
+    system.push(newRoot);
   }
 
-  console.log('createSystem result:', system);
+  console.log('createSystem result: ', system);
   return system;
+}
+
+export function generateRoot(rootNote, notesInDiapason, diapasonsInSystem, systemCalculator) {
+  let root = {
+    rootNote: rootNote,
+    diapasons: [],
+  };
+
+  for (let diapason = 0; diapason < diapasonsInSystem; diapason++) {
+    let diapasonNotes = [];
+    for (let note = 0; note < notesInDiapason; note++) {
+      const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote);
+      if (frequency !== null) {
+        diapasonNotes.push({
+          noteName: note,
+          frequency: frequency,
+        });
+      } else {
+        console.error('Unable to calculate frequency');
+      }
+    }
+    root.diapasons.push({ notes: diapasonNotes });
+  }
+
+  return root;
 }

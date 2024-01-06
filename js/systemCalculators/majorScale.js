@@ -41,6 +41,6 @@ export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, ro
     return null; // or handle it according to your application logic
   }
 
-  console.log('calculated frequency: ', frequency);
+  // console.log('calculated frequency: ', frequency);
   return frequency;
 }

@@ -5,7 +5,16 @@ import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equa
 
 let musicalSystemGlobal = [];
 let keyMapGlobal = [];
-export { musicalSystemGlobal, keyMapGlobal, updateKeyMapGlobal }; // exports for global use
+
+const updateKeyMapGlobal = (newKeyMap) => {
+  keyMapGlobal = newKeyMap;
+};
+
+export {
+  musicalSystemGlobal,
+  keyMapGlobal,
+  updateKeyMapGlobal
+};
 
 // Event listener for systemConfigForm submit
 document.getElementById('systemConfigForm').addEventListener('submit', function(event) {
@@ -34,15 +43,11 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
 
     // Generate the musical system and key map
     const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator);
-    const keyMap = createKeyMap(musicalSystem[0]);
+    musicalSystemGlobal = musicalSystem; //update global variable
+    const keyMap = createKeyMap(musicalSystemGlobal);
 
-    // Render the key map table and update the global key map
-    renderAlphaKeyMapTable(keyMap);
-    musicalSystemGlobal = musicalSystem;
+    // Render the key map table
     keyMapGlobal = keyMap;
+    renderAlphaKeyMapTable(keyMapGlobal);
   }
 });
-
-const updateKeyMapGlobal = (newKeyMap) => {
-  keyMapGlobal = newKeyMap;
-};
