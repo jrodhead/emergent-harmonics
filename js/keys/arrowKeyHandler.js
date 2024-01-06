@@ -21,6 +21,9 @@ const updateCurrentDiapasonIndex = (direction) => {
 export { currentDiapasonIndex, updateCurrentDiapasonIndex};
 
 document.body.addEventListener('keydown', (ev) => {
+  // Ignore repeated keydown events
+  if (ev.repeat) return;
+
   // Handle diapason change with up and down arrow keys
   if (ev.key === 'ArrowUp') {
     // Go to the next diapason (current diapason + 1)
