@@ -57,12 +57,12 @@ export function renderAlphaKeyMapTable(keyMap) {
                     <div class="diapason">
                       <div class="diapason-index" id="diapason${currentDiapasonIndex}">
                         <div class="current-root-index" id="root${currentRootIndex}">
-                          ${currentRootIndex}
+                          R${currentRootIndex}
                         </div>
                         <div class="current-diapason-index">
-                          ${currentDiapasonIndex}
+                          D${currentDiapasonIndex}
                         </div>
-                        <div class="root-value">${musicalSystemGlobal[currentRootIndex].rootNote}</div>
+                        <div class="root-value">R${musicalSystemGlobal[currentRootIndex].rootNote}Hz</div>
                       </div>`;
 
   for (let note = 0; note < keyMap.length; note++) {
@@ -70,7 +70,7 @@ export function renderAlphaKeyMapTable(keyMap) {
     gridHTML += `<div id="${note}" class="note">
                   <div class="note-name">${elementId}</div>
                   <div class="key-name">${key}</div>
-                  <div class="note-frequency">${frequency}</div>
+                  <div class="note-frequency">${frequency}Hz</div>
                 </div>`;
   }
   gridHTML += '</div></div>';
