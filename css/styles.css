@@ -62,6 +62,7 @@ button#play {
   border-radius: 1rem;
 }
 
+.diapason-index,
 .note {
   background: #fff;
   border: 1px solid #ccc;
@@ -72,12 +73,20 @@ button#play {
   align-items: center;
 }
 
+.diapason-index {
+  background-color: transparent;
+  border-color: transparent;
+  color: #fff;
+}
+
+.current-diapason-index,
 .key-name {
   font-size: 5rem;
   font-weight: bold;
   text-transform: capitalize;
 }
 
+.root-value,
 .note-frequency {
   margin-top: 5px;
   overflow: hidden;

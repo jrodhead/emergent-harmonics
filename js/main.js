@@ -1,6 +1,7 @@
 import { createSystem } from "./systemCalculators/musicalSystemGenerator.js";
 import { createKeyMap, renderAlphaKeyMapTable } from "./keys/keyMap.js";
 import { calculateMajorScaleFrequency } from "./systemCalculators/majorScale.js";
+import { calculateMinorScaleFrequency } from "./systemCalculators/minorScale.js";
 import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";
 
 let musicalSystemGlobal = [];
@@ -36,6 +37,8 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
       systemCalculator = calculateEqualTemperamentNoteFrequency;
     } else if (selectedCalculator === 'majorScale') {
       systemCalculator = calculateMajorScaleFrequency;
+    } else if (selectedCalculator === 'minorScale') {
+      systemCalculator = calculateMinorScaleFrequency;
     } else {
       alert("Please select a System Calculator.");
       return;

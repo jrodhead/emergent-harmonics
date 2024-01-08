@@ -1,3 +1,4 @@
+import { musicalSystemGlobal } from '../main.js';
 import { currentRootIndex } from './numericKeyHandler.js';
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
 
@@ -52,7 +53,17 @@ export function createKeyMap(system) {
  * @param {Array} keyMap - An array representing the key map to render.
  */
 export function renderAlphaKeyMapTable(keyMap) {
-  let gridHTML = '<div class="grid-container"><div class="diapason">';
+  let gridHTML = `<div class="grid-container">
+                    <div class="diapason">
+                      <div class="diapason-index" id="diapason${currentDiapasonIndex}">
+                        <div class="current-root-index" id="root${currentRootIndex}">
+                          ${currentRootIndex}
+                        </div>
+                        <div class="current-diapason-index">
+                          ${currentDiapasonIndex}
+                        </div>
+                        <div class="root-value">${musicalSystemGlobal[currentRootIndex].rootNote}</div>
+                      </div>`;
 
   for (let note = 0; note < keyMap.length; note++) {
     const { elementId, key, frequency } = keyMap[note];

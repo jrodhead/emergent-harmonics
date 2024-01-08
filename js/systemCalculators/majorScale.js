@@ -38,7 +38,7 @@ export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, ro
 
   if (!isFinite(frequency) || isNaN(frequency)) {
     console.error('Invalid frequency value calculated:', frequency);
-    return null; // or handle it according to your application logic
+    return null;
   }
 
   // console.log('calculated frequency: ', frequency);
