@@ -3,6 +3,7 @@ import { createKeyMap, renderAlphaKeyMapTable } from "./keys/keyMap.js";
 import { calculateMajorScaleFrequency } from "./systemCalculators/majorScale.js";
 import { calculateMinorScaleFrequency } from "./systemCalculators/minorScale.js";
 import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";
+import { calculateHD110067Frequency } from "./systemCalculators/HD110067.js";
 
 let musicalSystemGlobal = [];
 let keyMapGlobal = [];
@@ -39,6 +40,8 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
       systemCalculator = calculateMajorScaleFrequency;
     } else if (selectedCalculator === 'minorScale') {
       systemCalculator = calculateMinorScaleFrequency;
+    } else if (selectedCalculator === 'HD110067') {
+      systemCalculator = calculateHD110067Frequency;
     } else {
       alert("Please select a System Calculator.");
       return;
