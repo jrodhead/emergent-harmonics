@@ -1,3 +1,5 @@
+import { hd110067Calculator } from "./scaleCalculators.js";
+
 /**
  * Calculate frequency based on harmonic ratios of the planetary system of HD 110067
  * https://www.pbs.org/newshour/science/nasa-satellites-discovered-a-6-planet-solar-system-in-perfect-synchrony
@@ -12,24 +14,10 @@ export function calculateHD110067Frequency(note, diapason, notesInDiapason, root
     throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). The HD 110067 star system has 6 planets - please provide a number between 1 and 7.`);
   }
 
-  // Orbital resonance ratios for the planets orbiting HD 110067
-  // ratios are relative to the next-closest planet
-  const ratios = [
-    3/2, // planet B as 1 has a 9-(earth?)day orbit
-    3/2, // planet C
-    3/2, // planet D
-    4/3, // planet E
-    4/3,  // planet F
-  ];
+  let frequency = hd110067Calculator(note, diapason, rootFrequency, ratios);
 
   if (note < 0 || note >= notesInDiapason) {
     throw new Error(`Invalid note (${note}). Please provide a number between 0 and ${notesInDiapason}.`);
-  }
-
-  // calculate the frequency based on the previous note and the ratio for the current note in the diapason
-  let frequency = rootFrequency;
-  for (let i = 0; i < note; i++) {
-    frequency *= ratios[i % ratios.length];
   }
 
   if (!isFinite(frequency) || isNaN(frequency)) {
