@@ -34,6 +34,7 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
     return;
   } else {
     let systemCalculator;
+    
     if (selectedCalculator === 'equalTemperament') {
       systemCalculator = calculateEqualTemperamentNoteFrequency;
     } else if (selectedCalculator === 'majorScale') {

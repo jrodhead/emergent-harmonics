@@ -8,7 +8,7 @@ import { currentDiapasonIndex } from "./arrowKeyHandler.js";
  * @returns {Array} - A key map array associating notes with keys.
  */
 export function createKeyMap(system) {
-  if (!Array.isArray(system) || !system.length || !system[currentRootIndex]) {
+  if (!Array.isArray(system) || !system.length) {
     console.error('Invalid system or root provided:', system);
     return [];
   }

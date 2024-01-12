@@ -9,15 +9,9 @@ import { majorScaleRatios, rootToRatioCalculator } from "./scaleCalculators.js";
  * @returns {number|null} - Calculated frequency or null if invalid calculation.
  */
 export function calculateMajorScaleFrequency(note, diapason, notesInDiapason, rootFrequency) {
-  if (notesInDiapason > 7 || notesInDiapason <= 0) {
-    throw new Error(`Invalid number of notes in a diapason (${notesInDiapason}). The major scale has 7 notes - please provide a number between 1 and 7.`);
-  }
+  let ratios = majorScaleRatios;
 
-  if (notesInDiapason < 7) {
-    ratios.length = notesInDiapason;
-  }
-
-  const frequency = rootToRatioCalculator(note, diapason, rootFrequency, majorScaleRatios);
+  const frequency = rootToRatioCalculator(note, diapason, rootFrequency, ratios);
 
   if (!isFinite(frequency) || isNaN(frequency)) {
     console.error('Invalid frequency value calculated:', frequency);

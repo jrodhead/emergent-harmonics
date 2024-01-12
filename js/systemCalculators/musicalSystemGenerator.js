@@ -32,10 +32,12 @@ export function generateRoot(rootNote, notesInDiapason, diapasonsInSystem, syste
     diapasons: [],
   };
 
+  let ratios = [];
+
   for (let diapason = 0; diapason < diapasonsInSystem; diapason++) {
     let diapasonNotes = [];
     for (let note = 0; note < notesInDiapason; note++) {
-      const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote);
+      const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote, ratios);
       if (frequency !== null) {
         diapasonNotes.push({
           noteName: note,

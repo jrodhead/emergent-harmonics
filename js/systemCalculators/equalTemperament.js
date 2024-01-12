@@ -1,4 +1,5 @@
 import { equalTemperamentCalculator } from "./scaleCalculators.js";
+
 /**
  * Calculate the frequency for a note in an equal-tempered scale.
  * @param {number} note - The note index within the diapason.
@@ -8,13 +9,7 @@ import { equalTemperamentCalculator } from "./scaleCalculators.js";
  * @returns {number|null} - The calculated frequency for the note, or null if invalid inputs.
  */
 export function calculateEqualTemperamentNoteFrequency(note, diapason, notesInDiapason, rootFrequency) {
-  // Check for invalid input values
-  if (notesInDiapason <= 0 || diapason < 0) {
-    console.error('Invalid diapason or notesInDiapason values.');
-    return null;
-  }
 
-  // Calculate the frequency based on the formula
   let frequency = equalTemperamentCalculator(note, diapason, rootFrequency, notesInDiapason);
 
   // Validate the calculated frequency
@@ -24,6 +19,6 @@ export function calculateEqualTemperamentNoteFrequency(note, diapason, notesInDi
   }
 
   // Log and return the calculated frequency
-  console.log('Calculated frequency:', frequency);
+  // console.log('Calculated frequency:', frequency);
   return frequency;
 }
