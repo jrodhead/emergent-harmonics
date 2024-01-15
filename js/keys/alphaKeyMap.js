@@ -15,7 +15,7 @@ export function createAlphaKeyMap(system) {
   }
 
   const keys = 'qwertyuiopasdfghjklzxcvbnm'.split('');
-  let keyMap = [];
+  let alphaKeyMap = [];
 
   const root = system[currentRootIndex];
 
@@ -32,7 +32,7 @@ export function createAlphaKeyMap(system) {
         const note = notes[noteIndex];
         const key = keys[noteIndex % keys.length]; // Cycle through keys
 
-        keyMap.push({
+        alphaKeyMap.push({
           key: key,
           frequency: note.frequency,
           elementId: note.noteName,
@@ -45,15 +45,15 @@ export function createAlphaKeyMap(system) {
     console.error('Invalid diapason index:', currentDiapasonIndex);
   }
 
-  console.log('createAlphaKeyMap result:', keyMap);
-  return keyMap;
+  console.log('createAlphaKeyMap result:', alphaKeyMap);
+  return alphaKeyMap;
 }
 
 /**
  * Renders a table based on the provided key map.
- * @param {Array} keyMap - An array representing the key map to render.
+ * @param {Array} alphaKeyMap - An array representing the key map to render.
  */
-export function renderAlphaKeyMapTable(keyMap) {
+export function renderAlphaKeyMapTable(alphaKeyMap) {
   let gridHTML = `<div class="grid-container">
                     <div class="diapason">
                       <div class="diapason-index" id="diapason${currentDiapasonIndex}">
@@ -66,8 +66,8 @@ export function renderAlphaKeyMapTable(keyMap) {
                         <div class="root-value">R${musicalSystemGlobal[currentRootIndex].rootNote}Hz</div>
                       </div>`;
 
-  for (let note = 0; note < keyMap.length; note++) {
-    const { elementId, key, frequency } = keyMap[note];
+  for (let note = 0; note < alphaKeyMap.length; note++) {
+    const { elementId, key, frequency } = alphaKeyMap[note];
     gridHTML += `<div id="${note}" class="note">
                   <div class="note-name">${elementId}</div>
                   <div class="key-name">${key}</div>
