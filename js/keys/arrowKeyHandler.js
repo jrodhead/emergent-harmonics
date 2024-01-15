@@ -1,6 +1,6 @@
-import { musicalSystemGlobal, keyMapGlobal, updateKeyMapGlobal } from '../main.js';
+import { musicalSystemGlobal, alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
 import { currentRootIndex } from './numericKeyHandler.js';
-import { createKeyMap, renderAlphaKeyMapTable } from "./keyMap.js";
+import { createAlphaKeyMap, renderAlphaKeyMapTable } from "./alphaKeyMap.js";
 
 let currentDiapasonIndex = 0; // Assuming the initial diapason index is 0
 
@@ -44,7 +44,7 @@ const handleDiapasonChange = (direction) => {
   }
 
   // Update key map based on the new diapason
-  const newKeyMap = createKeyMap(musicalSystemGlobal);
-  updateKeyMapGlobal(newKeyMap);
-  renderAlphaKeyMapTable(keyMapGlobal);
+  const newKeyMap = createAlphaKeyMap(musicalSystemGlobal);
+  updateAlphaKeyMapGlobal(newKeyMap);
+  renderAlphaKeyMapTable(alphaKeyMapGlobal);
 };

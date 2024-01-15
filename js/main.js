@@ -1,18 +1,18 @@
 import { generateRootNotes, systemCalculators } from "./systemCalculators/musicalSystemGenerator.js";
 import * as ratioGenerators from "./systemCalculators/ratioGenerators.js";
-import * as keyMapper from "./keys/keyMap.js";
+import * as alphaKeyMapper from "./keys/alphaKeyMap.js";
 
 let musicalSystemGlobal = [];
-let keyMapGlobal = [];
+let alphaKeyMapGlobal = [];
 
-const updateKeyMapGlobal = (newKeyMap) => {
-  keyMapGlobal = newKeyMap;
+const updateAlphaKeyMapGlobal = (newAlphaKeyMap) => {
+  alphaKeyMapGlobal = newAlphaKeyMap;
 };
 
 export {
   musicalSystemGlobal,
-  keyMapGlobal,
-  updateKeyMapGlobal
+  alphaKeyMapGlobal,
+  updateAlphaKeyMapGlobal
 };
 
 // Event listener for systemConfigForm submit
@@ -48,10 +48,10 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
 
     let musicalSystem = systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType);
     musicalSystemGlobal = musicalSystem;
-    const keyMap = keyMapper.createKeyMap(musicalSystemGlobal);
+    const alphaKeyMap = alphaKeyMapper.createAlphaKeyMap(musicalSystemGlobal);
 
     // Render the key map table
-    keyMapGlobal = keyMap;
-    keyMapper.renderAlphaKeyMapTable(keyMapGlobal);
+    alphaKeyMapGlobal = alphaKeyMap;
+    alphaKeyMapper.renderAlphaKeyMapTable(alphaKeyMapGlobal);
   }
 });

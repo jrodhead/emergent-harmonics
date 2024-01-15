@@ -1,5 +1,5 @@
 import { playSound, stopSound } from '../audio/audioHandler.js';
-import { keyMapGlobal } from '../main.js';
+import { alphaKeyMapGlobal } from '../main.js';
 
 /**
  * Handles key events for sound playback and UI changes.
@@ -8,7 +8,7 @@ import { keyMapGlobal } from '../main.js';
  */
 const handleKey = (ev, action) => {
   // Find key data corresponding to the action
-  const keyData = keyMapGlobal.find((item) => item.key === action);
+  const keyData = alphaKeyMapGlobal.find((item) => item.key === action);
   if (!keyData) return;
 
   const { frequency, elementId } = keyData;
@@ -35,17 +35,14 @@ const handleKey = (ev, action) => {
  * Handles keyboard events for key presses and releases.
  * @param {Event} ev - The keyboard event.
  */
-const keyHandler = (ev) => {
+export const keyHandler = (ev) => {
   if (ev.repeat) return;
 
   // Find key data for the pressed key
-  const keyData = keyMapGlobal.find((item) => item.key === ev.key);
+  const keyData = alphaKeyMapGlobal.find((item) => item.key === ev.key);
   if (!keyData) return;
 
   // Handle the key event
   handleKey(ev.type, ev.key);
 };
 
-// Event listeners for keydown and keyup events
-document.body.addEventListener('keydown', keyHandler);
-document.body.addEventListener('keyup', keyHandler);

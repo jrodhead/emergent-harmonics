@@ -1,13 +1,14 @@
 import { musicalSystemGlobal } from '../main.js';
 import { currentRootIndex } from './numericKeyHandler.js';
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
+import { keyHandler } from './alphaKeyHandler.js';
 
 /**
  * Creates a key map for the notes in a diapason, associating notes with keys.
  * @param {Array} diapason - An array of notes in a diapason.
  * @returns {Array} - A key map array associating notes with keys.
  */
-export function createKeyMap(system) {
+export function createAlphaKeyMap(system) {
   if (!Array.isArray(system) || !system.length) {
     console.error('Invalid system or root provided:', system);
     return [];
@@ -44,7 +45,7 @@ export function createKeyMap(system) {
     console.error('Invalid diapason index:', currentDiapasonIndex);
   }
 
-  console.log('createKeyMap result:', keyMap);
+  console.log('createAlphaKeyMap result:', keyMap);
   return keyMap;
 }
 
@@ -76,4 +77,8 @@ export function renderAlphaKeyMapTable(keyMap) {
   gridHTML += '</div></div>';
 
   document.getElementById('alphaKeyTable').innerHTML = gridHTML;
+
+  // Event listeners for keydown and keyup events
+  document.body.addEventListener('keydown', keyHandler);
+  document.body.addEventListener('keyup', keyHandler);
 }
