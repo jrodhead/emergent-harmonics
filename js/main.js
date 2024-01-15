@@ -1,6 +1,7 @@
 import { generateRootNotes, systemCalculators } from "./systemCalculators/musicalSystemGenerator.js";
 import * as ratioGenerators from "./systemCalculators/ratioGenerators.js";
 import * as alphaKeyMapper from "./keys/alphaKeyMap.js";
+import { createNumericKeyMap, renderNumericKeyMapTable } from "./keys/numericKeyMap.js";
 
 let musicalSystemGlobal = [];
 let alphaKeyMapGlobal = [];
@@ -50,8 +51,10 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
     musicalSystemGlobal = musicalSystem;
     const alphaKeyMap = alphaKeyMapper.createAlphaKeyMap(musicalSystemGlobal);
 
-    // Render the key map table
+    // Render the key map tables
     alphaKeyMapGlobal = alphaKeyMap;
     alphaKeyMapper.renderAlphaKeyMapTable(alphaKeyMapGlobal);
+    let numericKeyMap = createNumericKeyMap(musicalSystemGlobal);
+    renderNumericKeyMapTable(numericKeyMap);
   }
 });

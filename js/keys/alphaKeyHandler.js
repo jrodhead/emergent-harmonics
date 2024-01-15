@@ -13,17 +13,17 @@ const handleAlphaKey = (ev, action) => {
 
   const { frequency, elementId } = keyData;
   console.log (`frequency: ${frequency}, elementId: ${elementId}`)
-  const element = document.getElementById(elementId);
+  let activeNote = document.getElementById(`note${elementId}`);
 
   if (ev === 'keydown') {
     // Play sound and apply active class on keydown event
     playSound(frequency, action);
-    element.classList.add('active');
+    activeNote.classList.add('active');
     console.log(`${action}On`);
   } else if (ev === 'keyup') {
     // Stop sound and remove active class on keyup event
     stopSound(action);
-    element.classList.remove('active');
+    activeNote.classList.remove('active');
     console.log(`${action}Off`);
   } else {
     // Log an error if unable to handle the key event

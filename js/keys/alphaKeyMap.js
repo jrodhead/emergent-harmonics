@@ -68,7 +68,7 @@ export function renderAlphaKeyMapTable(alphaKeyMap) {
 
   for (let note = 0; note < alphaKeyMap.length; note++) {
     const { elementId, key, frequency } = alphaKeyMap[note];
-    gridHTML += `<div id="${note}" class="note">
+    gridHTML += `<div id="note${note}" class="note">
                   <div class="note-name">${elementId}</div>
                   <div class="key-name">${key}</div>
                   <div class="note-frequency">${frequency}Hz</div>
