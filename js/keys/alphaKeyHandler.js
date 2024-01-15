@@ -6,7 +6,7 @@ import { alphaKeyMapGlobal } from '../main.js';
  * @param {string} ev - The type of keyboard event ('keydown' or 'keyup').
  * @param {string} action - The key action associated with the event.
  */
-const handleKey = (ev, action) => {
+const handleAlphaKey = (ev, action) => {
   // Find key data corresponding to the action
   const keyData = alphaKeyMapGlobal.find((item) => item.key === action);
   if (!keyData) return;
@@ -35,7 +35,7 @@ const handleKey = (ev, action) => {
  * Handles keyboard events for key presses and releases.
  * @param {Event} ev - The keyboard event.
  */
-export const keyHandler = (ev) => {
+export const alphaKeyHandler = (ev) => {
   if (ev.repeat) return;
 
   // Find key data for the pressed key
@@ -43,6 +43,5 @@ export const keyHandler = (ev) => {
   if (!keyData) return;
 
   // Handle the key event
-  handleKey(ev.type, ev.key);
+  handleAlphaKey(ev.type, ev.key);
 };
-

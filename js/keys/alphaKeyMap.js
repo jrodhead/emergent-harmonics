@@ -1,7 +1,7 @@
 import { musicalSystemGlobal } from '../main.js';
 import { currentRootIndex } from './numericKeyHandler.js';
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
-import { keyHandler } from './alphaKeyHandler.js';
+import { alphaKeyHandler } from './alphaKeyHandler.js';
 
 /**
  * Creates a key map for the notes in a diapason, associating notes with keys.
@@ -79,6 +79,6 @@ export function renderAlphaKeyMapTable(alphaKeyMap) {
   document.getElementById('alphaKeyTable').innerHTML = gridHTML;
 
   // Event listeners for keydown and keyup events
-  document.body.addEventListener('keydown', keyHandler);
-  document.body.addEventListener('keyup', keyHandler);
+  document.body.addEventListener('keydown', alphaKeyHandler);
+  document.body.addEventListener('keyup', alphaKeyHandler);
 }
