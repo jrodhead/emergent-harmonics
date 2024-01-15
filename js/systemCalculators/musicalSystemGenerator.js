@@ -3,52 +3,58 @@
  * @param {number} diapasonsInSystem - The number of diapasons in the system.
  * @param {number} notesInDiapason - The number of notes in each diapason.
  * @param {number} rootNote - The root note for frequency calculation.
- * @param {function} systemCalculator - The calculator function used for frequency calculation.
  * @returns {Array} - A two-dimensional array representing the generated musical system.
  */
+export function generateRootNotes(primaryRootFrequency, ratios, calculatorType) {
+  let rootNotes = [];
 
-export function createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator) {
-  let system = [];
-
-  // Primary root - create diapasons and notes based on the primary root note
-  let primaryRoot = generateRoot(rootNote, notesInDiapason, diapasonsInSystem, systemCalculator);
-  system.push(primaryRoot);
-
-  // Generate new roots from notes in the first diapason of the primary root
-  const firstDiapasonNotes = primaryRoot.diapasons[0].notes;
-  for (let i = 1; i < firstDiapasonNotes.length; i++) {
-    let newRootNote = firstDiapasonNotes[i].frequency;
-    let newRoot = generateRoot(newRootNote, notesInDiapason, diapasonsInSystem, systemCalculator);
-    system.push(newRoot);
+  if (calculatorType === 'majorScale' || calculatorType === 'minorScale') {
+    for (let ratio of ratios) {
+      rootNotes.push(primaryRootFrequency * ratio);
+    }
+  } else if (calculatorType === 'equalTemperament' || calculatorType === 'HD110067') {
+    rootNotes.push(primaryRootFrequency);
+  } else {
+    console.log("Please select a System Calculator.");
   }
 
-  console.log('createSystem result: ', system);
-  return system;
+  console.log('rootNotes: ', rootNotes);
+  return rootNotes;
 }
 
-export function generateRoot(rootNote, notesInDiapason, diapasonsInSystem, systemCalculator) {
-  let root = {
-    rootNote: rootNote,
-    diapasons: [],
-  };
+export function systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType) {
+  let musicalSystem = [];
 
-  let ratios = [];
+  for (let rootNote of rootNotes) {
+    let diapasons = [];
+    for (let diapason = 0; diapason < numberOfDiapasons; diapason++) {
+      let notes = [];
 
-  for (let diapason = 0; diapason < diapasonsInSystem; diapason++) {
-    let diapasonNotes = [];
-    for (let note = 0; note < notesInDiapason; note++) {
-      const frequency = systemCalculator(note, diapason, notesInDiapason, rootNote, ratios);
-      if (frequency !== null) {
-        diapasonNotes.push({
-          noteName: note,
-          frequency: frequency,
-        });
+      if (calculatorType === 'majorScale' || calculatorType === 'minorScale') {
+        for (let noteName = 0; noteName < ratios.length; noteName++) {
+          let frequency = rootNote * ratios[noteName] * Math.pow(2, diapason);
+          notes.push({ noteName, frequency });
+        }
+      } else if (calculatorType === 'equalTemperament') {
+        const notePower = Math.pow(2, 1 / ratios.length);
+        for (let noteName = 0; noteName < ratios.length; noteName++) {
+          let frequency = rootNote * Math.pow(notePower, noteName) * Math.pow(2, diapason);
+          notes.push({ noteName, frequency });
+        }
+      } else if (calculatorType === 'HD110067') {
+        let frequency = rootNote;
+        for (let noteName = 0; noteName < ratios.length; noteName++) {
+          frequency *= ratios[noteName % ratios.length] * Math.pow(2, diapason);
+          notes.push({ noteName, frequency });
+        }
       } else {
-        console.error('Unable to calculate frequency');
+        console.log("Please select a System Calculator.");
       }
+      diapasons.push({ notes });
     }
-    root.diapasons.push({ notes: diapasonNotes });
+    musicalSystem.push({ rootNote, diapasons });
   }
 
-  return root;
+  console.log('musicalSystem: ', musicalSystem);
+  return musicalSystem;
 }

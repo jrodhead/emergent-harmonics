@@ -1,9 +1,6 @@
-import { createSystem } from "./systemCalculators/musicalSystemGenerator.js";
-import { createKeyMap, renderAlphaKeyMapTable } from "./keys/keyMap.js";
-import { calculateMajorScaleFrequency } from "./systemCalculators/majorScale.js";
-import { calculateMinorScaleFrequency } from "./systemCalculators/minorScale.js";
-import { calculateEqualTemperamentNoteFrequency } from "./systemCalculators/equalTemperament.js";
-import { calculateHD110067Frequency } from "./systemCalculators/HD110067.js";
+import { generateRootNotes, systemCalculators } from "./systemCalculators/musicalSystemGenerator.js";
+import * as ratioGenerators from "./systemCalculators/ratioGenerators.js";
+import * as keyMapper from "./keys/keyMap.js";
 
 let musicalSystemGlobal = [];
 let keyMapGlobal = [];
@@ -23,38 +20,38 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
   event.preventDefault();
 
   // Extracting values from the form
-  const diapasonsInSystem = parseInt(document.getElementById('diapasons').value);
-  const notesInDiapason = parseInt(document.getElementById('notes').value);
-  const rootNote = parseInt(document.getElementById('rootNote').value);
-  const selectedCalculator = document.getElementById('calculator').value;
+  let primaryRootFrequency = parseInt(document.getElementById('primaryRootFrequency').value);
+  let notesInDiapason = parseInt(document.getElementById('notes').value);
+  let numberOfDiapasons = parseInt(document.getElementById('diapasons').value);
+  let calculatorType = document.getElementById('calculator').value;
 
   // Input validation
-  if (isNaN(diapasonsInSystem) || isNaN(notesInDiapason) || isNaN(rootNote)) {
+  if (isNaN(numberOfDiapasons) || isNaN(notesInDiapason) || isNaN(primaryRootFrequency)) {
     alert("Please enter valid numbers for diapasons, notes, and root note.");
     return;
   } else {
-    let systemCalculator;
-    
-    if (selectedCalculator === 'equalTemperament') {
-      systemCalculator = calculateEqualTemperamentNoteFrequency;
-    } else if (selectedCalculator === 'majorScale') {
-      systemCalculator = calculateMajorScaleFrequency;
-    } else if (selectedCalculator === 'minorScale') {
-      systemCalculator = calculateMinorScaleFrequency;
-    } else if (selectedCalculator === 'HD110067') {
-      systemCalculator = calculateHD110067Frequency;
+    let ratios = [];
+    if (calculatorType === 'majorScale') {
+      ratios = ratioGenerators.majorScaleRatios;
+    } else if (calculatorType === 'minorScale') {
+      ratios = ratioGenerators.minorScaleRatios;
+    } else if (calculatorType === 'equalTemperament') {
+      ratios = ratioGenerators.equalTemperamentRatioGenerator(notesInDiapason);
+    } else if (calculatorType === 'HD110067') {
+      ratios = ratioGenerators.hd110067Ratios;
     } else {
       alert("Please select a System Calculator.");
       return;
     }
 
-    // Generate the musical system and key map
-    const musicalSystem = createSystem(diapasonsInSystem, notesInDiapason, rootNote, systemCalculator);
-    musicalSystemGlobal = musicalSystem; //update global variable
-    const keyMap = createKeyMap(musicalSystemGlobal);
+    let rootNotes = generateRootNotes(primaryRootFrequency, ratios, calculatorType);
+
+    let musicalSystem = systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType);
+    musicalSystemGlobal = musicalSystem;
+    const keyMap = keyMapper.createKeyMap(musicalSystemGlobal);
 
     // Render the key map table
     keyMapGlobal = keyMap;
-    renderAlphaKeyMapTable(keyMapGlobal);
+    keyMapper.renderAlphaKeyMapTable(keyMapGlobal);
   }
 });
