@@ -8,14 +8,12 @@
 export function generateRootNotes(primaryRootFrequency, ratios, calculatorType) {
   let rootNotes = [];
 
-  if (calculatorType === 'majorScale' || calculatorType === 'minorScale') {
+  if (calculatorType === null) {
+    console.log("Please select a System Calculator.");
+  } else {
     for (let ratio of ratios) {
       rootNotes.push(primaryRootFrequency * ratio);
     }
-  } else if (calculatorType === 'equalTemperament' || calculatorType === 'HD110067') {
-    rootNotes.push(primaryRootFrequency);
-  } else {
-    console.log("Please select a System Calculator.");
   }
 
   console.log('rootNotes: ', rootNotes);
@@ -30,7 +28,7 @@ export function systemCalculators(rootNotes, ratios, numberOfDiapasons, calculat
     for (let diapason = 0; diapason < numberOfDiapasons; diapason++) {
       let notes = [];
 
-      if (calculatorType === 'majorScale' || calculatorType === 'minorScale') {
+      if (calculatorType === 'majorScale' || calculatorType === 'minorScale' || calculatorType === 'HD110067') {
         for (let noteName = 0; noteName < ratios.length; noteName++) {
           let frequency = rootNote * ratios[noteName] * Math.pow(2, diapason);
           notes.push({ noteName, frequency });
@@ -41,12 +39,12 @@ export function systemCalculators(rootNotes, ratios, numberOfDiapasons, calculat
           let frequency = rootNote * Math.pow(notePower, noteName) * Math.pow(2, diapason);
           notes.push({ noteName, frequency });
         }
-      } else if (calculatorType === 'HD110067') {
-        let frequency = rootNote;
-        for (let noteName = 0; noteName < ratios.length; noteName++) {
-          frequency *= ratios[noteName % ratios.length] * Math.pow(2, diapason);
-          notes.push({ noteName, frequency });
-        }
+      // } else if (calculatorType === 'HD110067') {
+      //   let frequency = rootNote;
+      //   for (let noteName = 0; noteName < ratios.length; noteName++) {
+      //     frequency *= ratios[noteName % ratios.length] * Math.pow(2, diapason);
+      //     notes.push({ noteName, frequency });
+      //   }
       } else {
         console.log("Please select a System Calculator.");
       }

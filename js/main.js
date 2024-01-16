@@ -16,8 +16,17 @@ export {
   updateAlphaKeyMapGlobal
 };
 
-// Event listener for systemConfigForm submit
-document.getElementById('systemConfigForm').addEventListener('submit', function(event) {
+document.getElementById('menu-icon').addEventListener('click', function() {
+  var systemConfig = document.getElementById('system-config');
+  if (systemConfig.style.display === 'none') {
+    systemConfig.style.display = 'grid'; // or 'block', depending on your needs
+  } else {
+    systemConfig.style.display = 'none';
+  }
+});
+
+// Event listener for system-config submit
+document.getElementById('system-config').addEventListener('submit', function(event) {
   event.preventDefault();
 
   // Extracting values from the form
@@ -39,7 +48,7 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
     } else if (calculatorType === 'equalTemperament') {
       ratios = ratioGenerators.equalTemperamentRatioGenerator(notesInDiapason);
     } else if (calculatorType === 'HD110067') {
-      ratios = ratioGenerators.hd110067Ratios;
+      ratios = ratioGenerators.hd110067RatiosInOneDiapason;
     } else {
       alert("Please select a System Calculator.");
       return;
@@ -56,5 +65,8 @@ document.getElementById('systemConfigForm').addEventListener('submit', function(
     alphaKeyMapper.renderAlphaKeyMapTable(alphaKeyMapGlobal);
     let numericKeyMap = createNumericKeyMap(musicalSystemGlobal);
     renderNumericKeyMapTable(numericKeyMap);
+
+    var systemConfig = document.getElementById('system-config');
+    systemConfig.style.display = 'none';
   }
 });

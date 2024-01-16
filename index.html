@@ -7,25 +7,14 @@
 </head>
 <body>
 
-  <h1>Musical System Generator</h1>
+  <header>
+    <h1>Musical System Generator</h1>
+    <div id="menu-icon">&#9776;</div>
+  </header>
 
-  <div id="mainGrid">
-
-    <form id="systemConfigForm">
-
-      <div class="formGroup">
-        <label for="primaryRootFrequency">Root Note Frequency:</label>
-        <input type="number" id="primaryRootFrequency" min="1" max="15000" value="54" required>
-      </div>
-      <div class="formGroup">
-        <label for="notes">Number of Notes in Diapason:</label>
-        <input type="number" id="notes" min="1" max="26" value="7" required>
-      </div>
-      <div class="formGroup">
-        <label for="diapasons">Number of Diapasons:</label>
-        <input type="number" id="diapasons" min="1" max="20" value="5" required>
-      </div>
-      <div class="formGroup">
+  <div id="main-grid">
+    <form id="system-config">
+      <div class="form-group">
         <label for="calculator">System Calculator:</label>
         <select id="calculator">
           <option value="majorScale" selected>Major Scale - Pythagorean</option>
@@ -33,6 +22,18 @@
           <option value="equalTemperament">Equal Temperament</option>
           <option value="HD110067">Planetary System HD 110067</option>
         </select>
+      </div>
+      <div class="form-group">
+        <label for="primaryRootFrequency">Root Note Frequency:</label>
+        <input type="number" id="primaryRootFrequency" min="1" max="15000" value="54" required>
+      </div>
+      <div class="form-group">
+        <label for="notes">Number of Notes in Diapason:</label>
+        <input type="number" id="notes" min="1" max="26" value="7" required>
+      </div>
+      <div class="form-group">
+        <label for="diapasons">Number of Diapasons:</label>
+        <input type="number" id="diapasons" min="1" max="20" value="5" required>
       </div>
 
       <input type="submit" value="Generate System">

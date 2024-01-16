@@ -3,16 +3,33 @@ body {
   font-size: 16px;
 }
 
-#mainGrid {
+header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: .5rem 0 2rem 0;
+}
+
+header h1 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+header #menu-icon {
+  font-size: 2rem;
+  text-align: right;
+}
+
+#main-grid {
   display: grid;
 }
 
-#systemConfigForm {
+#system-config {
   display: grid;
   grid-column: 1;
 }
 
-.formGroup {
+.form-group {
   display: grid;
   gap: 10px;
 }

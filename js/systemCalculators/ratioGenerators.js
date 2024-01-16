@@ -30,6 +30,16 @@ export const hd110067Ratios = [
   4 / 3
 ];
 
+export const hd110067RatiosInOneDiapason = [
+  1,
+  1.5,
+  1.125,
+  1.6875,
+  1.125 * 2,
+  1.5 * 2,
+  1 * 2,
+];
+
 export function equalTemperamentRatioGenerator(notesInDiapason) {
   const notePower = Math.pow(2, 1 / notesInDiapason);
   let ratios = [];

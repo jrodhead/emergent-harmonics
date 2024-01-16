@@ -2,7 +2,7 @@ export const createNumericKeyMap = (musicalSystem) => {
   let numericKeyMap = {};
 
   musicalSystem.forEach((system, index) => {
-    numericKeyMap[index] = system.rootNote; // assuming index starts from 1
+    numericKeyMap[index] = system.rootNote;
   });
 
   return numericKeyMap;
