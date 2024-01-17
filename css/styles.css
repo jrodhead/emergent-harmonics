@@ -1,6 +1,9 @@
 body {
   font-family: math;
   font-size: 16px;
+  display: grid;
+  grid-template-columns: [first] 21% [line2] 1fr;
+  gap: 1rem;
 }
 
 header {
@@ -10,18 +13,30 @@ header {
   padding: .5rem 0 2rem 0;
 }
 
+#sidebar {
+  display: flex;
+  flex-direction: column;
+}
+
 header h1 {
   font-size: 2rem;
   margin: 0;
 }
 
-header #menu-icon {
-  font-size: 2rem;
-  text-align: right;
+#sidebar a {
+  font-size: 1.5rem;
+  text-decoration: none;
+  padding: .5rem .5rem .5rem 0;
+  border-radius: .5rem;
+  margin-bottom: .5rem;
+  color: #000;
 }
 
-#main-grid {
-  display: grid;
+#menu-icon {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: right;
+  justify-self: end;
 }
 
 #system-config {
@@ -73,7 +88,7 @@ button#play {
   border-radius: 1rem;
 }
 
-.diapason-index,
+#current-diapason-data,
 .note,
 .root-selector {
   background: #fff;
@@ -85,13 +100,13 @@ button#play {
   align-items: center;
 }
 
-.diapason-index {
+#current-diapason-data {
   background-color: transparent;
   border-color: transparent;
   color: #fff;
 }
 
-.current-diapason-index,
+#current-diapason-index,
 .key-name {
   font-size: 5rem;
   font-weight: bold;

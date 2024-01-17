@@ -56,14 +56,14 @@ export function createAlphaKeyMap(system) {
 export function renderAlphaKeyMapTable(alphaKeyMap) {
   let gridHTML = `<div class="grid-container">
                     <div class="diapason">
-                      <div class="diapason-index" id="diapason${currentDiapasonIndex}">
-                        <div class="current-root-index" id="root${currentRootIndex}">
-                          R${currentRootIndex}
+                      <div id="current-diapason-data">
+                        <div id="current-root-index">
+                          Root${currentRootIndex}
                         </div>
-                        <div class="current-diapason-index">
+                        <div id="current-diapason-index">
                           D${currentDiapasonIndex}
                         </div>
-                        <div class="root-value">R${musicalSystemGlobal[currentRootIndex].rootNote}Hz</div>
+                        <div id="current-root-index">R${musicalSystemGlobal[currentRootIndex].rootNote}Hz</div>
                       </div>`;
 
   for (let note = 0; note < alphaKeyMap.length; note++) {
