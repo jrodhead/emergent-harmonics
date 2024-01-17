@@ -19,7 +19,7 @@ export {
 document.getElementById('menu-icon').addEventListener('click', function() {
   var systemConfig = document.getElementById('system-config');
   if (systemConfig.style.display === 'none') {
-    systemConfig.style.display = 'grid'; // or 'block', depending on your needs
+    systemConfig.style.display = 'grid';
   } else {
     systemConfig.style.display = 'none';
   }

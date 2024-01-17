@@ -6,18 +6,18 @@ export { currentRootIndex };
 
 const handleNumericKey = (ev, rootIndex) => {
   if (ev === 'keydown') {
+    console.log(`${rootIndex}On`);
     if (rootIndex >= 0 && rootIndex < musicalSystemGlobal.length) {
-      console.log(`${rootIndex}On`);
+      currentRootIndex = rootIndex;
+      // Calculate and generate the musical system for the selected root
+      let newKeyMap = createAlphaKeyMap(musicalSystemGlobal);
+      updateAlphaKeyMapGlobal(newKeyMap);
+      renderAlphaKeyMapTable(alphaKeyMapGlobal);
     } else {
       console.error('Invalid root index:', rootIndex);
     }
   } else if (ev === 'keyup') {
     console.log(`${rootIndex}Off`);
-    currentRootIndex = rootIndex;
-      // Calculate and generate the musical system for the selected root
-    let newKeyMap = createAlphaKeyMap(musicalSystemGlobal);
-    updateAlphaKeyMapGlobal(newKeyMap);
-    renderAlphaKeyMapTable(alphaKeyMapGlobal);
   }
 };
 
