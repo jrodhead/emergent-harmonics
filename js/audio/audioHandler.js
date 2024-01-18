@@ -2,9 +2,10 @@ let audioContext = null;
 const activeOscillators = {}; // Object to store active oscillators by key
 
 /**
- * Plays a sound with a given frequency and associates it with a key.
- * @param {number} frequency - The frequency of the sound.
- * @param {string} key - The key to associate with the sound.
+ * Plays a sound with the specified frequency.
+ *
+ * @param {number} frequency - The frequency of the sound to be played.
+ * @param {string} key - The key used to store the active oscillator.
  */
 export function playSound(frequency, key) {
   if (!audioContext) {

@@ -1,6 +1,11 @@
-import { musicalSystemGlobal, alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
+import { musicalSystemGlobal } from '../main.js';
 import { createAlphaKeyMap } from "./alphaKeyMap.js";
 
+/**
+ * Handles the numeric key event.
+ * @param {string} ev - The event type ('keydown' or 'keyup').
+ * @param {number} rootIndex - The root index.
+*/
 let currentRootIndex = 0;
 export { currentRootIndex };
 
@@ -9,7 +14,6 @@ const handleNumericKey = (ev, rootIndex) => {
     console.log(`${rootIndex}On`);
     if (rootIndex >= 0 && rootIndex < musicalSystemGlobal.length) {
       currentRootIndex = rootIndex;
-      // Calculate and generate the musical system for the selected root
       createAlphaKeyMap(musicalSystemGlobal);
     } else {
       console.error('Invalid root index:', rootIndex);
@@ -19,7 +23,6 @@ const handleNumericKey = (ev, rootIndex) => {
   }
 };
 
-// Listen for numerical keys
 document.body.addEventListener('keydown', (ev) => {
   const numericKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
   const keyIndex = numericKeys.indexOf(ev.key);
@@ -41,7 +44,6 @@ document.body.addEventListener('keyup', (ev) => {
   if (keyIndex !== -1) {
     handleNumericKey('keyup', keyIndex);
 
-    // Remove 'active' class from all other elements with the same class
     const activeElements = document.querySelectorAll('.active');
     activeElements.forEach(element => {
       element.classList.remove('active');

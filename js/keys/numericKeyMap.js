@@ -1,3 +1,7 @@
+/**
+ * Creates a numeric key map based on the provided musical system.
+ * @param {Array} musicalSystem - The musical system to create the numeric key map from.
+ */
 export const createNumericKeyMap = (musicalSystem) => {
   let numericKeyMap = {};
 
