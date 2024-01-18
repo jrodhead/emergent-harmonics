@@ -1,5 +1,5 @@
 import { musicalSystemGlobal, alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
-import { createAlphaKeyMap, renderAlphaKeyMapTable } from "./alphaKeyMap.js";
+import { createAlphaKeyMap } from "./alphaKeyMap.js";
 
 let currentRootIndex = 0;
 export { currentRootIndex };
@@ -10,9 +10,7 @@ const handleNumericKey = (ev, rootIndex) => {
     if (rootIndex >= 0 && rootIndex < musicalSystemGlobal.length) {
       currentRootIndex = rootIndex;
       // Calculate and generate the musical system for the selected root
-      let newKeyMap = createAlphaKeyMap(musicalSystemGlobal);
-      updateAlphaKeyMapGlobal(newKeyMap);
-      renderAlphaKeyMapTable(alphaKeyMapGlobal);
+      createAlphaKeyMap(musicalSystemGlobal);
     } else {
       console.error('Invalid root index:', rootIndex);
     }

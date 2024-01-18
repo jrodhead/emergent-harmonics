@@ -1,7 +1,7 @@
 import { generateRootNotes, systemCalculators } from "./systemCalculators/musicalSystemGenerator.js";
 import * as ratioGenerators from "./systemCalculators/ratioGenerators.js";
-import * as alphaKeyMapper from "./keys/alphaKeyMap.js";
-import { createNumericKeyMap, renderNumericKeyMapTable } from "./keys/numericKeyMap.js";
+import { createAlphaKeyMap } from "./keys/alphaKeyMap.js";
+import { createNumericKeyMap } from "./keys/numericKeyMap.js";
 
 let musicalSystemGlobal = [];
 let alphaKeyMapGlobal = [];
@@ -81,13 +81,9 @@ document.getElementById('system-config').addEventListener('submit', function(eve
 
     let musicalSystem = systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType);
     musicalSystemGlobal = musicalSystem;
-    const alphaKeyMap = alphaKeyMapper.createAlphaKeyMap(musicalSystemGlobal);
 
-    // Render the key map tables
-    alphaKeyMapGlobal = alphaKeyMap;
-    alphaKeyMapper.renderAlphaKeyMapTable(alphaKeyMapGlobal);
-    let numericKeyMap = createNumericKeyMap(musicalSystemGlobal);
-    renderNumericKeyMapTable(numericKeyMap);
+    createAlphaKeyMap(musicalSystemGlobal);
+    createNumericKeyMap(musicalSystemGlobal);
 
     keysUI.style.display = 'grid';
     systemConfigUI.style.display = 'none';
