@@ -20,12 +20,12 @@ export function generateRootNotes(primaryRootFrequency, ratios, calculatorType) 
   return rootNotes;
 }
 
-export function systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType) {
+export function systemCalculators(rootNotes, ratios, calculatorType) {
   let musicalSystem = [];
 
   for (let rootNote of rootNotes) {
     let diapasons = [];
-    for (let diapason = 0; diapason < numberOfDiapasons; diapason++) {
+    for (let diapason = 0; diapason < 10; diapason++) {
       let notes = [];
 
       if (calculatorType === 'majorScale' || calculatorType === 'minorScale' || calculatorType === 'HD110067') {

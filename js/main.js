@@ -55,12 +55,11 @@ document.getElementById('system-config').addEventListener('submit', function(eve
   // Extracting values from the form
   let primaryRootFrequency = parseInt(document.getElementById('primaryRootFrequency').value);
   let notesInDiapason = parseInt(document.getElementById('notes').value);
-  let numberOfDiapasons = parseInt(document.getElementById('diapasons').value);
   let calculatorType = document.getElementById('calculator').value;
 
   // Input validation
-  if (isNaN(numberOfDiapasons) || isNaN(notesInDiapason) || isNaN(primaryRootFrequency)) {
-    alert("Please enter valid numbers for diapasons, notes, and root note.");
+  if (isNaN(notesInDiapason) || isNaN(primaryRootFrequency)) {
+    alert("Please enter valid numbers for Root Note Frequency and Number of Notes in Diapason");
     return;
   } else {
     let ratios = [];
@@ -79,7 +78,7 @@ document.getElementById('system-config').addEventListener('submit', function(eve
 
     let rootNotes = generateRootNotes(primaryRootFrequency, ratios, calculatorType);
 
-    let musicalSystem = systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType);
+    let musicalSystem = systemCalculators(rootNotes, ratios, calculatorType);
     musicalSystemGlobal = musicalSystem;
 
     createAlphaKeyMap(musicalSystemGlobal);

@@ -28,7 +28,6 @@ describe('systemCalculators', () => {
   it('should generate a musical system based on provided parameters', () => {
     const rootNotes = [440, 880, 1320];
     const ratios = [1, 2, 3];
-    const numberOfDiapasons = 2;
     const calculatorType = 'majorScale';
 
     const expectedMusicalSystem = [
@@ -91,7 +90,7 @@ describe('systemCalculators', () => {
       }
     ];
 
-    const actualMusicalSystem = systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType);
+    const actualMusicalSystem = systemCalculators(rootNotes, ratios, calculatorType);
 
     expect(actualMusicalSystem).toEqual(expectedMusicalSystem);
   });
@@ -99,11 +98,10 @@ describe('systemCalculators', () => {
   it('should return an empty array if calculatorType is not supported', () => {
     const rootNotes = [440, 880, 1320];
     const ratios = [1, 2, 3];
-    const numberOfDiapasons = 2;
     const calculatorType = 'unsupportedCalculator';
 
     const expectedMusicalSystem = [];
-    const actualMusicalSystem = systemCalculators(rootNotes, ratios, numberOfDiapasons, calculatorType);
+    const actualMusicalSystem = systemCalculators(rootNotes, ratios, calculatorType);
 
     expect(actualMusicalSystem).toEqual(expectedMusicalSystem);
   });

@@ -22,12 +22,15 @@ const updateCurrentDiapasonIndex = (direction) => {
   if (direction === 'next') {
     currentDiapasonIndex++;
   } else if (direction === 'previous') {
+    if (currentDiapasonIndex === 0) {
+      return; // Do not decrement if currentDiapasonIndex is already 0
+    }
     currentDiapasonIndex--;
   }
 
   // Ensure the diapason index stays within valid bounds
-  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= musicalSystemGlobal.length) {
-    currentDiapasonIndex = Math.max(0, Math.min(musicalSystemGlobal.length - 1, currentDiapasonIndex));
+  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= musicalSystemGlobal[currentRootIndex].diapasons.length) {
+    currentDiapasonIndex = Math.max(0, Math.min(musicalSystemGlobal[currentRootIndex].diapasons.length - 1, currentDiapasonIndex));
     return;
   }
 };
