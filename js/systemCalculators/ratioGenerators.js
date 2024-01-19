@@ -2,7 +2,7 @@
  * Generates the ratios for a major scale.
  * @type {number[]}
  */
-export const majorScaleRatios = [
+const majorScaleRatios = [
    1,     // Tonic
    9 / 8, // Tonic to Supertonic (2nd degree)
    5 / 4, // Tonic to Mediant (3rd degree)
@@ -16,7 +16,7 @@ export const majorScaleRatios = [
  * Generates the ratios for a minor scale.
  * @type {number[]}
  */
-export const minorScaleRatios = [
+const minorScaleRatios = [
    1,      // root
   16 / 15, // minorSecond
    6 / 5,  // minorThird
@@ -26,11 +26,29 @@ export const minorScaleRatios = [
    9 / 5   // minorSeventh
 ];
 
+
+const pentatonicScaleRatios = [
+  1,
+  9 / 8,
+  5 / 4,
+  3 / 2,
+  5 / 3
+];
+
+const bluesScaleRatios = [
+  1,
+  6/5,
+  4/3,
+  7/5,
+  3/2,
+  7/4
+];
+
 /**
  * Generates the ratios for the HD110067 system.
  * @type {number[]}
  */
-export const hd110067Ratios = [
+const hd110067Ratios = [
   1,
   3 / 2,
   3 / 2,
@@ -44,7 +62,7 @@ export const hd110067Ratios = [
  * Generates the ratios for the HD110067 system in one diapason.
  * @type {number[]}
  */
-export const hd110067RatiosInOneDiapason = [
+const hd110067RatiosInOneDiapason = [
   1,
   1.5,
   1.125,
@@ -59,7 +77,7 @@ export const hd110067RatiosInOneDiapason = [
  * @param {number} notesInDiapason - The number of notes in a diapason.
  * @returns {number[]} The generated ratios.
  */
-export function equalTemperamentRatioGenerator(notesInDiapason) {
+function equalTemperamentRatioGenerator(notesInDiapason) {
   const notePower = Math.pow(2, 1 / notesInDiapason);
   let ratios = [];
   for (let note = 0; note < notesInDiapason; note++) {
@@ -67,3 +85,31 @@ export function equalTemperamentRatioGenerator(notesInDiapason) {
   }
   return ratios;
 }
+
+export function getRatiosForSystem(system) {
+  if (system === 'majorScaleRatios') {
+    return majorScaleRatios;
+  } else if (system === 'minorScaleRatios') {
+    return minorScaleRatios;
+  } else if (system === 'pentatonicScaleRatios') {
+    return pentatonicScaleRatios;
+  } else if (system === 'bluesScaleRatios') {
+    return bluesScaleRatios;
+  } else if (system === 'equalTemperamentRatios') {
+    return equalTemperamentRatioGenerator(notesInDiapason);
+  } else if (system === 'HD110067Ratios') {
+    return hd110067RatiosInOneDiapason;
+  } else {
+    throw new Error('Invalid System Calculator');
+  }
+};
+
+export const ratioGenerators = {
+  majorScaleRatios,
+  minorScaleRatios,
+  pentatonicScaleRatios,
+  bluesScaleRatios,
+  hd110067Ratios,
+  // hd110067RatiosInOneDiapason,
+  equalTemperamentRatioGenerator
+};

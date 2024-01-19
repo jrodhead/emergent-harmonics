@@ -28,6 +28,21 @@ export {
 var systemConfigUI = document.getElementById('system-config');
 var keysUI = document.getElementById('keys');
 
+const calculatorSelect = document.getElementById('calculator');
+
+// Iterate over the ratioGenerators object
+for (const system in ratioGenerators.ratioGenerators) {
+  // Create an option element
+  const option = document.createElement('option');
+  // Set the value of the option to the system name
+  option.value = system;
+  // Set the text content of the option to the system name
+  option.textContent = system;
+  // Append the option to the select element
+  calculatorSelect.appendChild(option);
+}
+
+
 document.getElementById('display-settings').addEventListener('click', function() {
   if (systemConfigUI.style.display === 'none') {
     systemConfigUI.style.display = 'grid';
@@ -62,19 +77,7 @@ document.getElementById('system-config').addEventListener('submit', function(eve
     alert("Please enter valid numbers for Root Note Frequency and Number of Notes in Diapason");
     return;
   } else {
-    let ratios = [];
-    if (calculatorType === 'majorScale') {
-      ratios = ratioGenerators.majorScaleRatios;
-    } else if (calculatorType === 'minorScale') {
-      ratios = ratioGenerators.minorScaleRatios;
-    } else if (calculatorType === 'equalTemperament') {
-      ratios = ratioGenerators.equalTemperamentRatioGenerator(notesInDiapason);
-    } else if (calculatorType === 'HD110067') {
-      ratios = ratioGenerators.hd110067RatiosInOneDiapason;
-    } else {
-      alert("Please select a System Calculator.");
-      return;
-    }
+    let ratios = ratioGenerators.getRatiosForSystem(calculatorType);
 
     let rootNotes = generateRootNotes(primaryRootFrequency, ratios, calculatorType);
 

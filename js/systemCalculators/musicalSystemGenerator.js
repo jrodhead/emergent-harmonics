@@ -28,12 +28,7 @@ export function systemCalculators(rootNotes, ratios, calculatorType) {
     for (let diapason = 0; diapason < 10; diapason++) {
       let notes = [];
 
-      if (calculatorType === 'majorScale' || calculatorType === 'minorScale' || calculatorType === 'HD110067') {
-        for (let noteName = 0; noteName < ratios.length; noteName++) {
-          let frequency = rootNote * ratios[noteName] * Math.pow(2, diapason);
-          notes.push({ noteName, frequency });
-        }
-      } else if (calculatorType === 'equalTemperament') {
+      if (calculatorType === 'equalTemperamentRatios') {
         const notePower = Math.pow(2, 1 / ratios.length);
         for (let noteName = 0; noteName < ratios.length; noteName++) {
           let frequency = rootNote * Math.pow(notePower, noteName) * Math.pow(2, diapason);
@@ -46,8 +41,12 @@ export function systemCalculators(rootNotes, ratios, calculatorType) {
       //     notes.push({ noteName, frequency });
       //   }
       } else {
-        console.log("Please select a System Calculator.");
+        for (let noteName = 0; noteName < ratios.length; noteName++) {
+          let frequency = rootNote * ratios[noteName] * Math.pow(2, diapason);
+          notes.push({ noteName, frequency });
+        }
       }
+
       diapasons.push({ notes });
     }
     musicalSystem.push({ rootNote, diapasons });
