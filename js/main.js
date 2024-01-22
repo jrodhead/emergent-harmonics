@@ -1,5 +1,5 @@
 import { generateRootNotes, systemCalculators } from "./systemCalculators/musicalSystemGenerator.js";
-import * as ratioGenerators from "./systemCalculators/ratioGenerators.js";
+import * as noteGenerators from "./systemCalculators/noteGenerators.js";
 import { createAlphaKeyMap } from "./keys/alphaKeyMap.js";
 import { createNumericKeyMap } from "./keys/numericKeyMap.js";
 
@@ -30,8 +30,8 @@ var keysUI = document.getElementById('keys');
 
 const calculatorSelect = document.getElementById('calculator');
 
-// Iterate over the ratioGenerators object
-for (const system in ratioGenerators.ratioGenerators) {
+// Iterate over the noteGenerators object
+for (const system in noteGenerators.noteGenerators) {
   // Create an option element
   const option = document.createElement('option');
   // Set the value of the option to the system name
@@ -77,11 +77,11 @@ document.getElementById('system-config').addEventListener('submit', function(eve
     alert("Please enter valid numbers for Root Note Frequency and Number of Notes in Diapason");
     return;
   } else {
-    let ratios = ratioGenerators.getRatiosForSystem(calculatorType);
+    let generatedNotes = noteGenerators.getNotesForSystem(calculatorType);
 
-    let rootNotes = generateRootNotes(primaryRootFrequency, ratios, calculatorType);
+    let rootNotes = generateRootNotes(primaryRootFrequency, generatedNotes, calculatorType);
 
-    let musicalSystem = systemCalculators(rootNotes, ratios, calculatorType);
+    let musicalSystem = systemCalculators(rootNotes, generatedNotes, calculatorType);
     musicalSystemGlobal = musicalSystem;
 
     createAlphaKeyMap(musicalSystemGlobal);

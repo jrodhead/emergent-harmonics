@@ -4,7 +4,7 @@ import {
   hd110067Ratios,
   hd110067RatiosInOneDiapason,
   equalTemperamentRatioGenerator
-} from '../../js/systemCalculators/ratioGenerators.js';
+} from '../../js/systemCalculators/noteGenerators.js';
 
 describe('ratioGenerators', () => {
   describe('majorScaleRatios', () => {

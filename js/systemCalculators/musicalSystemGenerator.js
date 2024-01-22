@@ -5,14 +5,14 @@
  * @param {number} rootNote - The root note for frequency calculation.
  * @returns {Array} - A two-dimensional array representing the generated musical system.
  */
-export function generateRootNotes(primaryRootFrequency, ratios, calculatorType) {
+export function generateRootNotes(primaryRootFrequency, generatedNotes, calculatorType) {
   let rootNotes = [];
 
   if (calculatorType === null) {
     console.log("Please select a System Calculator.");
   } else {
-    for (let ratio of ratios) {
-      rootNotes.push(primaryRootFrequency * ratio);
+    for (let note of generatedNotes) {
+      rootNotes.push(primaryRootFrequency * note.ratioToRoot);
     }
   }
 
@@ -20,7 +20,7 @@ export function generateRootNotes(primaryRootFrequency, ratios, calculatorType) 
   return rootNotes;
 }
 
-export function systemCalculators(rootNotes, ratios, calculatorType) {
+export function systemCalculators(rootNotes, generatedNotes, calculatorType) {
   let musicalSystem = [];
 
   for (let rootNote of rootNotes) {
@@ -28,23 +28,23 @@ export function systemCalculators(rootNotes, ratios, calculatorType) {
     for (let diapason = 0; diapason < 10; diapason++) {
       let notes = [];
 
-      if (calculatorType === 'equalTemperamentRatios') {
-        const notePower = Math.pow(2, 1 / ratios.length);
-        for (let noteName = 0; noteName < ratios.length; noteName++) {
-          let frequency = rootNote * Math.pow(notePower, noteName) * Math.pow(2, diapason);
-          notes.push({ noteName, frequency });
-        }
+      // if (calculatorType === 'equalTemperamentNotes') {
+      //   const notePower = Math.pow(2, 1 / notes.length);
+      //   for (let noteName = 0; noteName < notes.length; noteName++) {
+      //     let frequency = rootNote * Math.pow(notePower, noteName) * Math.pow(2, diapason);
+      //     notesInSystem.push({ noteName, frequency });
+      //   }
       // } else if (calculatorType === 'HD110067') {
       //   let frequency = rootNote;
-      //   for (let noteName = 0; noteName < ratios.length; noteName++) {
-      //     frequency *= ratios[noteName % ratios.length] * Math.pow(2, diapason);
+      //   for (let noteName = 0; noteName < notes.length; noteName++) {
+      //     frequency *= notes[noteName % notes.length] * Math.pow(2, diapason);
       //     notes.push({ noteName, frequency });
       //   }
-      } else {
-        for (let noteName = 0; noteName < ratios.length; noteName++) {
-          let frequency = rootNote * ratios[noteName] * Math.pow(2, diapason);
-          notes.push({ noteName, frequency });
-        }
+      // } else {
+        for (let noteName = 0; noteName < generatedNotes.length; noteName++) {
+          let frequency = rootNote * generatedNotes[noteName].ratioToRoot * Math.pow(2, diapason);
+          notes.push({ noteName, frequency, relationshipToRoot: generatedNotes[noteName] });
+        // }
       }
 
       diapasons.push({ notes });
