@@ -6,43 +6,43 @@ const majorScaleNotes = [
   {
     "degree": "I",
     "ratioToRoot": 1/1,
-    "relationshipToRootName": "root",
+    "relationshipToRootName": "Root",
     "triadType": "major",
   },
   {
     "degree": "II",
     "ratioToRoot": 9/8,
-    "relationshipToRootName": "majorSecond",
+    "relationshipToRootName": "Major 2nd",
     "triadType": "minor",
   },
   {
     "degree": "III",
     "ratioToRoot": 5/4,
-    "relationshipToRootName": "majorThird",
-    "triadtype": "minor",
+    "relationshipToRootName": "Major 3rd",
+    "triadType": "minor",
   },
   {
     "degree": "IV",
     "ratioToRoot": 4/3,
-    "relationshipToRootName": "perfectFourth",
+    "relationshipToRootName": "Perfect 4th",
     "triadType": "major",
   },
   {
     "degree": "V",
     "ratioToRoot": 3/2,
-    "relationshipToRootName": "perfectFifth",
+    "relationshipToRootName": "Perfect 5th",
     "triadType": "major",
   },
   {
     "degree": "VI",
     "ratioToRoot": 5/3,
-    "relationshipToRootName": "majorSixth",
+    "relationshipToRootName": "Major 6th",
     "triadType": "minor",
   },
   {
     "degree": "VII",
     "ratioToRoot": 15/8,
-    "relationshipToRootName": "majorSeventh",
+    "relationshipToRootName": "Major 7th",
     "triadType": "diminished",
   }
 ];

@@ -44,6 +44,7 @@ export function createAlphaKeyMap(system) {
           key: key,
           frequency: note.frequency,
           elementId: note.noteName,
+          relationshipToRoot: note.relationshipToRoot,
         };
       });
     } else {
@@ -74,11 +75,14 @@ function renderAlphaKeyMapTable(alphaKeyMap) {
         </div>
   `;
 
-  Object.entries(alphaKeyMap).map(([noteIndex, { elementId, key, frequency }]) => {
+  Object.entries(alphaKeyMap).map(([noteIndex, { elementId, key, frequency, relationshipToRoot }]) => {
     alphaGridHTML += `
       <div id="note${noteIndex}" class="note">
-        <div class="note-name">${elementId}</div>
+        <div class="degree">degree: ${relationshipToRoot.degree}</div>
         <div class="key-name">${key}</div>
+        <div class="ratio">ratio: ${relationshipToRoot.ratioToRoot}</div>
+        <div class="relationship">${relationshipToRoot.relationshipToRootName}</div>
+        <div class="triad-type">triad: ${relationshipToRoot.triadType}</div>
         <div class="note-frequency">${frequency}Hz</div>
       </div>
     `;
