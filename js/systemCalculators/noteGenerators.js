@@ -1,111 +1,8 @@
-/**
- * Generates the Notes for a major scale.
- * @type {number[]}
- */
-const majorScaleNotes = [
-  {
-    "degree": "I",
-    "ratioToRoot": 1/1,
-    "relationshipToRootName": "Root",
-    "triadType": "major",
-  },
-  {
-    "degree": "II",
-    "ratioToRoot": 9/8,
-    "relationshipToRootName": "Major 2nd",
-    "triadType": "minor",
-  },
-  {
-    "degree": "III",
-    "ratioToRoot": 5/4,
-    "relationshipToRootName": "Major 3rd",
-    "triadType": "minor",
-  },
-  {
-    "degree": "IV",
-    "ratioToRoot": 4/3,
-    "relationshipToRootName": "Perfect 4th",
-    "triadType": "major",
-  },
-  {
-    "degree": "V",
-    "ratioToRoot": 3/2,
-    "relationshipToRootName": "Perfect 5th",
-    "triadType": "major",
-  },
-  {
-    "degree": "VI",
-    "ratioToRoot": 5/3,
-    "relationshipToRootName": "Major 6th",
-    "triadType": "minor",
-  },
-  {
-    "degree": "VII",
-    "ratioToRoot": 15/8,
-    "relationshipToRootName": "Major 7th",
-    "triadType": "diminished",
-  }
-];
-
-/**
- * Generates the Notes for a minor scale.
- * @type {number[]}
- */
-const minorScaleNotes = [
-   1,      // root
-  16 / 15, // minorSecond
-   6 / 5,  // minorThird
-   4 / 3,  // perfectFourth
-  45 / 32, // diminishedFifth
-   8 / 5,  // minorSixth
-   9 / 5   // minorSeventh
-];
-
-
-const pentatonicScaleNotes = [
-  1,
-  9 / 8,
-  5 / 4,
-  3 / 2,
-  5 / 3
-];
-
-const bluesScaleNotes = [
-  1,
-  6/5,
-  4/3,
-  7/5,
-  3/2,
-  7/4
-];
-
-/**
- * Generates the Notes for the HD110067 system.
- * @type {number[]}
- */
-const hd110067Notes = [
-  1,
-  3 / 2,
-  3 / 2,
-  3 / 2,
-  4 / 3,
-  4 / 3,
-  4 / 3
-];
-
-/**
- * Generates the Notes for the HD110067 system in one diapason.
- * @type {number[]}
- */
-const hd110067NotesInOneDiapason = [
-  1,
-  1.5,
-  1.125,
-  1.6875,
-  1.125 * 2,
-  1.5 * 2,
-  1 * 2,
-];
+import { majorScaleNotes } from "./majorScale.js";
+import { minorScaleNotes } from "./minorScale.js";
+import { pentatonicScaleNotes } from "./pentatonicScale.js";
+import { bluesScaleNotes } from "./bluesScale.js";
+import { hd110067Notes, hd110067NotesInOneDiapason } from "./hd110067.js";
 
 /**
  * Generates the Notes for an equal temperament system with the specified number of notes in a diapason.
@@ -133,7 +30,7 @@ export function getNotesForSystem(system) {
   } else if (system === 'equalTemperamentNotes') {
     return equalTemperamentNoteGenerator(notesInDiapason);
   } else if (system === 'HD110067Notes') {
-    return hd110067NotesInOneDiapason;
+    return hd110067Notes;
   } else {
     throw new Error('Invalid System Calculator');
   }
@@ -145,6 +42,6 @@ export const noteGenerators = {
   pentatonicScaleNotes,
   bluesScaleNotes,
   hd110067Notes,
-  // hd110067NotesInOneDiapason,
+  hd110067NotesInOneDiapason,
   equalTemperamentNoteGenerator
 };
