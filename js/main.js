@@ -28,7 +28,7 @@ export {
 var systemConfigUI = document.getElementById('system-config');
 var keysUI = document.getElementById('keys');
 
-const calculatorSelect = document.getElementById('calculator');
+const calculatorSelector = document.getElementById('calculator');
 
 // Iterate over the noteGenerators object
 for (const system in noteGenerators.noteGenerators) {
@@ -39,7 +39,7 @@ for (const system in noteGenerators.noteGenerators) {
   // Set the text content of the option to the system name
   option.textContent = system;
   // Append the option to the select element
-  calculatorSelect.appendChild(option);
+  calculatorSelector.appendChild(option);
 }
 
 
@@ -77,11 +77,11 @@ document.getElementById('system-config').addEventListener('submit', function(eve
     alert("Please enter valid numbers for Root Note Frequency and Number of Notes in Diapason");
     return;
   } else {
-    let generatedNotes = noteGenerators.getNotesForSystem(calculatorType);
+    let notesToGenerate = noteGenerators.getNotesForSystem(calculatorType);
 
-    let rootNotes = generateRootNotes(primaryRootFrequency, generatedNotes, calculatorType);
+    let rootNotes = generateRootNotes(primaryRootFrequency, notesToGenerate, calculatorType);
 
-    let musicalSystem = systemCalculators(rootNotes, generatedNotes, calculatorType);
+    let musicalSystem = systemCalculators(rootNotes, notesToGenerate, calculatorType);
     musicalSystemGlobal = musicalSystem;
 
     createAlphaKeyMap(musicalSystemGlobal);

@@ -11,11 +11,11 @@ import { hd110067Notes, hd110067NotesInOneDiapason } from "./hd110067.js";
  */
 function equalTemperamentNoteGenerator(notesInDiapason) {
   const notePower = Math.pow(2, 1 / notesInDiapason);
-  let Notes = [];
+  let notes = [];
   for (let note = 0; note < notesInDiapason; note++) {
-    Notes.push(Math.pow(notePower, note));
+    notes.push(Math.pow(notePower, note));
   }
-  return Notes;
+  return notes;
 }
 
 export function getNotesForSystem(system) {
@@ -27,7 +27,7 @@ export function getNotesForSystem(system) {
     return pentatonicScaleNotes;
   } else if (system === 'bluesScaleNotes') {
     return bluesScaleNotes;
-  } else if (system === 'equalTemperamentNotes') {
+  } else if (system === 'equalTemperamentNoteGenerator') {
     return equalTemperamentNoteGenerator(notesInDiapason);
   } else if (system === 'HD110067Notes') {
     return hd110067Notes;

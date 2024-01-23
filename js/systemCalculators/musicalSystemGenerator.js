@@ -5,13 +5,13 @@
  * @param {number} rootNote - The root note for frequency calculation.
  * @returns {Array} - A two-dimensional array representing the generated musical system.
  */
-export function generateRootNotes(primaryRootFrequency, generatedNotes, calculatorType) {
+export function generateRootNotes(primaryRootFrequency, notesToGenerate, calculatorType) {
   let rootNotes = [];
 
   if (calculatorType === null) {
     console.log("Please select a System Calculator.");
   } else {
-    for (let note of generatedNotes) {
+    for (let note of notesToGenerate) {
       rootNotes.push(primaryRootFrequency * note.ratioToRoot);
     }
   }
@@ -20,7 +20,7 @@ export function generateRootNotes(primaryRootFrequency, generatedNotes, calculat
   return rootNotes;
 }
 
-export function systemCalculators(rootNotes, generatedNotes, calculatorType) {
+export function systemCalculators(rootNotes, notesToGenerate, calculatorType) {
   let musicalSystem = [];
 
   for (let rootNote of rootNotes) {
@@ -28,7 +28,7 @@ export function systemCalculators(rootNotes, generatedNotes, calculatorType) {
     for (let diapason = 0; diapason < 10; diapason++) {
       let notes = [];
 
-      if (calculatorType === 'equalTemperamentNotes') {
+      if (calculatorType === 'equalTemperamentNoteGenerator') {
         const notePower = Math.pow(2, 1 / notes.length);
         for (let noteName = 0; noteName < notes.length; noteName++) {
           let frequency = rootNote * Math.pow(notePower, noteName) * Math.pow(2, diapason);
@@ -41,9 +41,9 @@ export function systemCalculators(rootNotes, generatedNotes, calculatorType) {
           notes.push({ noteName, frequency });
         }
       } else {
-        for (let noteName = 0; noteName < generatedNotes.length; noteName++) {
-          let frequency = rootNote * generatedNotes[noteName].ratioToRoot * Math.pow(2, diapason);
-          notes.push({ noteName, frequency, relationshipToRoot: generatedNotes[noteName] });
+        for (let noteName = 0; noteName < notesToGenerate.length; noteName++) {
+          let frequency = rootNote * notesToGenerate[noteName].ratioToRoot * Math.pow(2, diapason);
+          notes.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
         }
       }
 
