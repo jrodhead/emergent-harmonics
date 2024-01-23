@@ -8,15 +8,16 @@ const numericKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 const handleNumericKey = (ev, rootIndex) => {
   if (ev === 'keydown') {
-    console.log(`${rootIndex}On`);
+    // console.log(`${rootIndex}On`);
     if (isValidRootIndex(rootIndex)) {
       currentRootIndex = rootIndex;
       createAlphaKeyMap(musicalSystemGlobal);
+      setActiveRoot(rootIndex);
     } else {
       console.error('Invalid root index:', rootIndex);
     }
   } else if (ev === 'keyup') {
-    console.log(`${rootIndex}Off`);
+    // console.log(`${rootIndex}Off`);
   }
 };
 
@@ -24,8 +25,8 @@ const isValidRootIndex = (rootIndex) => {
   return rootIndex >= 0 && rootIndex < musicalSystemGlobal.length;
 };
 
-const setActiveRoot = (keyIndex) => {
-  let activeRoot = document.getElementById(`root${keyIndex}`);
+const setActiveRoot = (rootIndex) => {
+  let activeRoot = document.getElementById(`root${rootIndex}`);
   const activeElements = document.querySelectorAll('.active');
   activeElements.forEach(element => {
     element.classList.remove('active');
@@ -35,22 +36,21 @@ const setActiveRoot = (keyIndex) => {
 };
 
 document.body.addEventListener('keydown', (ev) => {
-  const keyIndex = numericKeys.indexOf(ev.key);
+  const rootIndex = numericKeys.indexOf(ev.key);
 
   if (ev.repeat) return;
 
-  if (keyIndex !== -1) {
-    handleNumericKey('keydown', keyIndex);
+  if (rootIndex !== -1) {
+    handleNumericKey('keydown', rootIndex);
   }
 });
 
 document.body.addEventListener('keyup', (ev) => {
-  const keyIndex = numericKeys.indexOf(ev.key);
+  const rootIndex = numericKeys.indexOf(ev.key);
 
   if (ev.repeat) return;
 
-  if (keyIndex !== -1) {
-    handleNumericKey('keyup', keyIndex);
-    setActiveRoot(keyIndex);
+  if (rootIndex !== -1) {
+    handleNumericKey('keyup', rootIndex);
   }
 });

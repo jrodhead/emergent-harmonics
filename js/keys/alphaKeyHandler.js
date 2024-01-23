@@ -19,12 +19,10 @@ const handleAlphaKey = (ev, action) => {
     // Play sound and apply active class on keydown event
     playSound(frequency, action);
     activeNote.classList.add('active');
-    console.log(`${action}On`);
   } else if (ev === 'keyup') {
     // Stop sound and remove active class on keyup event
     stopSound(action);
     activeNote.classList.remove('active');
-    console.log(`${action}Off`);
   } else {
     // Log an error if unable to handle the key event
     console.error('Unable to handle key event:', ev);

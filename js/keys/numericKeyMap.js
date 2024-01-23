@@ -18,9 +18,11 @@ const renderNumericKeyMapTable = (numericKeyMap) => {
       <div class="root-group">
         ${Object.entries(numericKeyMap).map(([key, value]) => `
           <div id="root${key}" class="root-selector">
-            <div class="root-name">R${key}</div>
+            <div class="degree">${value.relationshipToRoot.degree}</div>
             <div class="key-name">${key}</div>
-            <div class="root-frequency">${value}Hz</div>
+            <div class="root-frequency">${value.frequency}Hz</div>
+            <div class="root-name">${value.relationshipToRoot.relationshipToRootName}</div>
+            <div class="triad-type">${value.relationshipToRoot.triadType}</div>
           </div>
         `).join('')}
       </div>

@@ -65,24 +65,35 @@ function renderAlphaKeyMapTable(alphaKeyMap) {
     <div class="grid-container">
       <div class="diapason">
         <div id="current-diapason-data">
+          <div id="current-root-degree">
+            ${musicalSystemGlobal[currentRootIndex].rootNote.relationshipToRoot.degree}
+          </div>
           <div id="current-root-index">
-            Root${currentRootIndex}
+            ${currentRootIndex}
           </div>
           <div id="current-diapason-index">
             D${currentDiapasonIndex}
           </div>
-          <div id="current-root-index">R${musicalSystemGlobal[currentRootIndex].rootNote}Hz</div>
+          <div id="current-root-frequency">
+            ${musicalSystemGlobal[currentRootIndex].rootNote.frequency}Hz
+          </div>
+          <div id="current-root-relationship-to-root">
+            ${musicalSystemGlobal[currentRootIndex].rootNote.relationshipToRoot.relationshipToRootName}
+          </div>
+          <div id="current-root-triad-type">
+            ${musicalSystemGlobal[currentRootIndex].rootNote.relationshipToRoot.triadType}
+          </div>
         </div>
   `;
 
   Object.entries(alphaKeyMap).map(([noteIndex, { elementId, key, frequency, relationshipToRoot }]) => {
     alphaGridHTML += `
       <div id="note${noteIndex}" class="note">
-        <div class="degree">degree: ${relationshipToRoot.degree}</div>
+        <div class="degree">${relationshipToRoot.degree}</div>
         <div class="key-name">${key}</div>
         <div class="ratio">ratio: ${relationshipToRoot.ratioToRoot}</div>
         <div class="relationship">${relationshipToRoot.relationshipToRootName}</div>
-        <div class="triad-type">triad: ${relationshipToRoot.triadType}</div>
+        <div class="triad-type">${relationshipToRoot.triadType}</div>
         <div class="note-frequency">${frequency}Hz</div>
       </div>
     `;
