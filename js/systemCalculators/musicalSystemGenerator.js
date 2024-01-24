@@ -30,23 +30,9 @@ export function systemCalculators(rootNotes, notesToGenerate, calculatorType) {
     for (let diapason = 0; diapason < 10; diapason++) {
       let notes = [];
 
-      if (calculatorType === 'equalTemperamentNoteGenerator') {
-        const notePower = Math.pow(2, 1 / notes.length);
-        for (let noteName = 0; noteName < notes.length; noteName++) {
-          let frequency = rootNote.frequency * Math.pow(notePower, noteName) * Math.pow(2, diapason);
-          notesInSystem.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
-        }
-      } else if (calculatorType === 'HD110067') {
-        let frequency = rootNote.frequency;
-        for (let noteName = 0; noteName < notes.length; noteName++) {
-          frequency *= notes[noteName % notes.length] * Math.pow(2, diapason);
-          notes.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
-        }
-      } else {
-        for (let noteName = 0; noteName < notesToGenerate.length; noteName++) {
-          let frequency = rootNote.frequency * notesToGenerate[noteName].ratioToRoot * Math.pow(2, diapason);
-          notes.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
-        }
+      for (let noteName = 0; noteName < notesToGenerate.length; noteName++) {
+        let frequency = rootNote.frequency * notesToGenerate[noteName].ratioToRoot * Math.pow(2, diapason);
+        notes.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
       }
 
       diapasons.push({ notes });

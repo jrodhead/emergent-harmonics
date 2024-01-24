@@ -77,11 +77,11 @@ document.getElementById('system-config').addEventListener('submit', function(eve
     alert("Please enter valid numbers for Root Note Frequency and Number of Notes in Diapason");
     return;
   } else {
-    let notesToGenerate = noteGenerators.getNotesForSystem(calculatorType);
+    let notesToGenerate = noteGenerators.getNotesForSystem(calculatorType, notesInDiapason);
 
     let rootNotes = generateRootNotes(primaryRootFrequency, notesToGenerate, calculatorType);
 
-    let musicalSystem = systemCalculators(rootNotes, notesToGenerate, calculatorType);
+    let musicalSystem = systemCalculators(rootNotes, notesToGenerate, calculatorType, notesInDiapason);
     musicalSystemGlobal = musicalSystem;
 
     createAlphaKeyMap(musicalSystemGlobal);

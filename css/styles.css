@@ -112,9 +112,9 @@ button#play {
   text-transform: capitalize;
 }
 
-.root-value,
-.note-frequency {
-  margin-top: 5px;
+#current-diapason-data > div,
+.note > div,
+.root-selector > div {
   overflow: hidden;
 }
 

@@ -3,22 +3,9 @@ import { minorScaleNotes } from "./minorScale.js";
 import { pentatonicScaleNotes } from "./pentatonicScale.js";
 import { bluesScaleNotes } from "./bluesScale.js";
 import { hd110067Notes, hd110067NotesInOneDiapason } from "./hd110067.js";
+import { equalTemperamentNoteGenerator } from "./equalTemperament.js";
 
-/**
- * Generates the Notes for an equal temperament system with the specified number of notes in a diapason.
- * @param {number} notesInDiapason - The number of notes in a diapason.
- * @returns {number[]} The generated Notes.
- */
-function equalTemperamentNoteGenerator(notesInDiapason) {
-  const notePower = Math.pow(2, 1 / notesInDiapason);
-  let notes = [];
-  for (let note = 0; note < notesInDiapason; note++) {
-    notes.push(Math.pow(notePower, note));
-  }
-  return notes;
-}
-
-export function getNotesForSystem(system) {
+export function getNotesForSystem(system, notesInDiapason) {
   if (system === 'majorScaleNotes') {
     return majorScaleNotes;
   } else if (system === 'minorScaleNotes') {
@@ -37,11 +24,11 @@ export function getNotesForSystem(system) {
 };
 
 export const noteGenerators = {
+  equalTemperamentNoteGenerator,
   majorScaleNotes,
   minorScaleNotes,
   pentatonicScaleNotes,
   bluesScaleNotes,
   hd110067Notes,
   hd110067NotesInOneDiapason,
-  equalTemperamentNoteGenerator
 };

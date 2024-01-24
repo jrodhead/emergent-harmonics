@@ -95,3 +95,11 @@ export const hd110067NotesInOneDiapason = [
     "triadType": "major"
   }
 ];
+
+export function generateFrequenciesRelativeToPreviousNote() {
+  let frequency = rootNote.frequency;
+  for (let noteName = 0; noteName < notes.length; noteName++) {
+    frequency *= notes[noteName % notes.length] * Math.pow(2, diapason);
+    notes.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
+  }
+}
