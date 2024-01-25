@@ -79,9 +79,9 @@ document.getElementById('system-config').addEventListener('submit', function(eve
   } else {
     let notesToGenerate = noteGenerators.getNotesForSystem(calculatorType, notesInDiapason);
 
-    let rootNotes = generateRootNotes(primaryRootFrequency, notesToGenerate, calculatorType);
+    let rootNotes = generateRootNotes(primaryRootFrequency, notesToGenerate);
 
-    let musicalSystem = systemCalculators(rootNotes, notesToGenerate, calculatorType, notesInDiapason);
+    let musicalSystem = systemCalculators(rootNotes, notesToGenerate);
     musicalSystemGlobal = musicalSystem;
 
     createAlphaKeyMap(musicalSystemGlobal);

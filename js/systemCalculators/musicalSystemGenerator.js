@@ -5,24 +5,20 @@
  * @param {number} rootNote - The root note for frequency calculation.
  * @returns {Array} - A two-dimensional array representing the generated musical system.
  */
-export function generateRootNotes(primaryRootFrequency, notesToGenerate, calculatorType) {
+export function generateRootNotes(primaryRootFrequency, notesToGenerate) {
   let rootNotes = [];
 
-  if (calculatorType === null) {
-    console.log("Please select a System Calculator.");
-  } else {
-    for (let noteName of notesToGenerate) {
-      let frequency = primaryRootFrequency * noteName.ratioToRoot;
+  for (let noteName of notesToGenerate) {
+    let frequency = primaryRootFrequency * noteName.ratioToRoot;
 
-      rootNotes.push({frequency, relationshipToRoot: noteName});
-    }
+    rootNotes.push({frequency, relationshipToRoot: noteName});
   }
 
   console.log('rootNotes: ', rootNotes);
   return rootNotes;
 }
 
-export function systemCalculators(rootNotes, notesToGenerate, calculatorType) {
+export function systemCalculators(rootNotes, notesToGenerate) {
   let musicalSystem = [];
 
   for (let rootNote of rootNotes) {

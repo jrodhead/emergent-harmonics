@@ -1,7 +1,3 @@
-/**
- * Generates the Notes for the HD110067 system.
- * @type {number[]}
- */
 export const hd110067Notes = [
   {
     "degree": "I",
@@ -47,10 +43,6 @@ export const hd110067Notes = [
   }
 ];
 
-/**
- * Generates the Notes for the HD110067 system in one diapason.
- * @type {number[]}
- */
 export const hd110067NotesInOneDiapason = [
   {
     "degree": "I",
