@@ -29,9 +29,9 @@ export const minorScaleNotes = [
   },
   {
     "degree": "V",
-    "ratioToRoot": 45/32,
-    "relationshipToRootName": "Diminished 5th",
-    "triadType": "diminished"
+    "ratioToRoot": 3/2,
+    "relationshipToRootName": "Perfect 5th",
+    "triadType": "minor"
   },
   {
     "degree": "VI",
