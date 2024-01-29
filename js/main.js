@@ -16,18 +16,6 @@ export {
   updateAlphaKeyMapGlobal
 };
 
-// document.getElementById('menu-icon').addEventListener('click', function() {
-//   var systemConfig = document.getElementById('system-config');
-//   if (systemConfig.style.display === 'none') {
-//     systemConfig.style.display = 'grid';
-//   } else {
-//     systemConfig.style.display = 'none';
-//   }
-// });
-
-var systemConfigUI = document.getElementById('system-config');
-var keysUI = document.getElementById('keys');
-
 const calculatorSelector = document.getElementById('calculator');
 
 // Iterate over the noteGenerators object
@@ -41,27 +29,6 @@ for (const system in noteGenerators.noteGenerators) {
   // Append the option to the select element
   calculatorSelector.appendChild(option);
 }
-
-
-document.getElementById('display-settings').addEventListener('click', function() {
-  if (systemConfigUI.style.display === 'none') {
-    systemConfigUI.style.display = 'grid';
-    keysUI.style.display = 'none';
-  } else {
-    systemConfigUI.style.display = 'none';
-    keysUI.style.display = 'grid';
-  }
-});
-
-document.getElementById('display-keys').addEventListener('click', function() {
-  if (keysUI.style.display === 'none') {
-    keysUI.style.display = 'grid';
-    systemConfigUI.style.display = 'none';
-  } else {
-    keysUI.style.display = 'none';
-    systemConfigUI.style.display = 'grid';
-  }
-});
 
 // Event listener for system-config submit
 document.getElementById('system-config').addEventListener('submit', function(event) {
@@ -86,8 +53,5 @@ document.getElementById('system-config').addEventListener('submit', function(eve
 
     createAlphaKeyMap(musicalSystemGlobal);
     createNumericKeyMap(musicalSystemGlobal);
-
-    keysUI.style.display = 'grid';
-    systemConfigUI.style.display = 'none';
   }
 });

@@ -5,36 +5,30 @@
   <title>Musical System Generator</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
-<body id="main-grid">
-  <div id="sidebar">
-    <h1>Music System Creator</h1>
-    <a href="#system-config" id="display-settings">Settings</a>
-    <a href="#keys" id="display-keys">Keyboard</a>
-    <!-- <button id="menu-icon">&#171;</button> -->
-  </div>
-  <div id="main">
+<body>
+  <header>
     <form id="system-config">
       <div class="form-group">
-        <label for="calculator">System Calculator:</label>
+        <label for="calculator">Calculator:</label>
         <select id="calculator"></select>
       </div>
       <div class="form-group">
-        <label for="primaryRootFrequency">Root Note Frequency:</label>
-        <input type="number" id="primaryRootFrequency" min="1" max="15000" value="440" required>
+        <label for="primaryRootFrequency">Root:</label>
+        <input type="number" id="primaryRootFrequency" min="1" max="15000" value="440" required>Hz
       </div>
       <div class="form-group">
-        <label for="notes">Number of Notes in Diapason:</label>
+        <label for="notes">Notes:</label>
         <input type="number" id="notes" min="1" max="26" value="12" required>
       </div>
       <input type="submit" value="Generate System">
     </form>
+  </header>
 
-    <div id="keys">
-      <div id="alphaKeyTable"></div>
-      <div id="numericKeyTable"></div>
-      <div id="arrowKeyTable"></div>
-      <div id="escapeKeyTable"></div>
-    </div>
+  <div id="keys">
+    <div id="alphaKeyTable"></div>
+    <div id="numericKeyTable"></div>
+    <div id="arrowKeyTable"></div>
+    <div id="escapeKeyTable"></div>
   </div>
 
   <script type="module" src="js/main.js"></script>

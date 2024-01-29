@@ -1,26 +1,19 @@
 body {
   font-family: math;
   font-size: 16px;
-  display: grid;
-  grid-template-columns: [first] 21% [line2] 1fr;
-  gap: 1rem;
+  margin: 0;
 }
 
 header {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 1rem;
-  padding: .5rem 0 2rem 0;
+  background-color: #c5c5c5;
+  padding: .5rem 0;
 }
 
-#sidebar {
+header form {
   display: flex;
-  flex-direction: column;
-}
-
-header h1 {
-  font-size: 2rem;
-  margin: 0;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding-right: 1rem;
 }
 
 #sidebar a {
@@ -38,37 +31,26 @@ header h1 {
   justify-self: end;
 }
 
-#system-config {
-  display: grid;
-  grid-column: 1;
-}
-
-.form-group {
-  display: grid;
-  gap: 10px;
-}
-
-label {
-  grid-column: 1;
-}
-
-input, select {
-  grid-column: 1;
-  margin-bottom: 1rem;
-  padding: 1rem;
-}
-
-button {
-  grid-column: 1;
-}
-
 fieldset {padding: 1rem; margin: 0;}
+
+#keys {
+  display: grid;
+  grid-template-columns: 3fr 1fr;
+}
 
 #alphaKeyTable,
 #numericKeyTable,
 button#play {
   user-select: none;
   -webkit-user-select: none;
+}
+
+#alphaKeyTable {
+  grid-column: 1 / 2;
+}
+
+#numericKeyTable {
+  grid-column: 2 / 2;
 }
 
 .grid-container {
@@ -84,7 +66,14 @@ button#play {
   padding: .5rem;
   border: 1px solid #ccc;
   background: #000;
-  border-radius: 1rem;
+}
+
+.diapason {
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+
+.root-group {
+  grid-template-columns: 1fr 1fr 1fr;
 }
 
 #current-diapason-data,
