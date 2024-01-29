@@ -1,7 +1,7 @@
 import { currentRootIndex } from './numericKeyHandler.js';
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
 import { alphaKeyHandler } from './alphaKeyHandler.js';
-import { alphaKeyMapGlobal, musicalSystemGlobal, updateAlphaKeyMapGlobal } from '../main.js';
+import { alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
 
 /**
  * Creates a key map for the notes in a diapason, associating notes with keys.
@@ -66,7 +66,7 @@ function renderAlphaKeyMapTable(alphaKeyMap) {
       <div class="diapason">
   `;
 
-  Object.entries(alphaKeyMap).map(([noteIndex, { elementId, key, frequency, relationshipToRoot }]) => {
+  Object.entries(alphaKeyMap).map(([noteIndex, { key, frequency, relationshipToRoot }]) => {
     alphaGridHTML += `
       <div id="note${noteIndex}" class="note">
         <div class="degree">${relationshipToRoot.degree} - ${currentDiapasonIndex}</div>
