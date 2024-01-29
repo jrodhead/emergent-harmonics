@@ -1,6 +1,10 @@
+html {
+  background-color: #000;
+}
+
 body {
-  font-family: math;
-  font-size: 16px;
+  font-family: monospace;
+  font-size: 12px;
   margin: 0;
 }
 
@@ -64,7 +68,6 @@ button#play {
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: .5rem;
   padding: .5rem;
-  border: 1px solid #ccc;
   background: #000;
 }
 
@@ -96,7 +99,7 @@ button#play {
 
 #current-diapason-index,
 .key-name {
-  font-size: 5rem;
+  font-size: 3rem;
   font-weight: bold;
   text-transform: capitalize;
 }
