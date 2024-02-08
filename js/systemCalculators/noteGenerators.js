@@ -33,11 +33,11 @@ export function getNotesForSystem(system, notesInDiapason) {
 };
 
 export const noteGenerators = {
-  pythagoreanNotes,
   majorScaleNotes,
   naturalMinorScaleNotes,
   majorPentatonicScaleNotes,
   bluesScaleNotes,
+  pythagoreanNotes,
   hd110067NotesInOneDiapason,
   exploratoryNotes,
   equalTemperamentNoteGenerator,
