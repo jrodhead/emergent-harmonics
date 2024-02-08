@@ -1,8 +1,4 @@
-/**
- * Generates the Notes for a minor scale.
- * @type {number[]}
- */
-export const minorScaleNotes = [
+export const naturalMinorScaleNotes = [
   {
     "degree": "I",
     "ratioToRoot": 1/1,

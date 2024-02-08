@@ -1,19 +1,20 @@
 import { majorScaleNotes } from "./majorScale.js";
-import { minorScaleNotes } from "./minorScale.js";
-import { pentatonicScaleNotes } from "./pentatonicScale.js";
+import { naturalMinorScaleNotes } from "./naturalMinorScale.js";
+import { majorPentatonicScaleNotes } from "./pentatonicScale.js";
 import { bluesScaleNotes } from "./bluesScale.js";
 import { hd110067NotesInOneDiapason } from "./hd110067.js";
 import { equalTemperamentNoteGenerator } from "./equalTemperament.js";
 import { fibonacciNotes } from "./fibonacciScale.js";
 import { exploratoryNotes } from "./exploratory.js";
+import { pythagoreanNotes } from "./pythagorean.js";
 
 export function getNotesForSystem(system, notesInDiapason) {
   if (system === 'majorScaleNotes') {
     return majorScaleNotes;
-  } else if (system === 'minorScaleNotes') {
-    return minorScaleNotes;
-  } else if (system === 'pentatonicScaleNotes') {
-    return pentatonicScaleNotes;
+  } else if (system === 'naturalMinorScaleNotes') {
+    return naturalMinorScaleNotes;
+  } else if (system === 'majorPentatonicScaleNotes') {
+    return majorPentatonicScaleNotes;
   } else if (system === 'bluesScaleNotes') {
     return bluesScaleNotes;
   } else if (system === 'equalTemperamentNoteGenerator') {
@@ -24,18 +25,21 @@ export function getNotesForSystem(system, notesInDiapason) {
     return fibonacciNotes;
   } else if (system === "exploratoryNotes") {
     return exploratoryNotes;
+  } else if (system === "pythagoreanNotes") {
+    return pythagoreanNotes;
   } else {
     throw new Error('Invalid System Calculator');
   }
 };
 
 export const noteGenerators = {
-  exploratoryNotes,
-  equalTemperamentNoteGenerator,
+  pythagoreanNotes,
   majorScaleNotes,
-  minorScaleNotes,
-  pentatonicScaleNotes,
+  naturalMinorScaleNotes,
+  majorPentatonicScaleNotes,
   bluesScaleNotes,
   hd110067NotesInOneDiapason,
+  exploratoryNotes,
+  equalTemperamentNoteGenerator,
   fibonacciNotes
 };

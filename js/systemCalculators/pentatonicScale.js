@@ -1,4 +1,4 @@
-export const pentatonicScaleNotes = [
+export const majorPentatonicScaleNotes = [
   {
     "degree": "I",
     "ratioToRoot": 1/1,

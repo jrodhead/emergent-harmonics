@@ -65,14 +65,13 @@ button#play {
 .diapason,
 .root-group {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
   gap: .5rem;
   padding: .5rem;
   background: #000;
 }
 
 .diapason {
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
 }
 
 .root-group {
