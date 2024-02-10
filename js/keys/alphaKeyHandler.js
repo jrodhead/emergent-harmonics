@@ -11,9 +11,9 @@ const handleAlphaKey = (ev, action) => {
   const keyData = alphaKeyMapGlobal.find((item) => item.key === action);
   if (!keyData) return;
 
-  const { frequency, elementId } = keyData;
-  console.log (`frequency: ${frequency}, elementId: ${elementId}`)
-  let activeNote = document.getElementById(`note${elementId}`);
+  const { frequency } = keyData;
+  console.log (`frequency: ${frequency}`)
+  let activeNote = document.getElementById(`${frequency}`);
 
   if (ev === 'keydown') {
     // Play sound and apply active class on keydown event

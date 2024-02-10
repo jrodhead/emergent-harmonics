@@ -7,5 +7,6 @@ export const fibonacciNotes = [
   { "ratioToRoot": 13/21 },
   { "ratioToRoot": 21/34 },
   { "ratioToRoot": 34/55 },
-  { "ratioToRoot": 55/89 }
+  { "ratioToRoot": 55/89 },
+  { "ratioToRoot": 89/144 }
 ];
