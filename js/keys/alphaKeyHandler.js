@@ -12,7 +12,6 @@ const handleAlphaKey = (ev, action) => {
   if (!keyData) return;
 
   const { frequency } = keyData;
-  console.log (`frequency: ${frequency}`)
   let activeNote = document.getElementById(`${frequency}`);
 
   if (ev === 'keydown') {

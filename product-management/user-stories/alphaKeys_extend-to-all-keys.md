@@ -9,6 +9,4 @@ As a website visitor, I want each key in the `alphaKeyMap` to be assigned a musi
 3. If there are more alpha keys than notes in the current diapason, the remaining keys should be assigned notes from the succeeding diapasons, in order.
 4. All alpha keys should have a note assigned, even if this requires using notes from multiple diapasons.
 5. The functionality to create the `alphaKeyMap` for all of the notes in one diapason should be maintained.
-
-**Fixes**
-do not extend beyond 'm' (get rid of extras)
+6. The assignment of keys should stop once all keys have been assigned, even if there are remaining notes in the diapason.

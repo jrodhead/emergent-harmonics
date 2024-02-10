@@ -1,30 +1,8 @@
-/**
- * @fileoverview This file contains the implementation of creating a key map for the notes in a diapason, associating notes with keys.
- * @module alphaKeyMap
- */
-
 import { currentRootIndex } from './numericKeyHandler.js';
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
-import { alphaKeyHandler } from './alphaKeyHandler.js';
 import { alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
-
-/**
- * Checks if the provided system is valid.
- * @param {Array} system - The system to be checked.
- * @returns {boolean} - True if the system is valid, false otherwise.
- */
-function isValidSystem(system) {
-  return Array.isArray(system) && system.length > 0;
-}
-
-/**
- * Checks if the provided diapasons are valid.
- * @param {Array} diapasons - The diapasons to be checked.
- * @returns {boolean} - True if the diapasons are valid, false otherwise.
- */
-function isValidDiapasons(diapasons) {
-  return diapasons && Array.isArray(diapasons) && diapasons.length > 0;
-}
+import { isValidSystem, isValidDiapasons } from './isValidSystem.js';
+import { renderAlphaKeyMapTable } from './renderAlphaKeyMapTable.js';
 
 /**
  * Creates a key map for the notes in a diapason, associating notes with keys.
@@ -76,6 +54,10 @@ export function createAlphaKeyMap(system) {
 
     if (notes && Array.isArray(notes)) {
       const additionalAlphaKeyMap = notes.map((note, noteIndex) => {
+        if (remainingKeys.length === 0) {
+          return null; // Stop assigning keys if there are no remaining keys
+        }
+
         const key = remainingKeys[noteIndex % remainingKeys.length];
 
         return {
@@ -84,7 +66,7 @@ export function createAlphaKeyMap(system) {
           elementId: note.noteName,
           relationshipToRoot: note.relationshipToRoot,
         };
-      });
+      }).filter(Boolean); // Remove null values from the additionalAlphaKeyMap
 
       alphaKeyMap = alphaKeyMap.concat(additionalAlphaKeyMap);
       remainingKeys = remainingKeys.slice(additionalAlphaKeyMap.length);
@@ -100,36 +82,4 @@ export function createAlphaKeyMap(system) {
   renderAlphaKeyMapTable(alphaKeyMapGlobal);
 
   return alphaKeyMapGlobal;
-}
-
-/**
- * Renders the alpha key map table.
- * @param {Array} alphaKeyMap - The alpha key map to be rendered.
- */
-function renderAlphaKeyMapTable(alphaKeyMap) {
-  let alphaGridHTML = `
-    <div class="grid-container">
-      <div class="diapason">
-  `;
-
-  Object.entries(alphaKeyMap).map(([noteIndex, { key, frequency, relationshipToRoot }]) => {
-    alphaGridHTML += `
-      <div id="${frequency}" class="note">
-        <div class="degree">${relationshipToRoot.degree} - ${currentDiapasonIndex}</div>
-        <div class="key-name">${key}</div>
-        <div class="ratio">ratio: ${relationshipToRoot.ratioToRoot}</div>
-        <div class="relationship">${relationshipToRoot.relationshipToRootName}</div>
-        <div class="triad-type">${relationshipToRoot.triadType}</div>
-        <div class="note-frequency">${frequency}Hz</div>
-      </div>
-    `;
-  });
-
-  alphaGridHTML += '</div></div>';
-
-  document.getElementById('alphaKeyTable').innerHTML = alphaGridHTML;
-
-  // Event listeners for keydown and keyup events
-  document.body.addEventListener('keydown', alphaKeyHandler);
-  document.body.addEventListener('keyup', alphaKeyHandler);
 }
