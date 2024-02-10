@@ -1,4 +1,4 @@
-### Generate alpha keymap for as many notes as possible (proceed to next diapason)
+# Generate alpha keymap for as many notes as possible (proceed to next diapason)
 
 **User Story:**
 As a website visitor, I want each key in the `alphaKeyMap` to be assigned a musical note, so that I can use all of the alpha keys on my keyboard to play a note.
@@ -9,3 +9,6 @@ As a website visitor, I want each key in the `alphaKeyMap` to be assigned a musi
 3. If there are more alpha keys than notes in the current diapason, the remaining keys should be assigned notes from the succeeding diapasons, in order.
 4. All alpha keys should have a note assigned, even if this requires using notes from multiple diapasons.
 5. The functionality to create the `alphaKeyMap` for all of the notes in one diapason should be maintained.
+
+**Fixes**
+do not extend beyond 'm' (get rid of extras)
