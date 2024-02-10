@@ -36,15 +36,14 @@ document.getElementById('system-config').addEventListener('submit', function(eve
 
   // Extracting values from the form
   let primaryRootFrequency = parseInt(document.getElementById('primaryRootFrequency').value);
-  let notesInDiapason = parseInt(document.getElementById('notes').value);
   let calculatorType = document.getElementById('calculator').value;
 
   // Input validation
-  if (isNaN(notesInDiapason) || isNaN(primaryRootFrequency)) {
-    alert("Please enter valid numbers for Root Note Frequency and Number of Notes in Diapason");
+  if (isNaN(primaryRootFrequency)) {
+    alert("Please enter a valid number for Root Note Frequency");
     return;
   } else {
-    let notesToGenerate = noteGenerators.getNotesForSystem(calculatorType, notesInDiapason);
+    let notesToGenerate = noteGenerators.getNotesForSystem(calculatorType);
 
     let rootNotes = generateRootNotes(primaryRootFrequency, notesToGenerate);
 

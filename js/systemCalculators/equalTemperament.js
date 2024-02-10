@@ -4,7 +4,7 @@
  * @returns {number[]} The generated Notes.
  */
 
-export function equalTemperamentNoteGenerator(notesInDiapason) {
+export function equalTemperamentNoteGenerator(notesInDiapason = 12) {
   const notePower = Math.pow(2, 1 / notesInDiapason);
   let notes = [];
   for (let note = 0; note < notesInDiapason; note++) {
