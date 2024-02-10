@@ -4,11 +4,6 @@ import { alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
 import { isValidSystem, isValidDiapasons } from './isValidSystem.js';
 import { renderAlphaKeyMapTable } from './renderAlphaKeyMapTable.js';
 
-/**
- * Creates a key map for the notes in a diapason, associating notes with keys.
- * @param {Array} system - An array of notes in a diapason.
- * @returns {Array} - A key map array associating notes with keys.
- */
 export function createAlphaKeyMap(system) {
   if (!isValidSystem(system)) {
     console.error('Invalid system or root provided:', system);
@@ -30,6 +25,10 @@ export function createAlphaKeyMap(system) {
 
     if (notes && Array.isArray(notes)) {
       alphaKeyMap = notes.map((note, noteIndex) => {
+        if (noteIndex >= keys.length || noteIndex >= notes.length) {
+          return null; // Stop assigning keys if there are no remaining keys or notes
+        }
+
         const key = keys[noteIndex % keys.length];
 
         return {
@@ -37,7 +36,7 @@ export function createAlphaKeyMap(system) {
           frequency: note.frequency,
           relationshipToRoot: note.relationshipToRoot,
         };
-      });
+      }).filter(Boolean); // Remove null values from the alphaKeyMap
     } else {
       console.error('Invalid notes in the diapason:', notes);
     }
@@ -54,8 +53,8 @@ export function createAlphaKeyMap(system) {
 
     if (notes && Array.isArray(notes)) {
       const additionalAlphaKeyMap = notes.map((note, noteIndex) => {
-        if (remainingKeys.length === 0) {
-          return null; // Stop assigning keys if there are no remaining keys
+        if (remainingKeys.length === 0 || noteIndex >= remainingKeys.length) {
+          return null; // Stop assigning keys if there are no remaining keys or notes
         }
 
         const key = remainingKeys[noteIndex % remainingKeys.length];
