@@ -8,13 +8,13 @@ const activeOscillators = {}; // Object to store active oscillators by key
  * @param {number} volume - The volume of the sound to be played.
  * @param {string} key - The key used to store the active oscillator.
  */
-export function playSound(frequency, key, volume) {
+export function playSound(frequency, key, volume, waveShape) {
   if (!audioContext) {
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
   }
 
   const oscillator = audioContext.createOscillator();
-  oscillator.type = 'sine';
+  oscillator.type = waveShape;
 
   if (isFinite(frequency)) { // Check if frequency is finite
     oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
@@ -40,18 +40,6 @@ export function playSound(frequency, key, volume) {
     oscillator,
     gainNode
   }; // Store the active oscillator and gain node by key
-}
-
-/**
- * Updates the volume of the oscillator associated with a given key.
- * @param {string} key - The key associated with the oscillator to update.
- * @param {number} volume - The new volume value.
- */
-export function updateVolume(key, volume) {
-  const activeOscillator = activeOscillators[key];
-  if (activeOscillator) {
-    activeOscillator.gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
-  }
 }
 
 /**

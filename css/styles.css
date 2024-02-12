@@ -8,7 +8,7 @@ body {
   margin: 0;
 }
 
-header {
+header, footer {
   background-color: #c5c5c5;
   padding: .5rem 0;
 }
