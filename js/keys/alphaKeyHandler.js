@@ -13,10 +13,11 @@ const handleAlphaKey = (ev, action) => {
 
   const { frequency } = keyData;
   let activeNote = document.getElementById(`${frequency}`);
+  let currentVolume = document.getElementById('oscillatorVolume').value;
 
   if (ev === 'keydown') {
     // Play sound and apply active class on keydown event
-    playSound(frequency, action);
+    playSound(frequency, action, currentVolume);
     activeNote.classList.add('active');
   } else if (ev === 'keyup') {
     // Stop sound and remove active class on keyup event
