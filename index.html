@@ -6,8 +6,10 @@
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
   <header>
     <form id="system-config">
+      <legend>System Configuration</legend>
       <div class="form-group">
         <label for="calculator">Calculator:</label>
         <select id="calculator"></select>
@@ -20,15 +22,18 @@
     </form>
   </header>
 
-  <div id="keys">
-    <div id="alphaKeyTable"></div>
-    <div id="numericKeyTable"></div>
-    <div id="arrowKeyTable"></div>
-    <div id="escapeKeyTable"></div>
-  </div>
+  <main>
+    <div id="keys">
+      <div id="alphaKeyTable"></div>
+      <div id="numericKeyTable"></div>
+      <div id="arrowKeyTable"></div>
+      <div id="escapeKeyTable"></div>
+    </div>
+  </main>
 
   <footer>
     <form id="oscillator-config">
+      <legend>Oscillator Configuration</legend>
       <div class="form-group">
         <label for="waveShape">Oscillator Type:</label>
         <select id="waveShape">
@@ -43,6 +48,22 @@
         <input type="range" id="oscillatorVolume" min="0" max="1" step="0.01" value="0.5">
         <output for="oscillatorVolume" id="volumeOutput">0.5</output>
       </div>
+      <!-- <div class="form-group">
+        <label for="attack">Attack:</label>
+        <input type="number" id="attack" min="0" max="10" step="0.01" value="0.01">s
+      </div>
+      <div class="form-group">
+        <label for="decay">Decay:</label>
+        <input type="number" id="decay" min="0" max="10" step="0.01" value="0.1">s
+      </div>
+      <div class="form-group">
+        <label for="sustain">Sustain:</label>
+        <input type="number" id="sustain" min="0" max="1" step="0.01" value="0.5">
+      </div>
+      <div class="form-group">
+        <label for="release">Release:</label>
+        <input type="number" id="release" min="0" max="10" step="0.01" value="1">s
+      </div> -->
     </form>
   </footer>
 
