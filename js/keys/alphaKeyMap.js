@@ -17,7 +17,7 @@ export function createAlphaKeyMap(system) {
     return [];
   }
 
-  const keys = 'qwertyuiopasdfghjklzxcvbnm'.split('');
+  const keys = 'qwertyuiopasdfghjkl;zxcvbnm,./'.split('');
   let alphaKeyMap = [];
 
   if (currentDiapasonIndex >= 0 && currentDiapasonIndex < root.diapasons.length) {
