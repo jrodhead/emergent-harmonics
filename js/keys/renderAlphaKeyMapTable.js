@@ -7,10 +7,7 @@ import { alphaKeyHandler } from './alphaKeyHandler.js';
  * @param {Object} alphaKeyMap - The alpha key map containing note information.
  */
 export function renderAlphaKeyMapTable(alphaKeyMap) {
-  let alphaGridHTML = `
-    <div class="grid-container">
-      <div class="diapason">
-  `;
+  let alphaGridHTML = ``;
 
   Object.entries(alphaKeyMap).map(([noteIndex, { key, frequency, relationshipToRoot }]) => {
     alphaGridHTML += `
@@ -24,8 +21,6 @@ export function renderAlphaKeyMapTable(alphaKeyMap) {
       </div>
     `;
   });
-
-  alphaGridHTML += '</div></div>';
 
   document.getElementById('alphaKeyTable').innerHTML = alphaGridHTML;
 

@@ -71,29 +71,20 @@ button#play {
 
 #alphaKeyTable {
   grid-column: 1 / 2;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: .5rem;
+  padding: .5rem;
 }
 
 #numericKeyTable {
   grid-column: 2 / 2;
 }
 
-.grid-container {
-  display: grid;
-  gap: 5px;
-}
-
-.diapason,
 .root-group {
   display: grid;
   gap: .5rem;
   padding: .5rem;
-}
-
-.diapason {
-  grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-}
-
-.root-group {
   grid-template-columns: 1fr 1fr 1fr;
 }
 
