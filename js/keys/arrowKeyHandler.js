@@ -10,7 +10,7 @@
 
 import { musicalSystemGlobal, updateAlphaKeyMapGlobal } from '../main.js';
 import { currentRootIndex } from './numericKeyHandler.js';
-import { createAlphaKeyMap } from "./alphaKeyMap.js";
+import { createSequentialNoteToKeyMap } from "./noteToKeyMaps.js";
 
 let currentDiapasonIndex = 0; // Assuming the initial diapason index is 0
 
@@ -66,6 +66,6 @@ const handleDiapasonChange = (direction) => {
   }
 
   // Update key map based on the new diapason
-  const newKeyMap = createAlphaKeyMap(musicalSystemGlobal);
+  const newKeyMap = createSequentialNoteToKeyMap(musicalSystemGlobal);
   updateAlphaKeyMapGlobal(newKeyMap);
 };

@@ -4,7 +4,7 @@ import { alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
 import { isValidSystem, isValidDiapasons } from './isValidSystem.js';
 import { renderAlphaKeyMapTable } from './renderAlphaKeyMapTable.js';
 
-export function createAlphaKeyMap(system) {
+export function createSequentialNoteToKeyMap(system) {
   if (!isValidSystem(system)) {
     console.error('Invalid system or root provided:', system);
     return [];
