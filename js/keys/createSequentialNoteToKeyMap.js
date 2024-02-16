@@ -76,7 +76,7 @@ export function createSequentialNoteToKeyMap(system) {
     diapasonIndex++;
   }
 
-  console.log('createAlphaKeyMap result:', alphaKeyMap);
+  console.log('createSequentialNoteToKeyMap result:', alphaKeyMap);
   updateAlphaKeyMapGlobal(alphaKeyMap);
   renderAlphaKeyMapTable(alphaKeyMapGlobal);
 

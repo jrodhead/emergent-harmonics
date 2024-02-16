@@ -1,6 +1,6 @@
 import { generateRootNotes, systemCalculators } from "./systemCalculators/musicalSystemGenerator.js";
 import * as noteGenerators from "./systemCalculators/noteGenerators.js";
-import { createSequentialNoteToKeyMap } from "./keys/noteToKeyMaps.js";
+import { createDiapasonRowKeyMap } from './keys/createDiapasonRowKeyMap.js';
 import { createNumericKeyMap } from "./keys/numericKeyMap.js";
 
 let musicalSystemGlobal = [];
@@ -50,7 +50,7 @@ document.getElementById('system-config').addEventListener('submit', function(eve
     let musicalSystem = systemCalculators(rootNotes, notesToGenerate);
     musicalSystemGlobal = musicalSystem;
 
-    createSequentialNoteToKeyMap(musicalSystemGlobal);
+    createDiapasonRowKeyMap(musicalSystemGlobal);
     createNumericKeyMap(musicalSystemGlobal);
   }
 });

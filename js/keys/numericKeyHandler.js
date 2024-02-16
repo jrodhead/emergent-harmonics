@@ -1,5 +1,5 @@
 import { musicalSystemGlobal } from '../main.js';
-import { createSequentialNoteToKeyMap } from "./noteToKeyMaps.js";
+import { createDiapasonRowKeyMap } from './createDiapasonRowKeyMap.js';
 
 let currentRootIndex = 0;
 export { currentRootIndex };
@@ -11,7 +11,7 @@ const handleNumericKey = (ev, rootIndex) => {
     // console.log(`${rootIndex}On`);
     if (isValidRootIndex(rootIndex)) {
       currentRootIndex = rootIndex;
-      createSequentialNoteToKeyMap(musicalSystemGlobal);
+      createDiapasonRowKeyMap(musicalSystemGlobal);
       setActiveRoot(rootIndex);
     } else {
       console.error('Invalid root index:', rootIndex);
