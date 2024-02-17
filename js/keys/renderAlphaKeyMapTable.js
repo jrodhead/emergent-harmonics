@@ -11,7 +11,7 @@ export function renderAlphaKeyMapTable(alphaKeyMap) {
 
   Object.entries(alphaKeyMap).map(([noteIndex, { key, frequency, relationshipToRoot }]) => {
     alphaGridHTML += `
-      <div id="${frequency}" class="note">
+      <div id="${key}" class="note">
         <div class="degree">${relationshipToRoot.degree} - ${currentDiapasonIndex}</div>
         <div class="key-name">${key}</div>
         <div class="ratio">ratio: ${relationshipToRoot.ratioToRoot}</div>

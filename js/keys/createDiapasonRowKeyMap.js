@@ -63,11 +63,9 @@ export function createDiapasonRowKeyMap(system) {
     const nextNotes = nextDiapason.notes;
     const remainingKeysCount = rowKeys.length - rowNotes.length;
     const nextNotesCount = nextNotes ? Math.min(nextNotes.length, remainingKeysCount) : 0;
-    console.log('nextNotesCount:', nextNotesCount);
-    
+
     // get the first nextNotesCount notes from the next diapason
     const nextRowNotes = nextNotes.slice(0, nextNotesCount);
-    console.log('nextRowNotes:', nextRowNotes);
 
     if (!nextNotes || !Array.isArray(nextNotes)) {
       console.error('Invalid notes in the next diapason:', nextNotes);

@@ -12,7 +12,7 @@ const handleAlphaKey = (ev, action) => {
   if (!keyData) return;
 
   const { frequency } = keyData;
-  let activeNote = document.getElementById(`${frequency}`);
+  let activeNote = document.getElementById(`${action}`);
   let currentVolume = document.getElementById('oscillatorVolume').value;
   let waveShape = document.getElementById('waveShape').value;
 
