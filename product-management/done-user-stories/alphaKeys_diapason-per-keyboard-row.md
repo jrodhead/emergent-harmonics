@@ -17,7 +17,3 @@ When 'Diapason Rows' is selected as the Key Layout option, the keymap should be 
 2. The `alphaKeyMap` should be generated to map each key in a row to a unique note within the corresponding diapason.
 3. If a keyboard row has more keys than there are notes in its diapason, the extra keys should be assigned notes from the next diapason(s) in sequence, ensuring each key is associated with a unique note.
 4. Once all keys in a row have been assigned notes, the next row should start with the following diapason. This process should continue until all rows have keys mapped to notes from distinct diapasons, ensuring a consistent key-note mapping across all keyboard rows.
-
-## Bugs to fix
-
-[] unassigned keys in a row are not being assigned notes in the subsequent diapason in sequence

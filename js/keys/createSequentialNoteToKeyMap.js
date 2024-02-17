@@ -44,7 +44,7 @@ export function createSequentialNoteToKeyMap(system) {
     console.error('Invalid diapason index:', currentDiapasonIndex);
   }
 
-  // Assign remaining alpha keys to notes from succeeding diapasons
+  // Assign remaining keys to notes from succeeding diapasons
   let remainingKeys = keys.slice(alphaKeyMap.length);
   let diapasonIndex = currentDiapasonIndex + 1;
 

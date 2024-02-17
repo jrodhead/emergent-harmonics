@@ -29,7 +29,7 @@ header form,
 footer form {
   display: flex;
   align-items: baseline;
-  justify-content: space-evenly;
+  justify-content: flex-start;
   gap: 1rem;
   padding-right: 1rem;
 }

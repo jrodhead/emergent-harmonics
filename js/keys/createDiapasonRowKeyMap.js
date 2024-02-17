@@ -4,7 +4,6 @@ import { alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
 import { isValidSystem, isValidDiapasons } from './isValidSystem.js';
 import { renderAlphaKeyMapTable } from './renderAlphaKeyMapTable.js';
 
-
 export function createDiapasonRowKeyMap(system) {
   if (!isValidSystem(system)) {
     console.error('Invalid system or root provided:', system);
@@ -20,7 +19,6 @@ export function createDiapasonRowKeyMap(system) {
 
   const rows = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
   let alphaKeyMap = [];
-
   let diapasonIndex = currentDiapasonIndex;
 
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
@@ -50,6 +48,45 @@ export function createDiapasonRowKeyMap(system) {
         relationshipToRoot: note.relationshipToRoot,
       };
     }));
+
+    // Assign extra keys with notes from the next diapason(s)
+    let extraKeysCount = rowKeys.length - rowNotes.length;
+    let nextDiapasonIndex = (diapasonIndex + 1) % root.diapasons.length;
+
+    const nextDiapason = root.diapasons[nextDiapasonIndex];
+
+    if (!nextDiapason) {
+      console.error('Invalid next diapason index:', nextDiapasonIndex);
+      break;
+    }
+
+    const nextNotes = nextDiapason.notes;
+    const remainingKeysCount = rowKeys.length - rowNotes.length;
+    const nextNotesCount = nextNotes ? Math.min(nextNotes.length, remainingKeysCount) : 0;
+    console.log('nextNotesCount:', nextNotesCount);
+    
+    // get the first nextNotesCount notes from the next diapason
+    const nextRowNotes = nextNotes.slice(0, nextNotesCount);
+    console.log('nextRowNotes:', nextRowNotes);
+
+    if (!nextNotes || !Array.isArray(nextNotes)) {
+      console.error('Invalid notes in the next diapason:', nextNotes);
+      break;
+    }
+
+    while (extraKeysCount > 0) {
+      const extraNote = nextRowNotes[nextRowNotes.length - extraKeysCount];
+      const extraKey = rowKeys[rowKeys.length - extraKeysCount];
+
+      alphaKeyMap.push({
+        key: extraKey,
+        frequency: extraNote.frequency,
+        relationshipToRoot: extraNote.relationshipToRoot,
+      });
+
+      extraKeysCount--;
+      nextDiapasonIndex = (nextDiapasonIndex + 1) % root.diapasons.length;
+    }
 
     diapasonIndex = (diapasonIndex + 1) % root.diapasons.length;
   }

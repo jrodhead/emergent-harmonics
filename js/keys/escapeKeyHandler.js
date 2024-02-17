@@ -24,5 +24,8 @@ document.body.addEventListener('keyup', (ev) => {
 
     // Remove the CSS class that indicates stop
     document.body.classList.remove('stop');
+    // find all elements with the class 'active' and remove the class
+    const activeKeys = document.querySelectorAll('.active');
+    activeKeys.forEach((key) => key.classList.remove('active'));
   }
 });
