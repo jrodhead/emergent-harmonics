@@ -1,13 +1,5 @@
-**User Story:**
-As a user of the website's musical keyboard functionality, I want the ability to choose between different key mapping layouts, enabling me to select the layout that best suits the music I wish to play.
+# Diapasons per keyboard row
 
-**Acceptance Criteria:**
-1. A new option should be added to the System Configuration that allows users to select a Key Layout.
-2. Two Key Layout options should be available: 'Sequential' and 'Diapason Rows'.
-  1. The 'Sequential' option should utilize the existing `createAlphaKeyMap` function, which will be renamed to `createSequentialNoteKeyMap`.
-  2. The 'Diapason Rows' option should utilize a new function named `createDiapasonRowKeyMap`.
-
-**User Story: Diapasons per Keyboard Row**
 As a user of the website's musical keyboard functionality, I want each keyboard row to represent a different diapason, enhancing my understanding of the key-note mapping and improving my user experience.
 
 **Acceptance Criteria:**

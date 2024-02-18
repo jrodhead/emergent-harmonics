@@ -2,7 +2,6 @@
 
 ## Oscillator volume control
 
-**User Story:**
 As a website visitor, I want to adjust the volume of the oscillator in real-time, allowing me to fine-tune its level in relation to other instruments in the mix.
 
 **Acceptance Criteria:**
@@ -11,7 +10,6 @@ As a website visitor, I want to adjust the volume of the oscillator in real-time
 
 ## Oscillator Wave Shape Control
 
-**User Story:**
 As a website visitor, I want to adjust the oscillator's wave shape in real-time, enabling me to modify the tone according to my preferences.
 
 **Acceptance Criteria:**

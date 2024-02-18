@@ -1,6 +1,5 @@
 # Generate alpha keymap for as many notes as possible (proceed to next diapason)
 
-**User Story:**
 As a website visitor, I want each key in the `alphaKeyMap` to be assigned a musical note, so that I can use all of the alpha keys on my keyboard to play a note.
 
 **Acceptance Criteria:**
