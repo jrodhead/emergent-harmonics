@@ -69,23 +69,40 @@ button#play {
   -webkit-user-select: none;
 }
 
-#alphaKeyTable {
-  grid-column: 1 / 2;
+#alphaKeyTable,
+#numericKeyTable {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
   gap: .5rem;
   padding: .5rem;
+}
+
+#alphaKeyTable {
+  grid-column: 1 / 2;
 }
 
 #numericKeyTable {
   grid-column: 2 / 2;
+  border-left: 1px dashed #fff;
 }
 
+.alpha-group,
 .root-group {
   display: grid;
   gap: .5rem;
   padding: .5rem;
-  grid-template-columns: 1fr 1fr 1fr;
+}
+
+.alpha-group {
+  grid-template-columns: repeat(10, 1fr);
+}
+
+.root-group {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.grid-container h2 {
+  color: #fff;
+  margin: 1rem .5rem .5rem;
 }
 
 #current-diapason-data,

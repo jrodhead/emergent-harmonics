@@ -15,6 +15,7 @@ export const createNumericKeyMap = (musicalSystem) => {
 const renderNumericKeyMapTable = (numericKeyMap) => {
   const numericGridHTML = `
     <div class="grid-container">
+      <h2>Root Selectors</h2>
       <div class="root-group">
         ${Object.entries(numericKeyMap).map(([key, value]) => `
           <div id="root${key}" class="root-selector">
