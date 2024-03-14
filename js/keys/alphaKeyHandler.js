@@ -1,5 +1,5 @@
 import { playSound, stopSound } from '../audio/audioHandler.js';
-import { activeScaleNotesGlobal } from './numericKeyHandler.js';
+import { alphaKeyMap } from './createDiapasonRowKeyMap.js';
 
 /**
  * Handles key events for sound playback and UI changes.
@@ -8,7 +8,7 @@ import { activeScaleNotesGlobal } from './numericKeyHandler.js';
  */
 const handleAlphaKey = (ev, action) => {
   // Find key data corresponding to the action
-  const keyData = activeScaleNotesGlobal.find((item) => item.key === action);
+  const keyData = alphaKeyMap.find((item) => item.key === action);
   if (!keyData) return;
 
   const { frequency } = keyData;
@@ -38,7 +38,7 @@ export const alphaKeyHandler = (ev) => {
   if (ev.repeat) return;
 
   // Find key data for the pressed key
-  const keyData = activeScaleNotesGlobal.find((item) => item.key === ev.key);
+  const keyData = alphaKeyMap.find((item) => item.key === ev.key);
   if (!keyData) return;
 
   // Handle the key event

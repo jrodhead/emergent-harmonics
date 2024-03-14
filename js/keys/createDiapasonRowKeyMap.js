@@ -1,7 +1,8 @@
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
-import { activeScaleNotesGlobal } from './numericKeyHandler.js';
 import { isValidSystem } from './isValidSystem.js';
 import { renderAlphaKeyMapTable } from './renderAlphaKeyMapTable.js';
+
+export let alphaKeyMap = [];
 
 export function createDiapasonRowKeyMap(system) {
   if (!isValidSystem(system)) {
@@ -10,7 +11,7 @@ export function createDiapasonRowKeyMap(system) {
   }
 
   const rows = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
-  let alphaKeyMap = [];
+  alphaKeyMap = [];
   let diapasonIndex = currentDiapasonIndex;
 
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
@@ -83,4 +84,5 @@ export function createDiapasonRowKeyMap(system) {
 
   console.log('createDiapasonRowKeyMap result:', alphaKeyMap);
   renderAlphaKeyMapTable(alphaKeyMap);
+  return alphaKeyMap;
 }
