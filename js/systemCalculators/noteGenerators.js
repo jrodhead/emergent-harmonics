@@ -1,5 +1,6 @@
 import { majorScaleNotes } from "./majorScale.js";
 import { naturalMinorScaleNotes } from "./naturalMinorScale.js";
+import { diminishedScaleNotes } from "./diminishedScale.js";
 import { majorPentatonicScaleNotes } from "./pentatonicScale.js";
 import { bluesScaleNotes } from "./bluesScale.js";
 import { hd110067NotesInOneDiapason } from "./hd110067.js";
@@ -9,10 +10,12 @@ import { exploratoryNotes } from "./exploratory.js";
 import { pythagoreanNotes } from "./pythagorean.js";
 
 export function getNotesForSystem(system, notesInDiapason) {
-  if (system === 'majorScaleNotes') {
+  if (system === 'majorScaleNotes' || system === 'major') {
     return majorScaleNotes;
-  } else if (system === 'naturalMinorScaleNotes') {
+  } else if (system === 'naturalMinorScaleNotes' || system === 'minor') {
     return naturalMinorScaleNotes;
+  } else if (system === 'diminishedScaleNotes' || system === 'diminished') {
+    return diminishedScaleNotes;
   } else if (system === 'majorPentatonicScaleNotes') {
     return majorPentatonicScaleNotes;
   } else if (system === 'bluesScaleNotes') {
@@ -28,13 +31,14 @@ export function getNotesForSystem(system, notesInDiapason) {
   } else if (system === "pythagoreanNotes") {
     return pythagoreanNotes;
   } else {
-    throw new Error('Invalid System Calculator');
+    throw new Error(`Invalid System Calculator: ${system}`);
   }
 };
 
 export const noteGenerators = {
   majorScaleNotes,
   naturalMinorScaleNotes,
+  diminishedScaleNotes,
   majorPentatonicScaleNotes,
   bluesScaleNotes,
   pythagoreanNotes,

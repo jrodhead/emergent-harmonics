@@ -8,9 +8,8 @@
  * and the key map based on the new diapason.
  */
 
-import { musicalSystemGlobal, updateAlphaKeyMapGlobal } from '../main.js';
 import { currentRootIndex } from './numericKeyHandler.js';
-import { createDiapasonRowKeyMap } from './createDiapasonRowKeyMap.js';
+import { activeScaleNotesGlobal } from './numericKeyHandler.js';
 
 let currentDiapasonIndex = 0; // Assuming the initial diapason index is 0
 
@@ -29,8 +28,8 @@ const updateCurrentDiapasonIndex = (direction) => {
   }
 
   // Ensure the diapason index stays within valid bounds
-  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= musicalSystemGlobal[currentRootIndex].diapasons.length) {
-    currentDiapasonIndex = Math.max(0, Math.min(musicalSystemGlobal[currentRootIndex].diapasons.length - 1, currentDiapasonIndex));
+  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= activeScaleNotesGlobal[currentRootIndex].diapasons.length) {
+    currentDiapasonIndex = Math.max(0, Math.min(activeScaleNotesGlobal[currentRootIndex].diapasons.length - 1, currentDiapasonIndex));
     return;
   }
 };
@@ -60,12 +59,8 @@ const handleDiapasonChange = (direction) => {
   updateCurrentDiapasonIndex(direction);
 
   // Ensure the diapason index stays within valid bounds
-  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= musicalSystemGlobal[currentRootIndex].diapasons.length) {
-    currentDiapasonIndex = Math.max(0, Math.min(musicalSystemGlobal[currentRootIndex].diapasons.length - 1, currentDiapasonIndex));
+  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= activeScaleNotesGlobal[currentRootIndex].diapasons.length) {
+    currentDiapasonIndex = Math.max(0, Math.min(activeScaleNotesGlobal[currentRootIndex].diapasons.length - 1, currentDiapasonIndex));
     return;
   }
-
-  // Update key map based on the new diapason
-  const newKeyMap = createDiapasonRowKeyMap(musicalSystemGlobal);
-  updateAlphaKeyMapGlobal(newKeyMap);
 };

@@ -14,28 +14,22 @@ export function generateRootNotes(primaryRootFrequency, notesToGenerate) {
     rootNotes.push({frequency, relationshipToRoot: noteName});
   }
 
-  console.log('rootNotes: ', rootNotes);
   return rootNotes;
 }
 
-export function systemCalculators(rootNotes, notesToGenerate) {
-  let musicalSystem = [];
+export function generateScaleNotes(rootNoteFrequency, notesToGenerate) {
+  let diapasons = [];
+  for (let diapason = 0; diapason < 10; diapason++) {
+    let notes = [];
 
-  for (let rootNote of rootNotes) {
-    let diapasons = [];
-    for (let diapason = 0; diapason < 10; diapason++) {
-      let notes = [];
-
-      for (let noteName = 0; noteName < notesToGenerate.length; noteName++) {
-        let frequency = rootNote.frequency * notesToGenerate[noteName].ratioToRoot * Math.pow(2, diapason);
-        notes.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
-      }
-
-      diapasons.push({ notes });
+    for (let noteName = 0; noteName < notesToGenerate.length; noteName++) {
+      let frequency = rootNoteFrequency * notesToGenerate[noteName].ratioToRoot * Math.pow(2, diapason);
+      notes.push({ noteName, frequency, relationshipToRoot: notesToGenerate[noteName] });
     }
-    musicalSystem.push({ rootNote, diapasons });
+
+    diapasons.push({ notes });
   }
 
-  console.log('musicalSystem: ', musicalSystem);
-  return musicalSystem;
+  console.log('diapasons: ', diapasons);
+  return diapasons;
 }

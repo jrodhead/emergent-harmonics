@@ -1,19 +1,11 @@
-import { currentRootIndex } from './numericKeyHandler.js';
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
-import { alphaKeyMapGlobal, updateAlphaKeyMapGlobal } from '../main.js';
-import { isValidSystem, isValidDiapasons } from './isValidSystem.js';
+import { activeScaleNotesGlobal } from './numericKeyHandler.js';
+import { isValidSystem } from './isValidSystem.js';
 import { renderAlphaKeyMapTable } from './renderAlphaKeyMapTable.js';
 
 export function createDiapasonRowKeyMap(system) {
   if (!isValidSystem(system)) {
     console.error('Invalid system or root provided:', system);
-    return [];
-  }
-
-  const root = system[currentRootIndex];
-
-  if (!isValidDiapasons(root.diapasons)) {
-    console.error('Invalid diapasons in the root:', root && root.diapasons);
     return [];
   }
 
@@ -23,7 +15,7 @@ export function createDiapasonRowKeyMap(system) {
 
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const rowKeys = rows[rowIndex];
-    const diapason = root.diapasons[diapasonIndex];
+    const diapason = system[diapasonIndex];
 
     if (!diapason) {
       console.error('Invalid diapason index:', diapasonIndex);
@@ -51,9 +43,9 @@ export function createDiapasonRowKeyMap(system) {
 
     // Assign extra keys with notes from the next diapason(s)
     let extraKeysCount = rowKeys.length - rowNotes.length;
-    let nextDiapasonIndex = (diapasonIndex + 1) % root.diapasons.length;
+    let nextDiapasonIndex = (diapasonIndex + 1) % system.length;
 
-    const nextDiapason = root.diapasons[nextDiapasonIndex];
+    const nextDiapason = system[nextDiapasonIndex];
 
     if (!nextDiapason) {
       console.error('Invalid next diapason index:', nextDiapasonIndex);
@@ -83,15 +75,12 @@ export function createDiapasonRowKeyMap(system) {
       });
 
       extraKeysCount--;
-      nextDiapasonIndex = (nextDiapasonIndex + 1) % root.diapasons.length;
+      nextDiapasonIndex = (nextDiapasonIndex + 1) % system.length;
     }
 
-    diapasonIndex = (diapasonIndex + 1) % root.diapasons.length;
+    diapasonIndex = (diapasonIndex + 1) % system.length;
   }
 
   console.log('createDiapasonRowKeyMap result:', alphaKeyMap);
-  updateAlphaKeyMapGlobal(alphaKeyMap);
-  renderAlphaKeyMapTable(alphaKeyMapGlobal);
-
-  return alphaKeyMapGlobal;
+  renderAlphaKeyMapTable(alphaKeyMap);
 }
