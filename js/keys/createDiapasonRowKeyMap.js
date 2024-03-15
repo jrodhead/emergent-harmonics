@@ -1,6 +1,6 @@
 import { currentDiapasonIndex } from "./arrowKeyHandler.js";
 import { isValidSystem } from './isValidSystem.js';
-import { renderAlphaKeyMapTable } from './renderAlphaKeyMapTable.js';
+import { renderAlphaKeyTable } from './renderAlphaKeyTable.js';
 
 export let alphaKeyMap = [];
 
@@ -83,6 +83,6 @@ export function createDiapasonRowKeyMap(system) {
   }
 
   console.log('createDiapasonRowKeyMap result:', alphaKeyMap);
-  renderAlphaKeyMapTable(alphaKeyMap);
+  renderAlphaKeyTable(alphaKeyMap);
   return alphaKeyMap;
 }

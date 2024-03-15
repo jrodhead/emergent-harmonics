@@ -6,7 +6,7 @@ import { alphaKeyHandler } from './alphaKeyHandler.js';
  *
  * @param {Object} alphaKeyMap - The alpha key map containing note information.
  */
-export function renderAlphaKeyMapTable(alphaKeyMap) {
+export function renderAlphaKeyTable(alphaKeyMap) {
   let alphaGridHTML = `
     <div class="grid-container">
       <h2>Note Selectors</h2>

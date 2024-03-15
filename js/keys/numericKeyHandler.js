@@ -1,6 +1,6 @@
 import { createDiapasonRowKeyMap } from './createDiapasonRowKeyMap.js';
-import { generateScaleNotes } from '../systemCalculators/musicalSystemGenerator.js';
-import { getNotesForSystem } from '../systemCalculators/noteGenerators.js';
+import { generateScaleNotes } from '../scaleCalculators/musicalSystemGenerator.js';
+import { getNotesForSystem } from '../scaleCalculators/noteGenerators.js';
 import { rootNotesGlobal } from '../main.js';
 
 let currentRootIndex = 0;

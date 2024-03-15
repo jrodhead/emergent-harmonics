@@ -1,7 +1,8 @@
 import { majorScaleNotes } from "./majorScale.js";
 import { naturalMinorScaleNotes } from "./naturalMinorScale.js";
 import { diminishedScaleNotes } from "./diminishedScale.js";
-import { majorPentatonicScaleNotes } from "./pentatonicScale.js";
+import { majorPentatonicScaleNotes } from "./majorPentatonicScale.js";
+import { minorPentatonicScaleNotes } from "./minorPentatonicScale.js";
 import { bluesScaleNotes } from "./bluesScale.js";
 import { hd110067NotesInOneDiapason } from "./hd110067.js";
 import { equalTemperamentNoteGenerator } from "./equalTemperament.js";
@@ -18,6 +19,8 @@ export function getNotesForSystem(system, notesInDiapason) {
     return diminishedScaleNotes;
   } else if (system === 'majorPentatonicScaleNotes') {
     return majorPentatonicScaleNotes;
+  } else if (system === 'minorPentatonicScaleNotes') {
+    return minorPentatonicScaleNotes;
   } else if (system === 'bluesScaleNotes') {
     return bluesScaleNotes;
   } else if (system === 'equalTemperamentNoteGenerator') {
@@ -40,6 +43,7 @@ export const noteGenerators = {
   naturalMinorScaleNotes,
   diminishedScaleNotes,
   majorPentatonicScaleNotes,
+  minorPentatonicScaleNotes,
   bluesScaleNotes,
   pythagoreanNotes,
   hd110067NotesInOneDiapason,

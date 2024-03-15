@@ -1,32 +1,38 @@
-export const majorPentatonicScaleNotes = [
+export const bluesScaleNotes = [
   {
     degree: "I",
     ratioToRoot: 1/1,
     relationshipToRootName: "Root",
-    triadType: "major"
+    triadType: "bluesScaleNotes"
   },
   {
     degree: "II",
     ratioToRoot: 9/8,
     relationshipToRootName: "Major 2nd",
-    triadType: "minor"
+    triadType: "bluesScaleNotes"
   },
   {
     degree: "III",
     ratioToRoot: 5/4,
     relationshipToRootName: "Major 3rd",
-    triadType: "major"
+    triadType: "bluesScaleNotes"
+  },
+  {
+    degree: "IV",
+    ratioToRoot: 4/3,
+    relationshipToRootName: "Perfect 4th",
+    triadType: "bluesScaleNotes"
   },
   {
     degree: "V",
     ratioToRoot: 3/2,
     relationshipToRootName: "Perfect 5th",
-    triadType: "major"
+    triadType: "bluesScaleNotes"
   },
   {
     degree: "VI",
     ratioToRoot: 5/3,
     relationshipToRootName: "Major 6th",
-    triadType: "minor"
+    triadType: "bluesScaleNotes"
   }
 ];

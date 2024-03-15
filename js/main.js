@@ -1,6 +1,6 @@
-import { generateRootNotes } from "./systemCalculators/musicalSystemGenerator.js";
-import { getNotesForSystem, noteGenerators } from "./systemCalculators/noteGenerators.js";
-import { renderNumericKeyTable } from "./keys/numericKeyMap.js";
+import { generateRootNotes } from "./scaleCalculators/musicalSystemGenerator.js";
+import { getNotesForSystem, noteGenerators } from "./scaleCalculators/noteGenerators.js";
+import { renderNumericKeyTable } from "./keys/renderNumericKeyTable.js";
 
 const calculatorSelector = document.getElementById('calculator');
 
