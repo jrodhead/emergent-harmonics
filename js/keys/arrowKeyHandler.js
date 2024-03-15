@@ -45,10 +45,10 @@ document.body.addEventListener('keydown', (ev) => {
   if (ev.key === 'ArrowUp') {
     // Go to the next diapason (current diapason + 1)
     updateCurrentDiapasonIndex('next');
+    createDiapasonRowKeyMap(activeScaleNotesGlobal);
   } else if (ev.key === 'ArrowDown') {
     // Go to the previous diapason (current diapason - 1)
     updateCurrentDiapasonIndex('previous');
+    createDiapasonRowKeyMap(activeScaleNotesGlobal);
   }
-
-  createDiapasonRowKeyMap(activeScaleNotesGlobal);
 });
