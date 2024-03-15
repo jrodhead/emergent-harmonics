@@ -26,13 +26,13 @@ const updateCurrentDiapasonIndex = (direction) => {
     currentDiapasonIndex--;
   }
 
-  console.log(activeScaleNotesGlobal[currentDiapasonIndex]);
-
   // Ensure the diapason index stays within valid bounds
   if (currentDiapasonIndex < 0 || currentDiapasonIndex >= activeScaleNotesGlobal.length) {
     currentDiapasonIndex = Math.max(0, Math.min(activeScaleNotesGlobal.length - 1, currentDiapasonIndex));
     return;
   }
+
+  createDiapasonRowKeyMap(activeScaleNotesGlobal);
 };
 
 export { currentDiapasonIndex, updateCurrentDiapasonIndex};
@@ -45,10 +45,8 @@ document.body.addEventListener('keydown', (ev) => {
   if (ev.key === 'ArrowUp') {
     // Go to the next diapason (current diapason + 1)
     updateCurrentDiapasonIndex('next');
-    createDiapasonRowKeyMap(activeScaleNotesGlobal);
   } else if (ev.key === 'ArrowDown') {
     // Go to the previous diapason (current diapason - 1)
     updateCurrentDiapasonIndex('previous');
-    createDiapasonRowKeyMap(activeScaleNotesGlobal);
   }
 });
