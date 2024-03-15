@@ -10,7 +10,7 @@
 import { activeScaleNotesGlobal } from './numericKeyHandler.js';
 import { createDiapasonRowKeyMap } from './createDiapasonRowKeyMap.js';
 
-let currentDiapasonIndex = 0; // Assuming the initial diapason index is 0
+let currentDiapasonIndex;
 
 /**
  * Updates the currentDiapasonIndex based on the direction provided.
@@ -24,6 +24,8 @@ const updateCurrentDiapasonIndex = (direction) => {
       return; // Do not decrement if currentDiapasonIndex is already 0
     }
     currentDiapasonIndex--;
+  } else if (direction === 'reset') {
+    currentDiapasonIndex = 0;
   }
 
   // Ensure the diapason index stays within valid bounds

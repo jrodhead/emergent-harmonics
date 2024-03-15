@@ -22,7 +22,7 @@ const handleNumericKey = (ev, rootIndex) => {
 
     let scaleNotesToGenerate = getNotesForSystem(rootNotesGlobal[currentRootIndex].relationshipToRoot.triadType);
 
-    activeScaleNotesGlobal = generateScaleNotes(rootNotesGlobal[currentRootIndex].frequency, scaleNotesToGenerate);
+    updateActiveScaleNotesGlobal(rootNotesGlobal[currentRootIndex].frequency, scaleNotesToGenerate);
 
     console.log('activeScaleNotesGlobal: ', activeScaleNotesGlobal);
 
@@ -36,11 +36,19 @@ const handleNumericKey = (ev, rootIndex) => {
   }
 };
 
-const isValidRootIndex = (rootIndex) => {
+export const updateActiveScaleNotesGlobal = (rootFrequency, newScaleNotesToGenerate) => {
+  activeScaleNotesGlobal = generateScaleNotes(rootFrequency, newScaleNotesToGenerate);
+};
+
+export const updateCurrentRootIndex = (newRootIndex) => {
+  currentRootIndex = newRootIndex;
+};
+
+export const isValidRootIndex = (rootIndex) => {
   return rootIndex >= 0 && rootIndex < activeScaleNotesGlobal.length;
 };
 
-const displayActiveRootNote = (rootIndex) => {
+export const displayActiveRootNote = (rootIndex) => {
   let activeRoot = document.getElementById(`root${rootIndex}`);
   const activeElements = document.querySelectorAll('.active');
   activeElements.forEach(element => {
