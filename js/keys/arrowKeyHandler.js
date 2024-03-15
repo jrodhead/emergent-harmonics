@@ -7,9 +7,8 @@
  * The handleDiapasonChange function is called when the arrow keys are pressed and updates the currentDiapasonIndex
  * and the key map based on the new diapason.
  */
-
-import { currentRootIndex } from './numericKeyHandler.js';
 import { activeScaleNotesGlobal } from './numericKeyHandler.js';
+import { createDiapasonRowKeyMap } from './createDiapasonRowKeyMap.js';
 
 let currentDiapasonIndex = 0; // Assuming the initial diapason index is 0
 
@@ -27,9 +26,11 @@ const updateCurrentDiapasonIndex = (direction) => {
     currentDiapasonIndex--;
   }
 
+  console.log(activeScaleNotesGlobal[currentDiapasonIndex]);
+
   // Ensure the diapason index stays within valid bounds
-  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= activeScaleNotesGlobal[currentRootIndex].diapasons.length) {
-    currentDiapasonIndex = Math.max(0, Math.min(activeScaleNotesGlobal[currentRootIndex].diapasons.length - 1, currentDiapasonIndex));
+  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= activeScaleNotesGlobal.length) {
+    currentDiapasonIndex = Math.max(0, Math.min(activeScaleNotesGlobal.length - 1, currentDiapasonIndex));
     return;
   }
 };
@@ -43,24 +44,11 @@ document.body.addEventListener('keydown', (ev) => {
   // Handle diapason change with up and down arrow keys
   if (ev.key === 'ArrowUp') {
     // Go to the next diapason (current diapason + 1)
-    handleDiapasonChange('next');
+    updateCurrentDiapasonIndex('next');
   } else if (ev.key === 'ArrowDown') {
     // Go to the previous diapason (current diapason - 1)
-    handleDiapasonChange('previous');
+    updateCurrentDiapasonIndex('previous');
   }
+
+  createDiapasonRowKeyMap(activeScaleNotesGlobal);
 });
-
-/**
- * Handles the diapason change based on the direction provided.
- * Updates the currentDiapasonIndex and the key map based on the new diapason.
- * @param {string} direction - The direction of the diapason change. Can be 'next' or 'previous'.
- */
-const handleDiapasonChange = (direction) => {
-  updateCurrentDiapasonIndex(direction);
-
-  // Ensure the diapason index stays within valid bounds
-  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= activeScaleNotesGlobal[currentRootIndex].diapasons.length) {
-    currentDiapasonIndex = Math.max(0, Math.min(activeScaleNotesGlobal[currentRootIndex].diapasons.length - 1, currentDiapasonIndex));
-    return;
-  }
-};
