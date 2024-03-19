@@ -2,7 +2,7 @@ import { generateRootNotes } from "./scaleCalculators/musicalSystemGenerator.js"
 import { getNotesForSystem, noteGenerators } from "./scaleCalculators/noteGenerators.js";
 import { renderNumericKeyTable } from "./keys/renderNumericKeyTable.js";
 import { createDiapasonRowKeyMap } from "./keys/createDiapasonRowKeyMap.js";
-import { currentDiapasonIndex, updateCurrentDiapasonIndex } from "./keys/arrowKeyHandler.js";
+import { updateCurrentDiapasonIndex } from "./keys/arrowKeyHandler.js";
 import { activeScaleNotesGlobal, updateActiveScaleNotesGlobal, displayActiveRootNote, currentRootIndex, updateCurrentRootIndex } from "./keys/numericKeyHandler.js";
 
 const calculatorSelector = document.getElementById('calculator');
