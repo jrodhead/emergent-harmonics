@@ -268,6 +268,92 @@ describe('the system configuration screen', { skip }, () => {
     });
   });
 
+  describe('the mixer layout', () => {
+    it('runs the notes across the screen as tracks', async () => {
+      const first = await app.boxOf('.config-note[data-note-index="0"]');
+      const second = await app.boxOf('.config-note[data-note-index="1"]');
+
+      assert.equal(first.top, second.top, 'tracks share a top edge');
+      assert.ok(second.left > first.left, 'the second track sits to the right of the first');
+    });
+
+    it('stacks each track\'s controls down its own strip', async () => {
+      const degree = await app.boxOf('.config-note-degree');
+      const fields = await app.boxOf('.config-note-fields');
+      const fader = await app.boxOf('.config-note-slider');
+      const readout = await app.boxOf('.config-note-hz');
+      const key = await app.boxOf('.config-note-key');
+
+      const tops = [degree.top, fields.top, fader.top, readout.top, key.top];
+      assert.deepEqual(tops, [...tops].sort((a, b) => a - b), `expected top to bottom, got ${tops}`);
+    });
+
+    it('gives the frequency a vertical fader, not a horizontal one', async () => {
+      const fader = await app.boxOf('.config-note-slider');
+
+      assert.ok(fader.height > fader.width * 5, `${fader.width}x${fader.height} is not a vertical fader`);
+    });
+
+    it('labels the fader with the ends of the diapason', async () => {
+      await app.evaluate(`
+        const root = document.getElementById('configRootFrequency');
+        root.value = '400';
+        root.dispatchEvent(new Event('change', { bubbles: true }));
+      `);
+
+      assert.deepEqual(await app.evaluate(`
+        return [...document.querySelectorAll('.config-note[data-note-index="0"] .config-note-scale')]
+          .map(scale => scale.textContent.trim());
+      `), ['800', '400']);
+    });
+
+    it('gives the fader more travel in a taller window', async () => {
+      await app.setViewport(1200, 700);
+      const short = await app.boxOf('.config-note-slider');
+
+      await app.setViewport(1200, 1100);
+      const tall = await app.boxOf('.config-note-slider');
+
+      await app.clearViewport();
+
+      // A 400px taller window should buy most of that back as fader travel.
+      assert.ok(
+        tall.height > short.height * 1.5,
+        `fader only grew from ${short.height}px to ${tall.height}px`,
+      );
+    });
+
+    it('scrolls the tracks sideways rather than the page', async () => {
+      await app.setViewport(700, 900);
+
+      const [listScrolls, pageScrolls] = await app.evaluate(`
+        for (let added = 0; added < 6; added++) document.getElementById('addNote').click();
+        const list = document.querySelector('.config-note-list');
+        return [list.scrollWidth > list.clientWidth,
+                document.documentElement.scrollWidth > document.documentElement.clientWidth];
+      `);
+
+      await app.clearViewport();
+
+      assert.equal(listScrolls, true, 'the track list should scroll');
+      assert.equal(pageScrolls, false, 'the page itself should not scroll sideways');
+    });
+
+    it('keeps the fader working after the relayout', async () => {
+      assert.deepEqual(await app.evaluate(`
+        const root = document.getElementById('configRootFrequency');
+        root.value = '400';
+        root.dispatchEvent(new Event('change', { bubbles: true }));
+
+        const row = document.querySelectorAll('.config-note')[1];
+        const fader = row.querySelector('.config-note-slider');
+        fader.value = '700';
+        fader.dispatchEvent(new Event('input', { bubbles: true }));
+        return [row.querySelector('.config-note-ratio').value, row.querySelector('.config-note-hz').value];
+      `), ['1.75', '700']);
+    });
+  });
+
   describe('auditioning notes from the top row', () => {
     it('shows the key that plays each note', async () => {
       assert.deepEqual(

@@ -66,41 +66,52 @@ export const renderNote = (note, noteIndex) => {
   const removable = canRemoveNote(noteIndex);
   const previewKey = previewKeyForIndex(noteIndex);
 
+  // Laid out as a mixer channel strip: the notes run across the screen, and
+  // each note's controls stack down its own track around a tall fader.
   return `
     <div class="config-note" data-note-index="${noteIndex}">
       <div class="config-note-heading">
         <span class="config-note-degree">${escapeHtml(note.degree)}</span>
-        ${previewKey
-          ? `<span class="config-note-key" title="Hold ${escapeHtml(previewKey)} to hear this note">${escapeHtml(previewKey)}</span>`
-          : '<span class="config-note-key none" title="Past the last preview key">&mdash;</span>'}
         <button type="button" class="config-note-remove"
                 title="${removable ? 'Remove this note' : 'The root of the diapason cannot be removed'}"
                 ${removable ? '' : 'disabled'}>&#10005;</button>
       </div>
 
-      <label>Name
-        <input type="text" class="config-note-name" value="${escapeHtml(note.relationshipToRootName)}"
-               data-derived="${note.relationshipToRootName === describeRatio(note.ratioToRoot)}">
-      </label>
+      <div class="config-note-fields">
+        <label>Name
+          <input type="text" class="config-note-name" value="${escapeHtml(note.relationshipToRootName)}"
+                 data-derived="${note.relationshipToRootName === describeRatio(note.ratioToRoot)}">
+        </label>
 
-      <label>Ratio to root
-        <input type="number" class="config-note-ratio"
-               min="${MIN_RATIO}" max="${MAX_RATIO}" step="0.0001" value="${formatRatio(note.ratioToRoot)}">
-      </label>
+        <label>Ratio to root
+          <input type="number" class="config-note-ratio"
+                 min="${MIN_RATIO}" max="${MAX_RATIO}" step="0.0001" value="${formatRatio(note.ratioToRoot)}">
+        </label>
 
-      <label>Frequency
+        <label>Triad type
+          <select class="config-note-triad" title="${escapeHtml(note.triadType)}">
+            ${renderTriadTypeOptions(note.triadType)}
+          </select>
+        </label>
+      </div>
+
+      <div class="config-note-fader">
+        <span class="config-note-scale">${formatFrequency(maximum)}</span>
+        <input type="range" class="config-note-slider" orient="vertical"
+               min="${minimum}" max="${maximum}" step="0.01" value="${frequency}"
+               aria-label="Frequency for ${escapeHtml(note.degree)}">
+        <span class="config-note-scale">${formatFrequency(minimum)}</span>
+      </div>
+
+      <label class="config-note-readout">
         <input type="number" class="config-note-hz"
                min="${formatFrequency(minimum)}" max="${formatFrequency(maximum)}" step="0.01"
                value="${formatFrequency(frequency)}">Hz
       </label>
 
-      <input type="range" class="config-note-slider"
-             min="${minimum}" max="${maximum}" step="0.01" value="${frequency}"
-             aria-label="Frequency for ${escapeHtml(note.degree)}">
-
-      <label>Triad type
-        <select class="config-note-triad">${renderTriadTypeOptions(note.triadType)}</select>
-      </label>
+      ${previewKey
+        ? `<div class="config-note-key" title="Hold ${escapeHtml(previewKey)} to hear this note">${escapeHtml(previewKey)}</div>`
+        : '<div class="config-note-key none" title="Past the last preview key">&mdash;</div>'}
     </div>
   `;
 };

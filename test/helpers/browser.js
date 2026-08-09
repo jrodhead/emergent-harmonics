@@ -181,6 +181,28 @@ export async function launchApp() {
       consoleErrors.length = 0;
     },
 
+    /** Resizes the viewport, for layout that depends on the window. */
+    async setViewport(width, height) {
+      await send('Emulation.setDeviceMetricsOverride', { width, height, deviceScaleFactor: 1, mobile: false }, sessionId);
+    },
+
+    async clearViewport() {
+      await send('Emulation.clearDeviceMetricsOverride', {}, sessionId);
+    },
+
+    /** The on-screen box of the first element matching the selector. */
+    async boxOf(selector) {
+      return evaluate(`
+        const element = document.querySelector('${selector}');
+        if (!element) return null;
+        const rect = element.getBoundingClientRect();
+        return {
+          top: Math.round(rect.top), left: Math.round(rect.left),
+          width: Math.round(rect.width), height: Math.round(rect.height),
+        };
+      `);
+    },
+
     /** Clicks the element at its centre with a real mouse, not a synthetic event. */
     async click(selector) {
       const box = await evaluate(`
