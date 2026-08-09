@@ -16,11 +16,11 @@ export const formatRatio = (ratio) => {
 };
 
 /**
- * Marks a degree with the octaves it has been shifted, so a repeated degree
+ * Marks a degree with the periods it has been shifted, so a repeated degree
  * reads apart from the one it repeats: I, I′, I″.
  */
-export const formatDegree = (degree, octaveShift = 0) => {
-  const shift = Number.isFinite(octaveShift) ? Math.max(0, Math.trunc(octaveShift)) : 0;
+export const formatDegree = (degree, periodShift = 0) => {
+  const shift = Number.isFinite(periodShift) ? Math.max(0, Math.trunc(periodShift)) : 0;
 
   return `${degree}${'′'.repeat(shift)}`;
 };

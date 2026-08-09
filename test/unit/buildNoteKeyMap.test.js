@@ -9,7 +9,7 @@ const ROW_LENGTH = KEY_ROWS[0].length;
 const systemOf = (notesPerRegister, registerCount) => Array.from(
   { length: registerCount },
   (unusedRegister, registerIndex) => ({
-    octaveShift: registerIndex,
+    periodShift: registerIndex,
     notes: Array.from({ length: notesPerRegister }, (unusedNote, noteIndex) => ({
       noteIndex,
       frequency: (noteIndex + 1) * Math.pow(2, registerIndex),
@@ -23,16 +23,16 @@ describe('buildNoteKeyMap', () => {
     const keyMap = buildNoteKeyMap(systemOf(ROW_LENGTH, 5), 0);
 
     assert.equal(keyMap.length, ROW_LENGTH * KEY_ROWS.length);
-    assert.equal(keyMap.find((entry) => entry.key === 'q').octaveShift, 0);
-    assert.equal(keyMap.find((entry) => entry.key === 'a').octaveShift, 1);
-    assert.equal(keyMap.find((entry) => entry.key === 'z').octaveShift, 2);
+    assert.equal(keyMap.find((entry) => entry.key === 'q').periodShift, 0);
+    assert.equal(keyMap.find((entry) => entry.key === 'a').periodShift, 1);
+    assert.equal(keyMap.find((entry) => entry.key === 'z').periodShift, 2);
   });
 
   it('starts on the register it is given', () => {
     const keyMap = buildNoteKeyMap(systemOf(ROW_LENGTH, 5), 2);
 
-    assert.equal(keyMap.find((entry) => entry.key === 'q').octaveShift, 2);
-    assert.equal(keyMap.find((entry) => entry.key === 'a').octaveShift, 3);
+    assert.equal(keyMap.find((entry) => entry.key === 'q').periodShift, 2);
+    assert.equal(keyMap.find((entry) => entry.key === 'a').periodShift, 3);
   });
 
   it('assigns the keys of a row in order', () => {
@@ -47,7 +47,7 @@ describe('buildNoteKeyMap', () => {
 
     assert.equal(firstRow.length, ROW_LENGTH);
     // Seven notes of the starting register, then the first three of the next.
-    assert.deepEqual(firstRow.map((entry) => entry.octaveShift), [0, 0, 0, 0, 0, 0, 0, 1, 1, 1]);
+    assert.deepEqual(firstRow.map((entry) => entry.periodShift), [0, 0, 0, 0, 0, 0, 0, 1, 1, 1]);
     assert.deepEqual(firstRow.slice(7).map((entry) => entry.frequency), [2, 4, 6]);
   });
 
@@ -65,7 +65,7 @@ describe('buildNoteKeyMap', () => {
 
     // Two registers fill two rows; the third row has nothing above it to show.
     assert.equal(keyMap.length, ROW_LENGTH * 2);
-    assert.ok(keyMap.every((entry) => entry.octaveShift <= 1));
+    assert.ok(keyMap.every((entry) => entry.periodShift <= 1));
   });
 
   it('keeps climbing registers until the row is full', () => {
@@ -73,7 +73,7 @@ describe('buildNoteKeyMap', () => {
 
     // Three notes each from three registers, then the first of a fourth.
     assert.equal(firstRow.length, ROW_LENGTH);
-    assert.deepEqual(firstRow.map((entry) => entry.octaveShift), [0, 0, 0, 1, 1, 1, 2, 2, 2, 3]);
+    assert.deepEqual(firstRow.map((entry) => entry.periodShift), [0, 0, 0, 1, 1, 1, 2, 2, 2, 3]);
   });
 
   it('lays out a single-note register without inventing keys', () => {
@@ -93,7 +93,7 @@ describe('buildNoteKeyMap', () => {
     // The four notes left over, then the opening of the register above.
     assert.deepEqual(secondRow.map((entry) => entry.definition.degree),
       ['10', '11', '12', '13', '0', '1', '2', '3', '4', '5']);
-    assert.deepEqual(secondRow.map((entry) => entry.octaveShift), [0, 0, 0, 0, 1, 1, 1, 1, 1, 1]);
+    assert.deepEqual(secondRow.map((entry) => entry.periodShift), [0, 0, 0, 0, 1, 1, 1, 1, 1, 1]);
   });
 
   it('resumes the climb from the register above the one the row started on', () => {
@@ -103,7 +103,7 @@ describe('buildNoteKeyMap', () => {
     // so the third row starts that second register over from its first note.
     assert.deepEqual(thirdRow.map((entry) => entry.definition.degree),
       ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
-    assert.ok(thirdRow.every((entry) => entry.octaveShift === 1));
+    assert.ok(thirdRow.every((entry) => entry.periodShift === 1));
   });
 
   it('spills a register across every row it needs', () => {
@@ -113,7 +113,7 @@ describe('buildNoteKeyMap', () => {
     // All 25 notes are reachable before the register above gets a key.
     assert.deepEqual(degrees.slice(0, 25), Array.from({ length: 25 }, (unused, index) => `${index}`));
     assert.deepEqual(degrees.slice(25), ['0', '1', '2', '3', '4']);
-    assert.ok(keyMap.slice(25).every((entry) => entry.octaveShift === 1));
+    assert.ok(keyMap.slice(25).every((entry) => entry.periodShift === 1));
   });
 
   it('returns nothing for a system that cannot be played', () => {
@@ -126,7 +126,7 @@ describe('buildNoteKeyMap', () => {
   });
 
   it('stops at a register whose notes are missing', () => {
-    const system = [...systemOf(ROW_LENGTH, 1), { octaveShift: 1, notes: null }];
+    const system = [...systemOf(ROW_LENGTH, 1), { periodShift: 1, notes: null }];
 
     assert.equal(buildNoteKeyMap(system, 0).length, ROW_LENGTH);
   });

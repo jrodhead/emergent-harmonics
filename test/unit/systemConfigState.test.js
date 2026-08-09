@@ -153,7 +153,7 @@ describe('notes', () => {
     assert.equal(getScale(id).notes.length, 7);
   });
 
-  it('clamp their ratio into the scale when edited', () => {
+  it('clamp their ratio into the period when edited', () => {
     const { id } = getPrimaryScale();
 
     updateNote(id, 0, { ratioToRoot: 5 });

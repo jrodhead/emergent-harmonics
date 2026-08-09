@@ -1,6 +1,7 @@
 import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/generateSystem.js';
 import { isPreset, canonicalPresetName } from '../presets/registry.js';
-import { presetToNotes, presetNames, degreeForIndex, foldRatioIntoPeriod } from './presets.js';
+import { presetToNotes, presetNames, degreeForIndex } from './presets.js';
+import { PERIOD_RATIO, foldRatioIntoPeriod } from '../system/period.js';
 import { describeRatio } from '../format.js';
 import { readStoredValue, writeStoredValue, clearStoredValue } from '../storage.js';
 
@@ -9,10 +10,10 @@ const CONFIG_VERSION = 2;
 const DEFAULT_PRESET = 'majorScaleNotes';
 const DEFAULT_ROOT_FREQUENCY = 27;
 
-// A note's ratio to its root always sits inside one octave: 1 is the root,
-// 2 is the octave above it.
+// A note's ratio to its root always sits inside one period: 1 is the root,
+// and the period ratio is the same note again, an octave above it.
 export const MIN_RATIO = 1;
-export const MAX_RATIO = 2;
+export const MAX_RATIO = PERIOD_RATIO;
 
 let nextScaleNumber = 1;
 const newScaleId = () => `scale-${nextScaleNumber++}`;
@@ -175,7 +176,7 @@ export const removeNote = (scaleId, noteIndex) => {
 
 /**
  * Applies a partial change to one note. Ratio changes are clamped into the
- * scale; everything else is taken as given.
+ * period; everything else is taken as given.
  */
 export const updateNote = (scaleId, noteIndex, patch, { silent = false } = {}) => {
   const scale = getScale(scaleId);

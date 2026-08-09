@@ -1,31 +1,8 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { presetNames, presetToNotes, foldRatioIntoPeriod, degreeForIndex } from '../../js/config/presets.js';
+import { presetNames, presetToNotes, degreeForIndex } from '../../js/config/presets.js';
 import { isPreset } from '../../js/presets/registry.js';
-
-describe('foldRatioIntoPeriod', () => {
-  it('leaves a ratio that already sits in the scale alone', () => {
-    assert.equal(foldRatioIntoPeriod(1), 1);
-    assert.equal(foldRatioIntoPeriod(1.5), 1.5);
-  });
-
-  it('folds a ratio above the octave down', () => {
-    assert.equal(foldRatioIntoPeriod(3), 1.5);
-    assert.equal(foldRatioIntoPeriod(4), 1);
-  });
-
-  it('folds a ratio below the root up', () => {
-    assert.equal(foldRatioIntoPeriod(0.75), 1.5);
-    assert.equal(foldRatioIntoPeriod(0.5), 1);
-  });
-
-  it('falls back to the root for values that are not usable ratios', () => {
-    [0, -3, Number.NaN, Number.POSITIVE_INFINITY, undefined].forEach((value) => {
-      assert.equal(foldRatioIntoPeriod(value), 1);
-    });
-  });
-});
 
 describe('degreeForIndex', () => {
   it('numbers degrees in roman numerals', () => {

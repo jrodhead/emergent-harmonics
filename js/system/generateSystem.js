@@ -1,3 +1,5 @@
+import { PERIOD_RATIO, periodMultiplier } from './period.js';
+
 export const MIN_AUDIBLE_FREQUENCY = 20;
 export const MAX_AUDIBLE_FREQUENCY = 20000;
 
@@ -5,18 +7,20 @@ export const MAX_AUDIBLE_FREQUENCY = 20000;
 // eleventh one.
 export const MAX_ROOT_NOTES = 10;
 
-// 20Hz to 20000Hz is just under ten octaves, so no root can be more than
-// eleven shifts away from either end of the audible range.
-const MAX_OCTAVE_SHIFT = 12;
+// However far apart the ends of the audible range are, a register shifted
+// further than that from its root has climbed out of it entirely.
+const MAX_PERIOD_SHIFT = Math.ceil(
+  Math.log(MAX_AUDIBLE_FREQUENCY / MIN_AUDIBLE_FREQUENCY) / Math.log(PERIOD_RATIO),
+);
 
 /**
  * Puts a root note on each of the ten root keys. A register with fewer than
- * ten notes repeats up the octaves to fill the keys that would otherwise be
+ * ten notes repeats up the periods to fill the keys that would otherwise be
  * dead: five notes make keys 5-9 an octave above their 0-4 counterparts.
  *
  * @param {number} primaryRootFrequency - The frequency the ratios are measured from.
  * @param {Array} notesToGenerate - The notes of the primary register.
- * @returns {Array} Root notes in key order, each tagged with its octaveShift.
+ * @returns {Array} Root notes in key order, each tagged with its periodShift.
  */
 export function generateRootNotes(primaryRootFrequency, notesToGenerate, {
   maxFrequency = MAX_AUDIBLE_FREQUENCY,
@@ -27,27 +31,27 @@ export function generateRootNotes(primaryRootFrequency, notesToGenerate, {
 
   for (let keyIndex = 0; keyIndex < MAX_ROOT_NOTES; keyIndex++) {
     const note = notesToGenerate[keyIndex % notesToGenerate.length];
-    const octaveShift = Math.floor(keyIndex / notesToGenerate.length);
-    const frequency = primaryRootFrequency * note.ratioToRoot * Math.pow(2, octaveShift);
+    const periodShift = Math.floor(keyIndex / notesToGenerate.length);
+    const frequency = primaryRootFrequency * note.ratioToRoot * periodMultiplier(periodShift);
 
     // A repeat that has climbed out of the audible range would be a root that
     // can never sound, so the keys above it stay unmapped.
     if (!Number.isFinite(frequency) || frequency > maxFrequency) break;
 
-    rootNotes.push({ frequency, octaveShift, definition: note });
+    rootNotes.push({ frequency, periodShift, definition: note });
   }
 
   return rootNotes;
 }
 
 /**
- * Builds the registers for a root note, octave-shifting the configured notes
+ * Builds the registers for a root note, shifting the configured notes a period at a time
  * outward in both directions and keeping every register that fits entirely
  * inside the audible range.
  *
  * @param {number} rootNoteFrequency - The frequency the ratios are measured from.
  * @param {Array} notesToGenerate - The notes of a single register.
- * @returns {Array} Registers ordered low to high, each tagged with its octaveShift.
+ * @returns {Array} Registers ordered low to high, each tagged with its periodShift.
  */
 export function buildRegisters(rootNoteFrequency, notesToGenerate, {
   minFrequency = MIN_AUDIBLE_FREQUENCY,
@@ -58,11 +62,11 @@ export function buildRegisters(rootNoteFrequency, notesToGenerate, {
     return [];
   }
 
-  const buildRegister = (octaveShift) => {
-    const multiplier = Math.pow(2, octaveShift);
+  const buildRegister = (periodShift) => {
+    const multiplier = periodMultiplier(periodShift);
 
     return {
-      octaveShift,
+      periodShift,
       notes: notesToGenerate.map((note, noteIndex) => ({
         noteIndex,
         frequency: rootNoteFrequency * note.ratioToRoot * multiplier,
@@ -73,8 +77,8 @@ export function buildRegisters(rootNoteFrequency, notesToGenerate, {
 
   const registers = [];
 
-  for (let octaveShift = -MAX_OCTAVE_SHIFT; octaveShift <= MAX_OCTAVE_SHIFT; octaveShift++) {
-    const register = buildRegister(octaveShift);
+  for (let periodShift = -MAX_PERIOD_SHIFT; periodShift <= MAX_PERIOD_SHIFT; periodShift++) {
+    const register = buildRegister(periodShift);
     const frequencies = register.notes.map((note) => note.frequency);
 
     if (!frequencies.every(Number.isFinite)) continue;
@@ -104,7 +108,7 @@ export function buildRegisters(rootNoteFrequency, notesToGenerate, {
  * the note keys land when a system is first generated.
  */
 export function homeRegisterIndex(registers) {
-  const index = registers.findIndex((register) => register.octaveShift === 0);
+  const index = registers.findIndex((register) => register.periodShift === 0);
 
   return index === -1 ? 0 : index;
 }

@@ -4,7 +4,7 @@ import { resolveScaleNotes } from '../config/resolveScaleNotes.js';
 import { renderRootKeyTable, displayActiveRootNote } from '../keys/renderRootKeyTable.js';
 import { mapNoteKeys } from '../keys/mapNoteKeys.js';
 import {
-  currentOctaveShift,
+  currentPeriodShift,
   isValidRootIndex,
   updateRegisters,
   updateCurrentRegisterIndex,
@@ -17,16 +17,16 @@ import {
  * Generates the registers for a root note and points the note keys at them.
  *
  * @param {number} rootIndex - Which of the root notes to build from.
- * @param {boolean} keepOctave - Stay in the octave the keys are already in,
+ * @param {boolean} keepRegister - Stay in the octave the keys are already in,
  *   rather than dropping back to the root's own register.
  */
-export function selectRootNote(rootIndex, { keepOctave = true } = {}) {
+export function selectRootNote(rootIndex, { keepRegister = true } = {}) {
   if (!isValidRootIndex(rootIndex)) {
     console.error('Invalid root index:', rootIndex);
     return;
   }
 
-  const previousOctaveShift = currentOctaveShift();
+  const previousPeriodShift = currentPeriodShift();
   const rootNote = rootNotes[rootIndex];
   const generated = buildRegisters(
     rootNote.frequency,
@@ -37,8 +37,8 @@ export function selectRootNote(rootIndex, { keepOctave = true } = {}) {
   updateRegisters(generated);
 
   // Changing root mid-play should not jump the keys into another register.
-  const keptIndex = keepOctave
-    ? generated.findIndex((register) => register.octaveShift === previousOctaveShift)
+  const keptIndex = keepRegister
+    ? generated.findIndex((register) => register.periodShift === previousPeriodShift)
     : -1;
 
   updateCurrentRegisterIndex(keptIndex === -1 ? homeRegisterIndex(generated) : keptIndex);
@@ -56,5 +56,5 @@ export function buildSystemFromConfig() {
 
   updateRootNotes(generated);
   renderRootKeyTable(generated);
-  selectRootNote(0, { keepOctave: false });
+  selectRootNote(0, { keepRegister: false });
 }

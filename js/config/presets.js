@@ -1,4 +1,5 @@
 import { presetNames, presetNotes, isPreset, canonicalPresetName } from '../presets/registry.js';
+import { foldRatioIntoPeriod } from '../system/period.js';
 import { describeRatio } from '../format.js';
 
 export { presetNames };
@@ -24,21 +25,6 @@ export const degreeForIndex = (index) => {
 
     return numeral;
   }, '');
-};
-
-/**
- * Folds a ratio into a single octave, so every note of a configured scale
- * sits between the root and its octave. Presets written across several octaves
- * (or below the root) keep their pitch classes.
- */
-export const foldRatioIntoPeriod = (ratio) => {
-  if (!Number.isFinite(ratio) || ratio <= 0) return 1;
-
-  let folded = ratio;
-  while (folded >= 2) folded /= 2;
-  while (folded < 1) folded *= 2;
-
-  return folded;
 };
 
 /**

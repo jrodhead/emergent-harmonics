@@ -33,5 +33,5 @@ export const updateCurrentRegisterIndex = (registerIndex) => {
 
 export const isValidRootIndex = (rootIndex) => rootIndex >= 0 && rootIndex < rootNotes.length;
 
-/** The octave the note keys are currently sitting in, or 0 if nothing is generated. */
-export const currentOctaveShift = () => registers[currentRegisterIndex]?.octaveShift ?? 0;
+/** How many periods the note keys are currently sitting above the root, or 0. */
+export const currentPeriodShift = () => registers[currentRegisterIndex]?.periodShift ?? 0;

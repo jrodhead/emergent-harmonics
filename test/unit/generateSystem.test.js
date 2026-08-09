@@ -17,7 +17,7 @@ const singleNote = [{ ratioToRoot: 1 }];
 describe('buildRegisters', () => {
   it('fills the audible range in both directions from the root', () => {
     const scale = buildRegisters(400, majorScale);
-    const shifts = scale.map((register) => register.octaveShift);
+    const shifts = scale.map((register) => register.periodShift);
 
     assert.ok(shifts.includes(0), 'the root register is present');
     assert.ok(Math.min(...shifts) < 0, 'registers are generated below the root');
@@ -33,7 +33,7 @@ describe('buildRegisters', () => {
   });
 
   it('orders registers low to high with no gaps', () => {
-    const shifts = buildRegisters(400, majorScale).map((register) => register.octaveShift);
+    const shifts = buildRegisters(400, majorScale).map((register) => register.periodShift);
 
     shifts.forEach((shift, index) => {
       if (index > 0) assert.equal(shift, shifts[index - 1] + 1);
@@ -48,7 +48,7 @@ describe('buildRegisters', () => {
   });
 
   it('does not descend below the root when there is no room', () => {
-    const shifts = buildRegisters(27, majorScale).map((register) => register.octaveShift);
+    const shifts = buildRegisters(27, majorScale).map((register) => register.periodShift);
 
     assert.equal(Math.min(...shifts), 0);
   });
@@ -66,7 +66,7 @@ describe('buildRegisters', () => {
     const scale = buildRegisters(19999, [{ ratioToRoot: 1 }, { ratioToRoot: 1.9 }]);
 
     assert.ok(scale.length > 0);
-    assert.ok(scale.every((register) => register.octaveShift < 0));
+    assert.ok(scale.every((register) => register.periodShift < 0));
   });
 
   it('still returns the root register when no shift of it fits', () => {
@@ -74,7 +74,7 @@ describe('buildRegisters', () => {
     const scale = buildRegisters(400, [{ ratioToRoot: 1 }, { ratioToRoot: 5000 }]);
 
     assert.equal(scale.length, 1);
-    assert.equal(scale[0].octaveShift, 0);
+    assert.equal(scale[0].periodShift, 0);
   });
 
   it('returns nothing for an empty note list rather than throwing', () => {
@@ -103,12 +103,12 @@ describe('homeRegisterIndex', () => {
   it('points at the register that starts on the root itself', () => {
     const scale = buildRegisters(400, majorScale);
 
-    assert.equal(scale[homeRegisterIndex(scale)].octaveShift, 0);
+    assert.equal(scale[homeRegisterIndex(scale)].periodShift, 0);
     assert.equal(scale[homeRegisterIndex(scale)].notes[0].frequency, 400);
   });
 
   it('falls back to the lowest register when there is no unshifted one', () => {
-    assert.equal(homeRegisterIndex([{ octaveShift: 3, notes: [] }]), 0);
+    assert.equal(homeRegisterIndex([{ periodShift: 3, notes: [] }]), 0);
   });
 });
 
@@ -117,7 +117,7 @@ describe('generateRootNotes', () => {
     const rootNotes = generateRootNotes(400, [{ ratioToRoot: 1 }, { ratioToRoot: 1.5 }]);
 
     assert.deepEqual(rootNotes.slice(0, 2).map((note) => note.frequency), [400, 600]);
-    assert.deepEqual(rootNotes.slice(0, 2).map((note) => note.octaveShift), [0, 0]);
+    assert.deepEqual(rootNotes.slice(0, 2).map((note) => note.periodShift), [0, 0]);
   });
 
   it('repeats a short register up the octaves to fill the root keys', () => {
@@ -125,7 +125,7 @@ describe('generateRootNotes', () => {
 
     assert.equal(rootNotes.length, MAX_ROOT_NOTES);
     assert.deepEqual(rootNotes.slice(2, 4).map((note) => note.frequency), [800, 1200]);
-    assert.deepEqual(rootNotes.map((note) => note.octaveShift), [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]);
+    assert.deepEqual(rootNotes.map((note) => note.periodShift), [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]);
   });
 
   it('leaves a repeat mid-cycle rather than a key without a root', () => {
@@ -134,7 +134,7 @@ describe('generateRootNotes', () => {
 
     assert.equal(rootNotes.length, MAX_ROOT_NOTES);
     // The tenth key is the root again, three octaves up, with its cycle cut short.
-    assert.deepEqual(rootNotes[9], { frequency: 800, octaveShift: 3, definition: threeNotes[0] });
+    assert.deepEqual(rootNotes[9], { frequency: 800, periodShift: 3, definition: threeNotes[0] });
   });
 
   it('stops repeating once the roots climb out of the audible range', () => {
