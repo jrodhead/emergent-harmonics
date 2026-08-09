@@ -5,7 +5,8 @@ export const KEY_ROWS = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
 /**
  * Lays the diapasons of a system across the three alpha key rows, starting at
  * the given diapason and climbing a diapason per row. A row longer than its
- * diapason keeps running into the opening notes of the next one.
+ * diapason keeps running into the diapasons above it, and a diapason longer
+ * than a row spills onto the row below before the climb resumes.
  *
  * Kept free of the DOM so the mapping can be checked on its own.
  *
@@ -21,48 +22,65 @@ export function buildAlphaKeyMap(system, startDiapasonIndex) {
 
   const alphaKeyMap = [];
   let diapasonIndex = startDiapasonIndex;
+  let noteIndex = 0;
 
   for (const rowKeys of KEY_ROWS) {
-    const diapason = system[diapasonIndex];
+    const rowDiapason = system[diapasonIndex];
 
-    if (!diapason) {
+    if (!rowDiapason) {
       console.error('Invalid diapason index:', diapasonIndex);
       break;
     }
 
-    if (!Array.isArray(diapason.notes)) {
-      console.error('Invalid notes in the diapason:', diapason.notes);
+    if (!Array.isArray(rowDiapason.notes)) {
+      console.error('Invalid notes in the diapason:', rowDiapason.notes);
       break;
     }
 
-    const rowNotes = diapason.notes.slice(0, rowKeys.length);
+    // Walk the row's keys, climbing through as many diapasons as it takes to
+    // fill them: a short diapason hands over to the one above it, and again
+    // above that, so no key on a filled row is left silent.
+    let fillDiapasonIndex = diapasonIndex;
+    let fillNoteIndex = noteIndex;
 
-    rowNotes.forEach((note, noteIndex) => {
+    for (let keyIndex = 0; keyIndex < rowKeys.length; keyIndex++) {
+      let diapason = system[fillDiapasonIndex];
+
+      while (diapason && Array.isArray(diapason.notes) && !diapason.notes[fillNoteIndex]) {
+        fillDiapasonIndex++;
+        fillNoteIndex = 0;
+        diapason = system[fillDiapasonIndex];
+      }
+
+      // Nothing left above the row: the keyboard stops rather than wrapping.
+      if (!diapason || !Array.isArray(diapason.notes)) break;
+
+      const note = diapason.notes[fillNoteIndex];
+
       alphaKeyMap.push({
-        key: rowKeys[noteIndex],
+        key: rowKeys[keyIndex],
         frequency: note.frequency,
         relationshipToRoot: note.relationshipToRoot,
         octaveShift: diapason.octaveShift,
       });
-    });
 
-    // Fill the rest of the row with the opening notes of the next diapason,
-    // so a row keeps running upward past the octave.
-    const nextDiapason = system[diapasonIndex + 1];
-    const nextNotes = nextDiapason?.notes ?? [];
-    const extraKeysCount = Math.min(rowKeys.length - rowNotes.length, nextNotes.length);
+      fillNoteIndex++;
+    }
 
-    for (let extraIndex = 0; extraIndex < extraKeysCount; extraIndex++) {
-      alphaKeyMap.push({
-        key: rowKeys[rowNotes.length + extraIndex],
-        frequency: nextNotes[extraIndex].frequency,
-        relationshipToRoot: nextNotes[extraIndex].relationshipToRoot,
-        octaveShift: nextDiapason.octaveShift,
-      });
+    // A diapason too long for one row carries on across the next one. Once it
+    // has been laid out in full the climb resumes from the diapason above the
+    // one this row started on, even if this row already borrowed its opening
+    // notes to fill itself out.
+    const spilled = fillDiapasonIndex === diapasonIndex && fillNoteIndex < rowDiapason.notes.length;
+
+    if (spilled) {
+      noteIndex = fillNoteIndex;
+      continue;
     }
 
     // Rows above the top of the audible range have nothing left to show.
     diapasonIndex++;
+    noteIndex = 0;
     if (diapasonIndex >= system.length) break;
   }
 

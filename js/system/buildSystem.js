@@ -1,4 +1,4 @@
-import { generateRootNotes, generateScaleNotes, homeDiapasonIndex } from '../scaleCalculators/musicalSystemGenerator.js';
+import { generateRootNotes, generateScaleNotes, homeDiapasonIndex } from './musicalSystemGenerator.js';
 import { getConfig, getPrimaryDiapason } from '../config/systemConfigState.js';
 import { resolveNoteSet } from '../config/resolveNoteSet.js';
 import { renderNumericKeyTable, displayActiveRootNote } from '../keys/renderNumericKeyTable.js';

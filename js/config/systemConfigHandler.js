@@ -25,7 +25,7 @@ import { initPreviewKeys, stopAllPreviews, retunePreview, markSoundingNotes } fr
 import { presetNames } from './presets.js';
 import { buildSystemFromConfig } from '../system/buildSystem.js';
 import { formatFrequency, formatRatio, describeRatio } from '../format.js';
-import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../scaleCalculators/musicalSystemGenerator.js';
+import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/musicalSystemGenerator.js';
 
 // Looked up in initSystemConfig rather than at import time, so that importing
 // this module never depends on a document being there.

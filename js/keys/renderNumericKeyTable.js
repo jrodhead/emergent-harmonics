@@ -1,4 +1,4 @@
-import { formatFrequency } from '../format.js';
+import { formatFrequency, formatDegree } from '../format.js';
 
 /**
  * Creates a numeric key table based on the provided musical system.
@@ -12,7 +12,7 @@ export const renderNumericKeyTable = (rootNotes) => {
       <div class="root-group">
         ${Object.entries(rootNotes).map(([key, value]) => `
           <div id="root${key}" class="root-selector">
-            <div class="degree">${value.relationshipToRoot.degree}</div>
+            <div class="degree">${formatDegree(value.relationshipToRoot.degree, value.octaveShift)}</div>
             <div class="key-name">${key}</div>
             <div class="root-frequency">${formatFrequency(value.frequency)}Hz</div>
             <div class="root-name">${value.relationshipToRoot.relationshipToRootName}</div>

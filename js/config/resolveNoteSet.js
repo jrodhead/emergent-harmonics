@@ -1,4 +1,4 @@
-import { getNotesForSystem, isBuiltInSystem } from '../scaleCalculators/noteGenerators.js';
+import { presetNotes, isPreset } from '../presets/registry.js';
 import { getConfig, getPrimaryDiapason } from './systemConfigState.js';
 
 /**
@@ -13,7 +13,7 @@ export function resolveNoteSet(triadType) {
   const configured = getConfig().diapasons.find((diapason) => diapason.id === triadType);
 
   if (configured) return configured.notes;
-  if (isBuiltInSystem(triadType)) return getNotesForSystem(triadType);
+  if (isPreset(triadType)) return presetNotes(triadType);
 
   console.warn(`Unknown triad type "${triadType}", falling back to the primary diapason`);
 

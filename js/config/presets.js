@@ -1,19 +1,30 @@
-import {
-  noteGenerators,
-  getNotesForSystem,
-  isBuiltInSystem,
-  canonicalSystemName,
-} from '../scaleCalculators/noteGenerators.js';
+import { presetNames, presetNotes, isPreset, canonicalPresetName } from '../presets/registry.js';
 import { describeRatio } from '../format.js';
 
-const ROMAN_NUMERALS = [
-  'I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII',
-  'IX', 'X', 'XI', 'XII', 'XIII', 'XIV', 'XV', 'XVI',
+export { presetNames };
+
+const NUMERALS = [
+  ['C', 100], ['XC', 90], ['L', 50], ['XL', 40],
+  ['X', 10], ['IX', 9], ['V', 5], ['IV', 4], ['I', 1],
 ];
 
-export const presetNames = Object.keys(noteGenerators);
+/**
+ * A note's degree is its position in the diapason, written the way scale
+ * degrees are conventionally written. Built up rather than listed, since a
+ * diapason can hold as many notes as the keyboard has keys.
+ */
+export const degreeForIndex = (index) => {
+  let remaining = index + 1;
 
-export const degreeForIndex = (index) => ROMAN_NUMERALS[index] ?? `${index + 1}`;
+  return NUMERALS.reduce((numeral, [symbol, value]) => {
+    while (remaining >= value) {
+      numeral += symbol;
+      remaining -= value;
+    }
+
+    return numeral;
+  }, '');
+};
 
 /**
  * Folds a ratio into a single diapason, so every note of a configured diapason
@@ -30,19 +41,12 @@ export const foldRatioIntoDiapason = (ratio) => {
   return folded;
 };
 
-const presetNotes = (presetName) => {
-  const preset = noteGenerators[presetName];
-
-  // equalTemperamentNoteGenerator is a generator rather than a fixed list.
-  return typeof preset === 'function' ? preset() : getNotesForSystem(presetName);
-};
-
 /**
  * Turns a built-in calculator into notes that can be edited on the
  * configuration screen: folded into one diapason, ordered, de-duplicated, and
  * with every field the UI shows filled in.
  *
- * @param {string} presetName - A key of noteGenerators.
+ * @param {string} presetName - The name of a built-in preset.
  * @param {string} ownDiapasonId - Diapason to point unresolvable triadTypes at.
  */
 export const presetToNotes = (presetName, ownDiapasonId) => {
@@ -63,6 +67,6 @@ export const presetToNotes = (presetName, ownDiapasonId) => {
       ratioToRoot: note.ratioToRoot,
       // Presets whose triadType names another built-in keep that relationship;
       // the rest fall back to the diapason they belong to.
-      triadType: isBuiltInSystem(note.triadType) ? canonicalSystemName(note.triadType) : ownDiapasonId,
+      triadType: isPreset(note.triadType) ? canonicalPresetName(note.triadType) : ownDiapasonId,
     }));
 };

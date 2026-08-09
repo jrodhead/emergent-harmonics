@@ -8,10 +8,10 @@ import {
   MAX_ROOT_NOTES,
   MIN_AUDIBLE_FREQUENCY,
   MAX_AUDIBLE_FREQUENCY,
-} from '../../js/scaleCalculators/musicalSystemGenerator.js';
-import { getNotesForSystem } from '../../js/scaleCalculators/noteGenerators.js';
+} from '../../js/system/musicalSystemGenerator.js';
+import { presetNotes } from '../../js/presets/registry.js';
 
-const majorScale = getNotesForSystem('majorScaleNotes');
+const majorScale = presetNotes('majorScaleNotes');
 const singleNote = [{ ratioToRoot: 1 }];
 
 describe('generateScaleNotes', () => {
@@ -93,7 +93,7 @@ describe('generateScaleNotes', () => {
     const [firstDiapason] = generateScaleNotes(400, majorScale);
 
     firstDiapason.notes.forEach((note, index) => {
-      assert.equal(note.noteName, index);
+      assert.equal(note.noteIndex, index);
       assert.equal(note.relationshipToRoot, majorScale[index]);
     });
   });
@@ -116,11 +116,41 @@ describe('generateRootNotes', () => {
   it('multiplies the root frequency by each ratio', () => {
     const rootNotes = generateRootNotes(400, [{ ratioToRoot: 1 }, { ratioToRoot: 1.5 }]);
 
-    assert.deepEqual(rootNotes.map((note) => note.frequency), [400, 600]);
+    assert.deepEqual(rootNotes.slice(0, 2).map((note) => note.frequency), [400, 600]);
+    assert.deepEqual(rootNotes.slice(0, 2).map((note) => note.octaveShift), [0, 0]);
+  });
+
+  it('repeats a short diapason up the octaves to fill the numeric keys', () => {
+    const rootNotes = generateRootNotes(400, [{ ratioToRoot: 1 }, { ratioToRoot: 1.5 }]);
+
+    assert.equal(rootNotes.length, MAX_ROOT_NOTES);
+    assert.deepEqual(rootNotes.slice(2, 4).map((note) => note.frequency), [800, 1200]);
+    assert.deepEqual(rootNotes.map((note) => note.octaveShift), [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]);
+  });
+
+  it('leaves a repeat mid-cycle rather than a key without a root', () => {
+    const threeNotes = [{ ratioToRoot: 1 }, { ratioToRoot: 1.25 }, { ratioToRoot: 1.5 }];
+    const rootNotes = generateRootNotes(100, threeNotes);
+
+    assert.equal(rootNotes.length, MAX_ROOT_NOTES);
+    // The tenth key is the root again, three octaves up, with its cycle cut short.
+    assert.deepEqual(rootNotes[9], { frequency: 800, octaveShift: 3, relationshipToRoot: threeNotes[0] });
+  });
+
+  it('stops repeating once the roots climb out of the audible range', () => {
+    const rootNotes = generateRootNotes(4000, [{ ratioToRoot: 1 }, { ratioToRoot: 1.5 }]);
+
+    // 4000, 6000, 8000, 12000, 16000, then 24000 is past hearing.
+    assert.deepEqual(rootNotes.map((note) => note.frequency), [4000, 6000, 8000, 12000, 16000]);
+  });
+
+  it('has no roots to put on the keys without notes to build from', () => {
+    assert.deepEqual(generateRootNotes(400, []), []);
+    assert.deepEqual(generateRootNotes(400, undefined), []);
   });
 
   it('caps at the ten numeric keys that can address a root', () => {
-    const twelveNotes = getNotesForSystem('equalTemperamentNoteGenerator', 12);
+    const twelveNotes = presetNotes('equalTemperamentNoteGenerator', 12);
 
     assert.equal(twelveNotes.length, 12);
     assert.equal(generateRootNotes(100, twelveNotes).length, MAX_ROOT_NOTES);

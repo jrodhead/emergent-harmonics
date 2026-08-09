@@ -1,5 +1,5 @@
-import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../scaleCalculators/musicalSystemGenerator.js';
-import { isBuiltInSystem, canonicalSystemName } from '../scaleCalculators/noteGenerators.js';
+import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/musicalSystemGenerator.js';
+import { isPreset, canonicalPresetName } from '../presets/registry.js';
 import { presetToNotes, presetNames, degreeForIndex, foldRatioIntoDiapason } from './presets.js';
 import { describeRatio } from '../format.js';
 import { readStoredValue, writeStoredValue, clearStoredValue } from '../storage.js';
@@ -250,8 +250,8 @@ const validateConfig = (candidate) => {
     diapason.notes.forEach((note) => {
       if (diapasonIds.has(note.triadType)) return;
 
-      note.triadType = isBuiltInSystem(note.triadType)
-        ? canonicalSystemName(note.triadType)
+      note.triadType = isPreset(note.triadType)
+        ? canonicalPresetName(note.triadType)
         : diapason.id;
     });
   });

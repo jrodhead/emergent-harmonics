@@ -167,7 +167,7 @@ describe('the system configuration screen', { skip }, () => {
         document.querySelectorAll('.config-note-remove')[2].click();
         document.querySelector('[data-show-view="play"]').click();
         return [...document.querySelectorAll('.root-selector .degree')].map(degree => degree.textContent.trim());
-      `), ['I', 'II', 'III', 'IV', 'V', 'VI']);
+      `), ['I', 'II', 'III', 'IV', 'V', 'VI', 'I′', 'II′', 'III′', 'IV′']);
     });
 
     it('shifts the preview keys up with the notes that remain', async () => {
@@ -354,7 +354,7 @@ describe('the system configuration screen', { skip }, () => {
     });
   });
 
-  describe('auditioning notes from the top row', () => {
+  describe('auditioning notes from the playing keys', () => {
     it('shows the key that plays each note', async () => {
       assert.deepEqual(
         await app.evaluate("return [...document.querySelectorAll('.config-note-key')].map(key => key.textContent.trim())"),
@@ -393,9 +393,17 @@ describe('the system configuration screen', { skip }, () => {
       `), 0);
     });
 
-    it('marks notes past the end of the row as having no key', async () => {
+    it('gives every note a key while the keyboard has one to spare', async () => {
+      // Seven notes to start with, and thirty keys to put them on.
       assert.equal(await app.evaluate(`
-        for (let added = 0; added < 8; added++) document.getElementById('addNote').click();
+        for (let added = 0; added < 23; added++) document.getElementById('addNote').click();
+        return document.querySelectorAll('.config-note-key.none').length;
+      `), 0);
+    });
+
+    it('marks notes past the last key as having none', async () => {
+      assert.equal(await app.evaluate(`
+        for (let added = 0; added < 25; added++) document.getElementById('addNote').click();
         return document.querySelectorAll('.config-note-key.none').length;
       `), 2);
     });
@@ -536,11 +544,22 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('puts the configured notes on the root keys', async () => {
-      assert.equal(await app.evaluate("return document.querySelectorAll('.root-selector').length"), 7);
+      assert.equal(await app.evaluate("return document.querySelectorAll('.root-selector').length"), 10);
       assert.equal(
         await app.evaluate("return document.getElementById('root0').querySelector('.root-frequency').textContent"),
         '400Hz',
       );
+    });
+
+    it('fills the leftover root keys an octave above their counterparts', async () => {
+      // Seven notes, so keys 7-9 repeat the first three an octave up.
+      assert.deepEqual(await app.evaluate(`
+        return [7, 8, 9].map(key => {
+          const selector = document.getElementById('root' + key);
+          return [selector.querySelector('.degree').textContent,
+                  selector.querySelector('.root-frequency').textContent];
+        });
+      `), [['I′', '800Hz'], ['II′', '900Hz'], ['III′', '1000Hz']]);
     });
 
     it('fills all three alpha key rows', async () => {

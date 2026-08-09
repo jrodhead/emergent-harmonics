@@ -1,13 +1,17 @@
 import { playSound, stopSound, setSoundFrequency } from '../audio/audioHandler.js';
 import { isTypingTarget } from '../keys/keyEventGuard.js';
+import { KEY_ROWS } from '../keys/buildAlphaKeyMap.js';
 import { getSelectedDiapason } from './selectedDiapason.js';
 import { ratioToFrequency } from './systemConfigState.js';
 
 /**
- * The top row of the keyboard auditions the notes of the diapason being
- * edited, in order, so a configuration can be heard while it is built.
+ * The playing keys audition the notes of the diapason being edited, in order,
+ * so a configuration can be heard while it is built. They are the same keys in
+ * the same order the notes will be played from, and there are as many of them
+ * as the keyboard has, so every note a diapason can hold can be heard.
  */
-export const PREVIEW_KEYS = [...'qwertyuiop[]\\'];
+export const PREVIEW_KEY_ROWS = KEY_ROWS;
+export const PREVIEW_KEYS = [...KEY_ROWS.join('')];
 
 export const previewKeyForIndex = (noteIndex) => PREVIEW_KEYS[noteIndex];
 

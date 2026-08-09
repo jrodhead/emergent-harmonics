@@ -9,7 +9,7 @@ import {
   clearStoredConfig,
   replaceConfig,
 } from '../../js/config/systemConfigState.js';
-import { getNotesForSystem } from '../../js/scaleCalculators/noteGenerators.js';
+import { presetNotes } from '../../js/presets/registry.js';
 
 beforeEach(() => {
   clearStoredConfig();
@@ -23,11 +23,11 @@ describe('resolveNoteSet', () => {
   });
 
   it('resolves a built-in calculator by name', () => {
-    assert.equal(resolveNoteSet('bluesScaleNotes'), getNotesForSystem('bluesScaleNotes'));
+    assert.equal(resolveNoteSet('bluesScaleNotes'), presetNotes('bluesScaleNotes'));
   });
 
   it('resolves a built-in calculator given by its alias', () => {
-    assert.equal(resolveNoteSet('minor'), getNotesForSystem('naturalMinorScaleNotes'));
+    assert.equal(resolveNoteSet('minor'), presetNotes('naturalMinorScaleNotes'));
   });
 
   it('prefers a configured diapason over a calculator with the same name', () => {

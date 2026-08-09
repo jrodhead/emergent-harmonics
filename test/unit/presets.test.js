@@ -2,7 +2,7 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { presetNames, presetToNotes, foldRatioIntoDiapason, degreeForIndex } from '../../js/config/presets.js';
-import { isBuiltInSystem } from '../../js/scaleCalculators/noteGenerators.js';
+import { isPreset } from '../../js/presets/registry.js';
 
 describe('foldRatioIntoDiapason', () => {
   it('leaves a ratio that already sits in the diapason alone', () => {
@@ -33,8 +33,11 @@ describe('degreeForIndex', () => {
     assert.equal(degreeForIndex(6), 'VII');
   });
 
-  it('falls back to a plain number past the numerals it knows', () => {
-    assert.equal(degreeForIndex(99), '100');
+  it('keeps numbering past the notes a conventional scale holds', () => {
+    // A diapason can hold a note per key, which is well past VII.
+    assert.equal(degreeForIndex(13), 'XIV');
+    assert.equal(degreeForIndex(29), 'XXX');
+    assert.equal(degreeForIndex(99), 'C');
   });
 });
 
@@ -84,7 +87,7 @@ describe('presetToNotes', () => {
     presetNames.forEach((name) => {
       presetToNotes(name, 'diapason-1').forEach((note) => {
         assert.ok(
-          note.triadType === 'diapason-1' || isBuiltInSystem(note.triadType),
+          note.triadType === 'diapason-1' || isPreset(note.triadType),
           `${name}: ${note.triadType} resolves to nothing`,
         );
       });

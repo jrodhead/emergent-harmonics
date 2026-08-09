@@ -18,8 +18,8 @@ import {
   setRootFrequency,
   updateNote,
 } from '../../js/config/systemConfigState.js';
-import { PREVIEW_KEYS } from '../../js/config/previewKeyHandler.js';
-import { MAX_ROOT_NOTES } from '../../js/scaleCalculators/musicalSystemGenerator.js';
+import { PREVIEW_KEYS, PREVIEW_KEY_ROWS } from '../../js/config/previewKeyHandler.js';
+import { MAX_ROOT_NOTES } from '../../js/system/musicalSystemGenerator.js';
 
 beforeEach(() => {
   clearStoredConfig();
@@ -192,10 +192,24 @@ describe('renderNotes', () => {
     assert.match(renderNotes(getPrimaryDiapason()), /400Hz to 800Hz/);
   });
 
-  it('lists the keys that audition notes', () => {
+  it('names the rows of keys that audition notes', () => {
     const html = renderNotes(getPrimaryDiapason());
 
-    PREVIEW_KEYS.forEach((key) => assert.ok(html.includes(`<kbd>${key}</kbd>`), `${key} is listed`));
+    PREVIEW_KEY_ROWS.forEach((row) => {
+      assert.ok(html.includes(`<kbd>${row[0]}</kbd>&ndash;<kbd>${row[row.length - 1]}</kbd>`), `${row} is named`);
+    });
+  });
+
+  it('explains that a short primary diapason repeats up the root keys', () => {
+    assert.match(renderNotes(getPrimaryDiapason()), /Keys 7-9 repeat these notes an octave higher/);
+  });
+
+  it('says nothing about repeats once the notes fill the root keys', () => {
+    const { id } = getPrimaryDiapason();
+
+    while (getPrimaryDiapason().notes.length < MAX_ROOT_NOTES) addNote(id);
+
+    assert.doesNotMatch(renderNotes(getPrimaryDiapason()), /repeat these notes/);
   });
 
   it('checks the primary radio only for the primary diapason', () => {

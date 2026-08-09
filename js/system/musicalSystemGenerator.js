@@ -9,13 +9,32 @@ export const MAX_ROOT_NOTES = 10;
 // eleven shifts away from either end of the audible range.
 const MAX_OCTAVE_SHIFT = 12;
 
-export function generateRootNotes(primaryRootFrequency, notesToGenerate) {
-  let rootNotes = [];
+/**
+ * Puts a root note on each of the ten numeric keys. A diapason with fewer than
+ * ten notes repeats up the octaves to fill the keys that would otherwise be
+ * dead: five notes make keys 5-9 an octave above their 0-4 counterparts.
+ *
+ * @param {number} primaryRootFrequency - The frequency the ratios are measured from.
+ * @param {Array} notesToGenerate - The notes of the primary diapason.
+ * @returns {Array} Root notes in key order, each tagged with its octaveShift.
+ */
+export function generateRootNotes(primaryRootFrequency, notesToGenerate, {
+  maxFrequency = MAX_AUDIBLE_FREQUENCY,
+} = {}) {
+  if (!Array.isArray(notesToGenerate) || notesToGenerate.length === 0) return [];
 
-  for (let noteName of notesToGenerate.slice(0, MAX_ROOT_NOTES)) {
-    let frequency = primaryRootFrequency * noteName.ratioToRoot;
+  const rootNotes = [];
 
-    rootNotes.push({frequency, relationshipToRoot: noteName});
+  for (let keyIndex = 0; keyIndex < MAX_ROOT_NOTES; keyIndex++) {
+    const note = notesToGenerate[keyIndex % notesToGenerate.length];
+    const octaveShift = Math.floor(keyIndex / notesToGenerate.length);
+    const frequency = primaryRootFrequency * note.ratioToRoot * Math.pow(2, octaveShift);
+
+    // A repeat that has climbed out of the audible range would be a root that
+    // can never sound, so the keys above it stay unmapped.
+    if (!Number.isFinite(frequency) || frequency > maxFrequency) break;
+
+    rootNotes.push({ frequency, octaveShift, relationshipToRoot: note });
   }
 
   return rootNotes;
@@ -44,8 +63,8 @@ export function generateScaleNotes(rootNoteFrequency, notesToGenerate, {
 
     return {
       octaveShift,
-      notes: notesToGenerate.map((note, noteName) => ({
-        noteName,
+      notes: notesToGenerate.map((note, noteIndex) => ({
+        noteIndex,
         frequency: rootNoteFrequency * note.ratioToRoot * multiplier,
         relationshipToRoot: note,
       })),

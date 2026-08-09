@@ -8,8 +8,8 @@ import {
   MAX_RATIO,
 } from './systemConfigState.js';
 import { getSelectedDiapason } from './selectedDiapason.js';
-import { PREVIEW_KEYS, previewKeyForIndex } from './previewKeyHandler.js';
-import { MAX_ROOT_NOTES } from '../scaleCalculators/musicalSystemGenerator.js';
+import { PREVIEW_KEYS, PREVIEW_KEY_ROWS, previewKeyForIndex } from './previewKeyHandler.js';
+import { MAX_ROOT_NOTES } from '../system/musicalSystemGenerator.js';
 import { formatFrequency, formatRatio, describeRatio } from '../format.js';
 
 export const escapeHtml = (value) => String(value ?? '')
@@ -121,7 +121,13 @@ export const renderNotes = (diapason) => {
   const { minimum, maximum } = diapasonBounds();
   const isPrimary = diapason.id === config.primaryDiapasonId;
   const overflowsRootKeys = isPrimary && diapason.notes.length > MAX_ROOT_NOTES;
+  const repeatsOnRootKeys = isPrimary && diapason.notes.length < MAX_ROOT_NOTES;
   const overflowsPreviewKeys = diapason.notes.length > PREVIEW_KEYS.length;
+
+  // Named by their ends rather than key by key: there are three rows of them.
+  const previewRows = PREVIEW_KEY_ROWS
+    .map((row) => `<kbd>${escapeHtml(row[0])}</kbd>&ndash;<kbd>${escapeHtml(row[row.length - 1])}</kbd>`)
+    .join(', ');
 
   return `
     <h2>Notes</h2>
@@ -137,10 +143,13 @@ export const renderNotes = (diapason) => {
 
     <p class="config-hint">
       Every note sits between the root and its octave: ${formatFrequency(minimum)}Hz to ${formatFrequency(maximum)}Hz.
-      Hold the key shown on a note to hear it, using the top row
-      <kbd>${PREVIEW_KEYS.map(escapeHtml).join('</kbd> <kbd>')}</kbd>.
+      Hold the key shown on a note to hear it; the notes run across the keyboard rows ${previewRows}.
       ${overflowsRootKeys
         ? `<strong>Only the first ${MAX_ROOT_NOTES} notes get a root key</strong>, since the roots live on keys 0-9.</br>`
+        : ''}
+      ${repeatsOnRootKeys
+        ? `Keys ${diapason.notes.length}-${MAX_ROOT_NOTES - 1} repeat these notes an octave higher each time round,
+           so every root key has a note to build from.</br>`
         : ''}
       ${overflowsPreviewKeys
         ? `<strong>Only the first ${PREVIEW_KEYS.length} notes can be previewed</strong>, since the top row runs out.`

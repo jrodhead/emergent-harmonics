@@ -30,8 +30,8 @@ import {
   STORAGE_KEY,
 } from '../../js/config/systemConfigState.js';
 import { readStoredValue, writeStoredValue } from '../../js/storage.js';
-import { isBuiltInSystem } from '../../js/scaleCalculators/noteGenerators.js';
-import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../../js/scaleCalculators/musicalSystemGenerator.js';
+import { isPreset } from '../../js/presets/registry.js';
+import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../../js/system/musicalSystemGenerator.js';
 
 beforeEach(() => {
   clearStoredConfig();
@@ -231,7 +231,7 @@ describe('diapasons', () => {
     removeDiapason(first);
 
     getDiapason(second).notes.forEach((note) => {
-      assert.ok(note.triadType === second || isBuiltInSystem(note.triadType));
+      assert.ok(note.triadType === second || isPreset(note.triadType));
     });
   });
 
@@ -266,7 +266,7 @@ describe('triadTypeOptions', () => {
     const { configured, builtIn } = triadTypeOptions();
 
     assert.deepEqual(configured.map((option) => option.value), [getConfig().diapasons[0].id, second]);
-    assert.ok(builtIn.every((option) => isBuiltInSystem(option.value)));
+    assert.ok(builtIn.every((option) => isPreset(option.value)));
   });
 });
 
