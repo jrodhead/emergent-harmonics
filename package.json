@@ -1,0 +1,13 @@
+{
+  "name": "emergent-harmonics",
+  "version": "1.0.0",
+  "description": "A configurable musical system generator played from the keyboard.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"test/**/*.test.js\"",
+    "test:unit": "node --test \"test/unit/*.test.js\"",
+    "test:browser": "node --test \"test/browser/*.test.js\"",
+    "start": "python3 -m http.server 8765"
+  }
+}

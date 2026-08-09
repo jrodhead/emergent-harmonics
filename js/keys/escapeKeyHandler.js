@@ -24,8 +24,8 @@ document.body.addEventListener('keyup', (ev) => {
 
     // Remove the CSS class that indicates stop
     document.body.classList.remove('stop');
-    // find all elements with the class 'active' and remove the class
-    const activeKeys = document.querySelectorAll('.active');
+    // clear the keys that are lit up, leaving the rest of the UI alone
+    const activeKeys = document.querySelectorAll('.note.active, .config-note.active');
     activeKeys.forEach((key) => key.classList.remove('active'));
   }
 });

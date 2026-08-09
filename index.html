@@ -8,26 +8,43 @@
 <body>
 
   <header>
-    <form id="system-config">
-      <legend>System Configuration</legend>
-      <div class="form-group">
-        <label for="calculator">Calculator:</label>
-        <select id="calculator"></select>
-      </div>
-      <div class="form-group">
-        <label for="primaryRootFrequency">Root:</label>
-        <input type="number" id="primaryRootFrequency" min="20" max="880" value="27" required>Hz
-      </div>
-      <input type="submit" value="Generate System">
-    </form>
+    <nav id="viewToggle">
+      <button type="button" data-show-view="config">Configure System</button>
+      <button type="button" data-show-view="play">Play</button>
+    </nav>
   </header>
 
   <main>
+    <section id="systemConfig">
+      <div class="config-toolbar">
+        <legend>System Configuration</legend>
+        <div class="form-group">
+          <label for="configRootFrequency">Root:</label>
+          <input type="number" id="configRootFrequency" min="20" max="20000" step="0.01" value="27">Hz
+        </div>
+        <div class="form-group">
+          <label for="presetSelect">Calculator:</label>
+          <select id="presetSelect"></select>
+          <button type="button" id="loadPreset">Load into diapason</button>
+        </div>
+        <div class="form-group">
+          <button type="button" id="exportConfig">Export JSON</button>
+          <button type="button" id="importConfig">Import JSON</button>
+          <input type="file" id="importConfigFile" accept="application/json,.json" hidden>
+          <button type="button" id="resetConfig">Reset</button>
+        </div>
+      </div>
+
+      <div id="configDiapasons"></div>
+      <div id="configNotes"></div>
+    </section>
+
     <div id="keys">
       <div id="alphaKeyTable"></div>
       <div id="numericKeyTable"></div>
       <div id="arrowKeyTable"></div>
       <div id="escapeKeyTable"></div>
+      <div id="playModeTable">Play mode: <span id="playMode">latch</span> (press * to switch)</div>
     </div>
   </main>
 
@@ -56,6 +73,7 @@
   <script type="module" src="js/keys/numericKeyHandler.js"></script>
   <script type="module" src="js/keys/arrowKeyHandler.js"></script>
   <script type="module" src="js/keys/escapeKeyHandler.js"></script>
+  <script type="module" src="js/keys/playModeHandler.js"></script>
 
 </body>
 </html>
