@@ -1,8 +1,8 @@
 import { generateRootNotes, generateScaleNotes, homeDiapasonIndex } from './musicalSystemGenerator.js';
 import { getConfig, getPrimaryDiapason } from '../config/systemConfigState.js';
 import { resolveNoteSet } from '../config/resolveNoteSet.js';
-import { renderNumericKeyTable, displayActiveRootNote } from '../keys/renderNumericKeyTable.js';
-import { createDiapasonRowKeyMap } from '../keys/createDiapasonRowKeyMap.js';
+import { renderRootKeyTable, displayActiveRootNote } from '../keys/renderRootKeyTable.js';
+import { mapNoteKeys } from '../keys/mapNoteKeys.js';
 import {
   activeScaleNotesGlobal,
   currentOctaveShift,
@@ -15,7 +15,7 @@ import {
 } from '../systemState.js';
 
 /**
- * Generates the diapasons for a root note and points the alpha keys at them.
+ * Generates the diapasons for a root note and points the note keys at them.
  *
  * @param {number} rootIndex - Which of the root notes to build from.
  * @param {boolean} keepOctave - Stay in the octave the keys are already in,
@@ -44,18 +44,18 @@ export function selectRootNote(rootIndex, { keepOctave = true } = {}) {
 
   updateCurrentDiapasonIndex(keptIndex === -1 ? homeDiapasonIndex(scaleNotesPerDiapason) : keptIndex);
   displayActiveRootNote(rootIndex);
-  createDiapasonRowKeyMap(activeScaleNotesGlobal);
+  mapNoteKeys(activeScaleNotesGlobal);
 }
 
 /**
  * Rebuilds the whole playable system from the current configuration: the root
- * notes on the numeric keys, and the diapasons on the alpha keys.
+ * notes on the root keys, and the diapasons on the note keys.
  */
 export function buildSystemFromConfig() {
   const config = getConfig();
   const rootNotes = generateRootNotes(config.primaryRootFrequency, getPrimaryDiapason().notes);
 
   updateRootNotesGlobal(rootNotes);
-  renderNumericKeyTable(rootNotes);
+  renderRootKeyTable(rootNotes);
   selectRootNote(0, { keepOctave: false });
 }

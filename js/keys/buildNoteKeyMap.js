@@ -3,7 +3,7 @@ import { isValidSystem } from './isValidSystem.js';
 export const KEY_ROWS = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
 
 /**
- * Lays the diapasons of a system across the three alpha key rows, starting at
+ * Lays the diapasons of a system across the three note key rows, starting at
  * the given diapason and climbing a diapason per row. A row longer than its
  * diapason keeps running into the diapasons above it, and a diapason longer
  * than a row spills onto the row below before the climb resumes.
@@ -14,13 +14,13 @@ export const KEY_ROWS = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
  * @param {number} startDiapasonIndex - The diapason the first row starts on.
  * @returns {Array} Entries of { key, frequency, relationshipToRoot, octaveShift }.
  */
-export function buildAlphaKeyMap(system, startDiapasonIndex) {
+export function buildNoteKeyMap(system, startDiapasonIndex) {
   if (!isValidSystem(system)) {
     console.error('Invalid system or root provided:', system);
     return [];
   }
 
-  const alphaKeyMap = [];
+  const noteKeyMap = [];
   let diapasonIndex = startDiapasonIndex;
   let noteIndex = 0;
 
@@ -57,7 +57,7 @@ export function buildAlphaKeyMap(system, startDiapasonIndex) {
 
       const note = diapason.notes[fillNoteIndex];
 
-      alphaKeyMap.push({
+      noteKeyMap.push({
         key: rowKeys[keyIndex],
         frequency: note.frequency,
         relationshipToRoot: note.relationshipToRoot,
@@ -84,5 +84,5 @@ export function buildAlphaKeyMap(system, startDiapasonIndex) {
     if (diapasonIndex >= system.length) break;
   }
 
-  return alphaKeyMap;
+  return noteKeyMap;
 }

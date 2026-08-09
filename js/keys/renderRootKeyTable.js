@@ -1,12 +1,12 @@
 import { formatFrequency, formatDegree } from '../format.js';
 
 /**
- * Creates a numeric key table based on the provided musical system.
- * @param {Array} rootNotes - The musical system to create the numeric key map from.
+ * Creates a root key table based on the provided musical system.
+ * @param {Array} rootNotes - The musical system to create the root key map from.
  */
 
-export const renderNumericKeyTable = (rootNotes) => {
-  const numericGridHTML = `
+export const renderRootKeyTable = (rootNotes) => {
+  const rootGridHTML = `
     <div class="grid-container">
       <h2>Root Selectors</h2>
       <div class="root-group">
@@ -23,11 +23,11 @@ export const renderNumericKeyTable = (rootNotes) => {
     </div>
   `;
 
-  document.getElementById('numericKeyTable').innerHTML = numericGridHTML;
+  document.getElementById('rootKeyTable').innerHTML = rootGridHTML;
 };
 
 /**
- * Marks which root selector the alpha keys are currently generated from.
+ * Marks which root selector the note keys are currently generated from.
  * @param {number} rootIndex
  */
 export const displayActiveRootNote = (rootIndex) => {

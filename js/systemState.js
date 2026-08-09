@@ -32,5 +32,5 @@ export const updateCurrentDiapasonIndex = (diapasonIndex) => {
 
 export const isValidRootIndex = (rootIndex) => rootIndex >= 0 && rootIndex < rootNotesGlobal.length;
 
-/** The octave the alpha keys are currently sitting in, or 0 if nothing is generated. */
+/** The octave the note keys are currently sitting in, or 0 if nothing is generated. */
 export const currentOctaveShift = () => activeScaleNotesGlobal[currentDiapasonIndex]?.octaveShift ?? 0;

@@ -120,7 +120,7 @@ describe('generateRootNotes', () => {
     assert.deepEqual(rootNotes.slice(0, 2).map((note) => note.octaveShift), [0, 0]);
   });
 
-  it('repeats a short diapason up the octaves to fill the numeric keys', () => {
+  it('repeats a short diapason up the octaves to fill the root keys', () => {
     const rootNotes = generateRootNotes(400, [{ ratioToRoot: 1 }, { ratioToRoot: 1.5 }]);
 
     assert.equal(rootNotes.length, MAX_ROOT_NOTES);
@@ -149,7 +149,7 @@ describe('generateRootNotes', () => {
     assert.deepEqual(generateRootNotes(400, undefined), []);
   });
 
-  it('caps at the ten numeric keys that can address a root', () => {
+  it('caps at the ten root keys that can address a root', () => {
     const twelveNotes = presetNotes('equalTemperamentNoteGenerator', 12);
 
     assert.equal(twelveNotes.length, 12);

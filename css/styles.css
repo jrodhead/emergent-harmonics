@@ -62,37 +62,37 @@ fieldset {padding: 1rem; margin: 0;}
   grid-template-columns: 3fr 1fr;
 }
 
-#alphaKeyTable,
-#numericKeyTable,
+#noteKeyTable,
+#rootKeyTable,
 button#play {
   user-select: none;
   -webkit-user-select: none;
 }
 
-#alphaKeyTable,
-#numericKeyTable {
+#noteKeyTable,
+#rootKeyTable {
   display: grid;
   gap: .5rem;
   padding: .5rem;
 }
 
-#alphaKeyTable {
+#noteKeyTable {
   grid-column: 1 / 2;
 }
 
-#numericKeyTable {
+#rootKeyTable {
   grid-column: 2 / 2;
   border-left: 1px dashed #fff;
 }
 
-.alpha-group,
+.note-group,
 .root-group {
   display: grid;
   gap: .5rem;
   padding: .5rem;
 }
 
-.alpha-group {
+.note-group {
   grid-template-columns: repeat(10, 1fr);
 }
 

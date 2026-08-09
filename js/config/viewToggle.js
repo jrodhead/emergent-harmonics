@@ -1,5 +1,5 @@
 import { stopAllSounds } from '../audio/audioHandler.js';
-import { heldRootKeys, heldAlphaKeys } from '../keys/heldKeysState.js';
+import { heldRootKeys, heldNoteKeys } from '../keys/heldKeysState.js';
 
 const VIEWS = ['config', 'play'];
 
@@ -16,7 +16,7 @@ export function showView(view) {
 
   stopAllSounds();
   heldRootKeys.clear();
-  heldAlphaKeys.clear();
+  heldNoteKeys.clear();
   document.querySelectorAll('.note.active, .config-note.active').forEach((element) => {
     element.classList.remove('active');
   });

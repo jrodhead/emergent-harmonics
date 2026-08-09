@@ -1,6 +1,6 @@
 import { playSound, stopSound, setSoundFrequency } from '../audio/audioHandler.js';
 import { isTypingTarget } from '../keys/keyEventGuard.js';
-import { KEY_ROWS } from '../keys/buildAlphaKeyMap.js';
+import { KEY_ROWS } from '../keys/buildNoteKeyMap.js';
 import { getSelectedDiapason } from './selectedDiapason.js';
 import { ratioToFrequency } from './systemConfigState.js';
 

@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildAlphaKeyMap, KEY_ROWS } from '../../js/keys/buildAlphaKeyMap.js';
+import { buildNoteKeyMap, KEY_ROWS } from '../../js/keys/buildNoteKeyMap.js';
 
 const ROW_LENGTH = KEY_ROWS[0].length;
 
@@ -18,9 +18,9 @@ const systemOf = (notesPerDiapason, diapasonCount) => Array.from(
   }),
 );
 
-describe('buildAlphaKeyMap', () => {
+describe('buildNoteKeyMap', () => {
   it('climbs one diapason per keyboard row', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(ROW_LENGTH, 5), 0);
+    const keyMap = buildNoteKeyMap(systemOf(ROW_LENGTH, 5), 0);
 
     assert.equal(keyMap.length, ROW_LENGTH * KEY_ROWS.length);
     assert.equal(keyMap.find((entry) => entry.key === 'q').octaveShift, 0);
@@ -29,20 +29,20 @@ describe('buildAlphaKeyMap', () => {
   });
 
   it('starts on the diapason it is given', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(ROW_LENGTH, 5), 2);
+    const keyMap = buildNoteKeyMap(systemOf(ROW_LENGTH, 5), 2);
 
     assert.equal(keyMap.find((entry) => entry.key === 'q').octaveShift, 2);
     assert.equal(keyMap.find((entry) => entry.key === 'a').octaveShift, 3);
   });
 
   it('assigns the keys of a row in order', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(ROW_LENGTH, 3), 0);
+    const keyMap = buildNoteKeyMap(systemOf(ROW_LENGTH, 3), 0);
 
     assert.deepEqual(keyMap.slice(0, ROW_LENGTH).map((entry) => entry.key), [...KEY_ROWS[0]]);
   });
 
   it('fills a row that outruns its diapason from the next one up', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(7, 4), 0);
+    const keyMap = buildNoteKeyMap(systemOf(7, 4), 0);
     const firstRow = keyMap.slice(0, ROW_LENGTH);
 
     assert.equal(firstRow.length, ROW_LENGTH);
@@ -53,7 +53,7 @@ describe('buildAlphaKeyMap', () => {
 
   it('carries the note details onto each key', () => {
     const system = systemOf(3, 3);
-    const [firstKey] = buildAlphaKeyMap(system, 0);
+    const [firstKey] = buildNoteKeyMap(system, 0);
 
     assert.equal(firstKey.key, 'q');
     assert.equal(firstKey.frequency, system[0].notes[0].frequency);
@@ -61,7 +61,7 @@ describe('buildAlphaKeyMap', () => {
   });
 
   it('stops at the top of the system instead of wrapping back to the bottom', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(ROW_LENGTH, 2), 0);
+    const keyMap = buildNoteKeyMap(systemOf(ROW_LENGTH, 2), 0);
 
     // Two diapasons fill two rows; the third row has nothing above it to show.
     assert.equal(keyMap.length, ROW_LENGTH * 2);
@@ -69,7 +69,7 @@ describe('buildAlphaKeyMap', () => {
   });
 
   it('keeps climbing diapasons until the row is full', () => {
-    const firstRow = buildAlphaKeyMap(systemOf(3, 6), 0).slice(0, ROW_LENGTH);
+    const firstRow = buildNoteKeyMap(systemOf(3, 6), 0).slice(0, ROW_LENGTH);
 
     // Three notes each from three diapasons, then the first of a fourth.
     assert.equal(firstRow.length, ROW_LENGTH);
@@ -77,14 +77,14 @@ describe('buildAlphaKeyMap', () => {
   });
 
   it('lays out a single-note diapason without inventing keys', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(1, 4), 0);
+    const keyMap = buildNoteKeyMap(systemOf(1, 4), 0);
 
     // Each row climbs as far as the system reaches, and no further.
     assert.deepEqual(keyMap.map((entry) => entry.key), ['q', 'w', 'e', 'r', 'a', 's', 'd', 'z', 'x']);
   });
 
   it('spills a diapason too long for one row onto the next row', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(14, 4), 0);
+    const keyMap = buildNoteKeyMap(systemOf(14, 4), 0);
     const firstRow = keyMap.slice(0, ROW_LENGTH);
     const secondRow = keyMap.slice(ROW_LENGTH, ROW_LENGTH * 2);
 
@@ -97,7 +97,7 @@ describe('buildAlphaKeyMap', () => {
   });
 
   it('resumes the climb from the diapason above the one the row started on', () => {
-    const thirdRow = buildAlphaKeyMap(systemOf(14, 4), 0).slice(ROW_LENGTH * 2);
+    const thirdRow = buildNoteKeyMap(systemOf(14, 4), 0).slice(ROW_LENGTH * 2);
 
     // The second row finished the first diapason and borrowed from the second,
     // so the third row starts that second diapason over from its first note.
@@ -107,7 +107,7 @@ describe('buildAlphaKeyMap', () => {
   });
 
   it('spills a diapason across every row it needs', () => {
-    const keyMap = buildAlphaKeyMap(systemOf(25, 3), 0);
+    const keyMap = buildNoteKeyMap(systemOf(25, 3), 0);
     const degrees = keyMap.map((entry) => entry.relationshipToRoot.degree);
 
     // All 25 notes are reachable before the diapason above gets a key.
@@ -117,17 +117,17 @@ describe('buildAlphaKeyMap', () => {
   });
 
   it('returns nothing for a system that cannot be played', () => {
-    assert.deepEqual(buildAlphaKeyMap([], 0), []);
-    assert.deepEqual(buildAlphaKeyMap(undefined, 0), []);
+    assert.deepEqual(buildNoteKeyMap([], 0), []);
+    assert.deepEqual(buildNoteKeyMap(undefined, 0), []);
   });
 
   it('returns nothing when the starting diapason is out of range', () => {
-    assert.deepEqual(buildAlphaKeyMap(systemOf(3, 2), 9), []);
+    assert.deepEqual(buildNoteKeyMap(systemOf(3, 2), 9), []);
   });
 
   it('stops at a diapason whose notes are missing', () => {
     const system = [...systemOf(ROW_LENGTH, 1), { octaveShift: 1, notes: null }];
 
-    assert.equal(buildAlphaKeyMap(system, 0).length, ROW_LENGTH);
+    assert.equal(buildNoteKeyMap(system, 0).length, ROW_LENGTH);
   });
 });

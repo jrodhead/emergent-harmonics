@@ -4,13 +4,13 @@ import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
 import { selectRootNote } from '../system/buildSystem.js';
 import { isValidRootIndex } from '../systemState.js';
 
-const numericKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+const rootKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 
 const dispatchRootReleased = () => {
   document.body.dispatchEvent(new CustomEvent('rootReleased'));
 };
 
-const handleNumericKey = (ev, rootIndex, key) => {
+const handleRootKey = (ev, rootIndex, key) => {
   if (ev === 'keydown') {
     if (!isValidRootIndex(rootIndex)) {
       console.error('Invalid root index:', rootIndex);
@@ -18,7 +18,7 @@ const handleNumericKey = (ev, rootIndex, key) => {
     }
 
     heldRootKeys.add(key);
-    // Regenerates the key map, which resyncs any already-held alpha notes.
+    // Regenerates the key map, which resyncs any already-held note keys.
     selectRootNote(rootIndex);
   } else if (ev === 'keyup') {
     heldRootKeys.delete(key);
@@ -29,15 +29,15 @@ const handleNumericKey = (ev, rootIndex, key) => {
   }
 };
 
-const onNumericKeyEvent = (ev) => {
+const onRootKeyEvent = (ev) => {
   if (ev.repeat || shouldIgnoreKeyEvent(ev)) return;
 
-  const rootIndex = numericKeys.indexOf(ev.key);
+  const rootIndex = rootKeys.indexOf(ev.key);
 
   if (rootIndex !== -1) {
-    handleNumericKey(ev.type, rootIndex, ev.key);
+    handleRootKey(ev.type, rootIndex, ev.key);
   }
 };
 
-document.body.addEventListener('keydown', onNumericKeyEvent);
-document.body.addEventListener('keyup', onNumericKeyEvent);
+document.body.addEventListener('keydown', onRootKeyEvent);
+document.body.addEventListener('keyup', onRootKeyEvent);

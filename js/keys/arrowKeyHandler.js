@@ -1,14 +1,14 @@
 /**
- * Handles the arrow key events that move the alpha keys between diapasons.
+ * Handles the arrow key events that move the note keys between diapasons.
  * The system now spans every diapason that fits inside the audible range, so
  * the number of diapasons depends on the root note and the configured notes.
  */
-import { createDiapasonRowKeyMap } from './createDiapasonRowKeyMap.js';
+import { mapNoteKeys } from './mapNoteKeys.js';
 import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
 import { activeScaleNotesGlobal, currentDiapasonIndex, updateCurrentDiapasonIndex } from '../systemState.js';
 
 /**
- * Moves the alpha keys one diapason in the given direction, if there is one.
+ * Moves the note keys one diapason in the given direction, if there is one.
  * @param {string} direction - 'next' or 'previous'.
  */
 const changeDiapason = (direction) => {
@@ -17,7 +17,7 @@ const changeDiapason = (direction) => {
   if (nextIndex < 0 || nextIndex >= activeScaleNotesGlobal.length) return;
 
   updateCurrentDiapasonIndex(nextIndex);
-  createDiapasonRowKeyMap(activeScaleNotesGlobal);
+  mapNoteKeys(activeScaleNotesGlobal);
 };
 
 document.body.addEventListener('keydown', (ev) => {

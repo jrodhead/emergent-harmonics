@@ -1,7 +1,7 @@
 export const MIN_AUDIBLE_FREQUENCY = 20;
 export const MAX_AUDIBLE_FREQUENCY = 20000;
 
-// The numeric keys 0-9 address the root notes, so there is no way to reach an
+// The root keys 0-9 address the root notes, so there is no way to reach an
 // eleventh one.
 export const MAX_ROOT_NOTES = 10;
 
@@ -10,7 +10,7 @@ export const MAX_ROOT_NOTES = 10;
 const MAX_OCTAVE_SHIFT = 12;
 
 /**
- * Puts a root note on each of the ten numeric keys. A diapason with fewer than
+ * Puts a root note on each of the ten root keys. A diapason with fewer than
  * ten notes repeats up the octaves to fill the keys that would otherwise be
  * dead: five notes make keys 5-9 an octave above their 0-4 counterparts.
  *
@@ -101,7 +101,7 @@ export function generateScaleNotes(rootNoteFrequency, notesToGenerate, {
 
 /**
  * The index of the diapason that starts on the root note itself, which is where
- * the alpha keys land when a system is first generated.
+ * the note keys land when a system is first generated.
  */
 export function homeDiapasonIndex(scaleNotesPerDiapason) {
   const index = scaleNotesPerDiapason.findIndex((diapason) => diapason.octaveShift === 0);

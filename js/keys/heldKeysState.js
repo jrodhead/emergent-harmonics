@@ -1,2 +1,2 @@
 export const heldRootKeys = new Set();
-export const heldAlphaKeys = new Set();
+export const heldNoteKeys = new Set();
