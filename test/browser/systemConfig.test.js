@@ -409,6 +409,122 @@ describe('the system configuration screen', { skip }, () => {
     });
   });
 
+  describe('tuning a note by ear while it sounds', () => {
+    // Records every retune the app asks of the audio hardware. Installed
+    // before any note sounds, since the oscillator is built on first play.
+    const recordRetunes = () => app.evaluate(`
+      window.__retunes = [];
+      const createOscillator = AudioContext.prototype.createOscillator;
+      AudioContext.prototype.createOscillator = function () {
+        const oscillator = createOscillator.call(this);
+        const setTarget = oscillator.frequency.setTargetAtTime.bind(oscillator.frequency);
+        oscillator.frequency.setTargetAtTime = (value, ...rest) => {
+          window.__retunes.push(Math.round(value));
+          return setTarget(value, ...rest);
+        };
+        return oscillator;
+      };
+      const root = document.getElementById('configRootFrequency');
+      root.value = '400';
+      root.dispatchEvent(new Event('change', { bubbles: true }));
+    `);
+
+    const dragFader = (noteIndex, toFrequency) => app.evaluate(`
+      const row = document.querySelector('.config-note[data-note-index="${noteIndex}"]');
+      const fader = row.querySelector('.config-note-slider');
+      fader.focus();
+      for (const value of [${toFrequency.map ? toFrequency.join(', ') : toFrequency}]) {
+        fader.value = String(value);
+        fader.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    `);
+
+    it('retunes a held note as its fader moves, without restarting it', async () => {
+      await recordRetunes();
+      await app.evaluate("document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', bubbles: true }));");
+
+      await dragFader(1, [500, 550, 600]);
+
+      assert.deepEqual(await app.evaluate('return window.__retunes'), [500, 550, 600]);
+      assert.equal(await app.evaluate(`
+        return document.querySelector('.config-note[data-note-index="1"]').classList.contains('active');
+      `), true, 'the note should still be sounding');
+    });
+
+    it('leaves a note alone that is not being held', async () => {
+      await recordRetunes();
+
+      await dragFader(1, [500, 600]);
+
+      assert.deepEqual(await app.evaluate('return window.__retunes'), []);
+    });
+
+    it('retunes only the note whose fader moved, so the other holds its pitch', async () => {
+      await recordRetunes();
+      await app.evaluate(`
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true }));
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', bubbles: true }));
+      `);
+
+      await dragFader(1, [500, 620]);
+
+      // Two notes sounding, and only the dragged one was retuned.
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note.active').length"), 2);
+      assert.deepEqual(await app.evaluate('return window.__retunes'), [500, 620]);
+      assert.equal(await app.evaluate(`
+        return document.querySelector('.config-note[data-note-index="0"] .config-note-hz').value;
+      `), '400', 'the untouched note keeps its frequency');
+    });
+
+    it('releases a held note even though the fader took focus', async () => {
+      await recordRetunes();
+      await app.evaluate("document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', bubbles: true }));");
+      await dragFader(1, [560]);
+
+      // The keyup lands on the fader, which is a form field.
+      assert.equal(await app.evaluate(`
+        const fader = document.querySelector('.config-note[data-note-index="1"] .config-note-slider');
+        fader.dispatchEvent(new KeyboardEvent('keyup', { key: 'w', bubbles: true }));
+        return document.querySelectorAll('.config-note.active').length;
+      `), 0, 'the note stuck on after its key was released');
+    });
+
+    it('does not start a note when its key is typed into a field', async () => {
+      assert.equal(await app.evaluate(`
+        const name = document.querySelector('.config-note[data-note-index="1"] .config-note-name');
+        name.focus();
+        name.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', bubbles: true }));
+        return document.querySelectorAll('.config-note.active').length;
+      `), 0);
+    });
+
+    it('keeps a sounding note marked through the redraw when the drag is committed', async () => {
+      await recordRetunes();
+      await app.evaluate("document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', bubbles: true }));");
+      await dragFader(1, [640]);
+
+      assert.equal(await app.evaluate(`
+        const fader = document.querySelector('.config-note[data-note-index="1"] .config-note-slider');
+        fader.dispatchEvent(new Event('change', { bubbles: true }));
+        return document.querySelector('.config-note[data-note-index="1"]').classList.contains('active');
+      `), true, 'the redraw dropped the sounding mark');
+    });
+
+    it('follows the frequency typed into the readout too', async () => {
+      await recordRetunes();
+      await app.evaluate("document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', bubbles: true }));");
+
+      await app.evaluate(`
+        const hz = document.querySelector('.config-note[data-note-index="1"] .config-note-hz');
+        hz.focus();
+        hz.value = '505';
+        hz.dispatchEvent(new Event('input', { bubbles: true }));
+      `);
+
+      assert.deepEqual(await app.evaluate('return window.__retunes'), [505]);
+    });
+  });
+
   describe('the generated system', () => {
     beforeEach(async () => {
       await app.evaluate(`

@@ -21,7 +21,7 @@ import {
 } from './systemConfigState.js';
 import { getSelectedDiapason, getSelectedDiapasonId, setSelectedDiapasonId } from './selectedDiapason.js';
 import { renderSystemConfig } from './renderSystemConfig.js';
-import { initPreviewKeys, stopAllPreviews } from './previewKeyHandler.js';
+import { initPreviewKeys, stopAllPreviews, retunePreview, markSoundingNotes } from './previewKeyHandler.js';
 import { presetNames } from './presets.js';
 import { buildSystemFromConfig } from '../system/buildSystem.js';
 import { formatFrequency, formatRatio, describeRatio } from '../format.js';
@@ -33,6 +33,12 @@ let configNotes;
 let rootFrequencyInput;
 let presetSelect;
 let importFileInput;
+
+/** Redraws the screen, keeping any note that is sounding marked as such. */
+const render = () => {
+  renderSystemConfig();
+  markSoundingNotes();
+};
 
 const syncToolbar = () => {
   rootFrequencyInput.value = formatFrequency(getConfig().primaryRootFrequency);
@@ -56,6 +62,11 @@ const applyRatio = (row, noteIndex, ratio) => {
   updateNote(getSelectedDiapasonId(), noteIndex, { ratioToRoot: bounded }, { silent: true });
 
   const frequency = ratioToFrequency(bounded);
+
+  // Heard straight away, so an interval can be tuned by ear rather than by
+  // stopping to listen after every adjustment.
+  retunePreview(noteIndex, frequency);
+
   const ratioInput = row.querySelector('.config-note-ratio');
   const frequencyInput = row.querySelector('.config-note-hz');
   const slider = row.querySelector('.config-note-slider');
@@ -159,13 +170,13 @@ const handleConfigClick = (ev) => {
   if (select) {
     stopAllPreviews();
     setSelectedDiapasonId(select.dataset.diapasonId);
-    renderSystemConfig();
+    render();
     return;
   }
 
   if (target.id === 'addDiapason') {
     setSelectedDiapasonId(addDiapason());
-    renderSystemConfig();
+    render();
     return;
   }
 
@@ -198,7 +209,7 @@ const importConfig = async (file) => {
     replaceConfig(JSON.parse(await file.text()));
     setSelectedDiapasonId(null);
     syncToolbar();
-    renderSystemConfig();
+    render();
   } catch (error) {
     console.error('Could not import the system configuration:', error);
     alert(`That file is not a usable system configuration: ${error.message}`);
@@ -219,13 +230,13 @@ export function initSystemConfig() {
 
   loadStoredConfig();
   syncToolbar();
-  renderSystemConfig();
+  render();
   buildSystemFromConfig();
 
   // Every change to the configuration is saved and pushed straight into the
   // playable system, so switching to the keyboard always plays what is shown.
   subscribe(() => {
-    renderSystemConfig();
+    render();
     buildSystemFromConfig();
   });
 
@@ -245,7 +256,7 @@ export function initSystemConfig() {
     resetConfig();
     setSelectedDiapasonId(null);
     syncToolbar();
-    renderSystemConfig();
+    render();
   });
 
   document.getElementById('exportConfig').addEventListener('click', exportConfig);

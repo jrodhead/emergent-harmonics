@@ -43,6 +43,28 @@ export function playSound(frequency, key, volume, waveShape) {
 }
 
 /**
+ * Retunes a sound that is already playing, so a frequency can be moved while
+ * it is being listened to. Does nothing if that key is not sounding.
+ *
+ * @param {string} key - The key the sound was started under.
+ * @param {number} frequency - The frequency to move to.
+ */
+export function setSoundFrequency(key, frequency) {
+  const activeOscillator = activeOscillators[key];
+  if (!activeOscillator) return;
+
+  if (!isFinite(frequency)) {
+    console.error('Invalid frequency value:', frequency);
+    return;
+  }
+
+  // Glides to the new frequency over a few milliseconds. Jumping straight
+  // there clicks on every step of a drag, which drowns out the interval the
+  // drag is trying to find.
+  activeOscillator.oscillator.frequency.setTargetAtTime(frequency, audioContext.currentTime, 0.01);
+}
+
+/**
  * Stops the sound associated with a given key.
  * @param {string} key - The key associated with the sound to stop.
  */
