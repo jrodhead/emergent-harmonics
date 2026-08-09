@@ -2,33 +2,28 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  presetIds,
+  presetOptions,
+  presetLabel,
   presetNotes,
   isPreset,
-  canonicalPresetName,
-  presetNames,
 } from '../../js/presets/registry.js';
 
 describe('presetNotes', () => {
-  it('returns notes for every name it offers', () => {
-    presetNames.forEach((name) => {
-      const notes = presetNotes(name);
+  it('returns notes for every preset it offers', () => {
+    presetIds.forEach((id) => {
+      const notes = presetNotes(id);
 
-      assert.ok(Array.isArray(notes), `${name} returns an array`);
-      assert.ok(notes.length > 0, `${name} is not empty`);
+      assert.ok(Array.isArray(notes), `${id} returns an array`);
+      assert.ok(notes.length > 0, `${id} is not empty`);
     });
   });
 
-  it('accepts the short aliases used inside the scale files', () => {
-    assert.equal(presetNotes('major'), presetNotes('majorScaleNotes'));
-    assert.equal(presetNotes('minor'), presetNotes('naturalMinorScaleNotes'));
-    assert.equal(presetNotes('diminished'), presetNotes('diminishedScaleNotes'));
-  });
-
   it('generates an equal temperament of the requested size', () => {
-    assert.equal(presetNotes('equalTemperamentNoteGenerator', 19).length, 19);
+    assert.equal(presetNotes('equalTemperament', 19).length, 19);
   });
 
-  it('throws on a name it does not know', () => {
+  it('throws on an id it does not know', () => {
     assert.throws(() => presetNotes('nonsense'), /Unknown preset: nonsense/);
   });
 
@@ -39,10 +34,8 @@ describe('presetNotes', () => {
 });
 
 describe('isPreset', () => {
-  it('recognises canonical names, aliases, and the computed preset', () => {
-    assert.equal(isPreset('majorScaleNotes'), true);
-    assert.equal(isPreset('minor'), true);
-    assert.equal(isPreset('equalTemperamentNoteGenerator'), true);
+  it('recognises every id it offers', () => {
+    presetIds.forEach((id) => assert.equal(isPreset(id), true, `${id} is a preset`));
   });
 
   it('rejects anything else, including a scale id', () => {
@@ -52,21 +45,22 @@ describe('isPreset', () => {
   });
 });
 
-describe('canonicalPresetName', () => {
-  it('resolves an alias to the name the configuration screen lists', () => {
-    assert.equal(canonicalPresetName('major'), 'majorScaleNotes');
-    assert.equal(canonicalPresetName('minor'), 'naturalMinorScaleNotes');
-    assert.equal(canonicalPresetName('diminished'), 'diminishedScaleNotes');
-  });
+describe('presetOptions', () => {
+  it('offers every preset as an id to store and a name to show', () => {
+    const options = presetOptions();
 
-  it('leaves a name that is already canonical alone', () => {
-    assert.equal(canonicalPresetName('bluesScaleNotes'), 'bluesScaleNotes');
-    assert.equal(canonicalPresetName('scale-1'), 'scale-1');
-  });
-
-  it('resolves every alias to a name it offers', () => {
-    ['major', 'minor', 'diminished'].forEach((alias) => {
-      assert.ok(presetNames.includes(canonicalPresetName(alias)));
+    assert.equal(options.length, presetIds.length);
+    options.forEach(({ value, label }) => {
+      assert.ok(isPreset(value), `${value} is a preset`);
+      assert.ok(label && label !== value, `${value} is shown as something friendlier`);
     });
+  });
+
+  it('names a preset the same way wherever it is asked', () => {
+    presetOptions().forEach(({ value, label }) => assert.equal(presetLabel(value), label));
+  });
+
+  it('has no name for an id that is not a preset', () => {
+    assert.equal(presetLabel('scale-1'), undefined);
   });
 });

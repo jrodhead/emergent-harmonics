@@ -2,7 +2,7 @@ import { heldRootKeys } from './heldKeysState.js';
 import { currentPlayMode } from './playModeHandler.js';
 import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
 import { selectRootNote } from '../system/buildSystem.js';
-import { isValidRootIndex } from '../systemState.js';
+import { isValidRootIndex } from '../system/state.js';
 
 const rootKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
 

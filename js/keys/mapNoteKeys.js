@@ -1,6 +1,6 @@
 import { buildNoteKeyMap } from './buildNoteKeyMap.js';
 import { renderNoteKeyTable } from './renderNoteKeyTable.js';
-import { currentRegisterIndex } from '../systemState.js';
+import { currentRegisterIndex } from '../system/state.js';
 
 export let noteKeyMap = [];
 

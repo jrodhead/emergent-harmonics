@@ -9,13 +9,13 @@ export const diminishedScaleNotes = [
     degree: "II",
     ratioToRoot: 16/15,
     intervalName: "Minor second",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "III",
     ratioToRoot: 6/5,
     intervalName: "Minor third",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "IV",
@@ -33,12 +33,12 @@ export const diminishedScaleNotes = [
     degree: "VI",
     ratioToRoot: 8/5,
     intervalName: "Minor sixth",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "VII",
     ratioToRoot: 16/9,
     intervalName: "Minor seventh",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   }
 ];

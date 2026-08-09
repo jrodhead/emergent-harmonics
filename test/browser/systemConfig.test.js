@@ -52,8 +52,8 @@ describe('the system configuration screen', { skip }, () => {
         return [...document.querySelectorAll('.config-note-root-scale')]
           .map(select => select.selectedOptions[0].textContent.trim());
       `), [
-        'majorScaleNotes', 'naturalMinorScaleNotes', 'naturalMinorScaleNotes', 'majorScaleNotes',
-        'majorScaleNotes', 'naturalMinorScaleNotes', 'diminishedScaleNotes',
+        'Major', 'Natural minor', 'Natural minor', 'Major',
+        'Major', 'Natural minor', 'Diminished',
       ]);
     });
 
@@ -166,8 +166,8 @@ describe('the system configuration screen', { skip }, () => {
       assert.deepEqual(await app.evaluate(`
         document.querySelectorAll('.config-note-remove')[2].click();
         document.querySelector('[data-show-view="play"]').click();
-        return [...document.querySelectorAll('.root-selector .degree')].map(degree => degree.textContent.trim());
-      `), ['I', 'II', 'III', 'IV', 'V', 'VI', 'I′', 'II′', 'III′', 'IV′']);
+        return [...document.querySelectorAll('.root-key .degree')].map(degree => degree.textContent.trim());
+      `), ['I', 'II', 'III', 'IV', 'V', 'VI', 'I +1', 'II +1', 'III +1', 'IV +1']);
     });
 
     it('shifts the preview keys up with the notes that remain', async () => {
@@ -179,11 +179,11 @@ describe('the system configuration screen', { skip }, () => {
 
     it('loads a preset into the scale being edited', async () => {
       assert.deepEqual(await app.evaluate(`
-        document.getElementById('presetSelect').value = 'minorPentatonicScaleNotes';
+        document.getElementById('presetSelect').value = 'minorPentatonic';
         document.getElementById('loadPreset').click();
         return [document.querySelectorAll('.config-note[data-note-index]').length,
                 document.getElementById('scaleName').value];
-      `), [5, 'minorPentatonicScaleNotes']);
+      `), [5, 'Minor pentatonic']);
     });
   });
 
@@ -544,22 +544,29 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('puts the configured notes on the root keys', async () => {
-      assert.equal(await app.evaluate("return document.querySelectorAll('.root-selector').length"), 10);
+      assert.equal(await app.evaluate("return document.querySelectorAll('.root-key').length"), 10);
       assert.equal(
-        await app.evaluate("return document.getElementById('root0').querySelector('.root-frequency').textContent"),
+        await app.evaluate("return document.getElementById('root0').querySelector('.frequency').textContent"),
         '400Hz',
       );
     });
 
-    it('fills the leftover root keys an octave above their counterparts', async () => {
-      // Seven notes, so keys 7-9 repeat the first three an octave up.
+    it('fills the leftover root keys a period above their counterparts', async () => {
+      // Seven notes, so keys 7-9 repeat the first three a period up.
       assert.deepEqual(await app.evaluate(`
         return [7, 8, 9].map(key => {
-          const selector = document.getElementById('root' + key);
-          return [selector.querySelector('.degree').textContent,
-                  selector.querySelector('.root-frequency').textContent];
+          const rootKey = document.getElementById('root' + key);
+          return [rootKey.querySelector('.degree').textContent,
+                  rootKey.querySelector('.frequency').textContent];
         });
-      `), [['I′', '800Hz'], ['II′', '900Hz'], ['III′', '1000Hz']]);
+      `), [['I +1', '800Hz'], ['II +1', '900Hz'], ['III +1', '1000Hz']]);
+    });
+
+    it('names the scale each root key would build, rather than its id', async () => {
+      assert.deepEqual(await app.evaluate(`
+        return [...document.querySelectorAll('.root-key .root-scale')]
+          .slice(0, 3).map(scale => scale.textContent.trim());
+      `), ['Major', 'Natural minor', 'Natural minor']);
     });
 
     it('fills all three note key rows', async () => {
@@ -575,7 +582,7 @@ describe('the system configuration screen', { skip }, () => {
 
     it('starts the home row on the root note', async () => {
       assert.equal(
-        await app.evaluate("return document.getElementById('q').querySelector('.note-frequency').textContent"),
+        await app.evaluate("return document.getElementById('q').querySelector('.frequency').textContent"),
         '400Hz',
       );
     });
@@ -583,7 +590,7 @@ describe('the system configuration screen', { skip }, () => {
     it('moves an octave up and back with the arrow keys', async () => {
       const frequencyAfter = (key) => app.evaluate(`
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '${key}', bubbles: true }));
-        return document.getElementById('q').querySelector('.note-frequency').textContent;
+        return document.getElementById('q').querySelector('.frequency').textContent;
       `);
 
       assert.equal(await frequencyAfter('ArrowUp'), '800Hz');
@@ -595,7 +602,7 @@ describe('the system configuration screen', { skip }, () => {
         const frequencies = [];
         for (let step = 0; step < 4; step++) {
           document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
-          frequencies.push(document.getElementById('q').querySelector('.note-frequency').textContent);
+          frequencies.push(document.getElementById('q').querySelector('.frequency').textContent);
         }
         return frequencies;
       `), ['200Hz', '100Hz', '50Hz', '25Hz']);
@@ -606,7 +613,7 @@ describe('the system configuration screen', { skip }, () => {
         for (let step = 0; step < 20; step++) {
           document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
         }
-        return document.getElementById('q').querySelector('.note-frequency').textContent;
+        return document.getElementById('q').querySelector('.frequency').textContent;
       `), '25Hz');
     });
 
@@ -614,9 +621,9 @@ describe('the system configuration screen', { skip }, () => {
       assert.deepEqual(await app.evaluate(`
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '4', bubbles: true }));
         document.body.dispatchEvent(new KeyboardEvent('keyup', { key: '4', bubbles: true }));
-        return [document.querySelector('.root-selector.active').id,
-                document.getElementById('root4').querySelector('.root-frequency').textContent,
-                document.getElementById('q').querySelector('.note-frequency').textContent];
+        return [document.querySelector('.root-key.active').id,
+                document.getElementById('root4').querySelector('.frequency').textContent,
+                document.getElementById('q').querySelector('.frequency').textContent];
       `), ['root4', '600Hz', '600Hz']);
     });
 

@@ -1,7 +1,7 @@
 import { describe, it, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { resolveScaleNotes } from '../../js/config/resolveScaleNotes.js';
+import { resolveScaleNotes, rootScaleLabel } from '../../js/config/rootScales.js';
 import {
   getConfig,
   getPrimaryScale,
@@ -22,21 +22,17 @@ describe('resolveScaleNotes', () => {
     assert.equal(resolveScaleNotes(second), getConfig().scales[1].notes);
   });
 
-  it('resolves a built-in preset by name', () => {
-    assert.equal(resolveScaleNotes('bluesScaleNotes'), presetNotes('bluesScaleNotes'));
+  it('resolves a built-in preset by its id', () => {
+    assert.equal(resolveScaleNotes('blues'), presetNotes('blues'));
   });
 
-  it('resolves a built-in preset given by its alias', () => {
-    assert.equal(resolveScaleNotes('minor'), presetNotes('naturalMinorScaleNotes'));
-  });
-
-  it('prefers a configured scale over a preset with the same name', () => {
+  it('prefers a configured scale over a preset with the same id', () => {
     replaceConfig({
-      primaryScaleId: 'majorScaleNotes',
-      scales: [{ id: 'majorScaleNotes', name: 'Mine', notes: [{ ratioToRoot: 1.25 }] }],
+      primaryScaleId: 'major',
+      scales: [{ id: 'major', name: 'Mine', notes: [{ ratioToRoot: 1.25, rootScaleId: 'major' }] }],
     });
 
-    assert.equal(resolveScaleNotes('majorScaleNotes').length, 1);
+    assert.equal(resolveScaleNotes('major').length, 1);
   });
 
   it('falls back to the primary scale for a name it cannot resolve', (t) => {
@@ -62,5 +58,22 @@ describe('resolveScaleNotes', () => {
         assert.ok(Array.isArray(notes) && notes.length > 0, `${note.rootScaleId} resolves`);
       });
     });
+  });
+});
+
+describe('rootScaleLabel', () => {
+  it('names a configured scale by the name it was given', () => {
+    const second = addScale();
+
+    assert.equal(rootScaleLabel(second), getConfig().scales[1].name);
+  });
+
+  it('names a built-in preset the way the screen offers it', () => {
+    assert.equal(rootScaleLabel('naturalMinor'), 'Natural minor');
+    assert.equal(rootScaleLabel('hd110067'), 'HD 110067');
+  });
+
+  it('falls back to the primary scale for an id it cannot place', () => {
+    assert.equal(rootScaleLabel('ghost'), getPrimaryScale().name);
   });
 });

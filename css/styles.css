@@ -105,9 +105,8 @@ button#play {
   margin: 1rem .5rem .5rem;
 }
 
-#current-register-data,
 .note,
-.root-selector {
+.root-key {
   background: #fff;
   border: 1px solid #ccc;
   border-radius: .5rem;
@@ -117,27 +116,19 @@ button#play {
   align-items: center;
 }
 
-#current-register-data {
-  background-color: transparent;
-  border-color: transparent;
-  color: #fff;
-}
-
-#current-register-index,
 .key-name {
   font-size: 3rem;
   font-weight: bold;
   text-transform: capitalize;
 }
 
-#current-register-data > div,
 .note > div,
-.root-selector > div {
+.root-key > div {
   overflow: hidden;
 }
 
-/* Preset names are long, so let them wrap rather than get clipped. */
-.root-selector .root-scale {
+/* Scale names are long, so let them wrap rather than get clipped. */
+.root-key .root-scale {
   font-size: .75rem;
   overflow-wrap: anywhere;
 }

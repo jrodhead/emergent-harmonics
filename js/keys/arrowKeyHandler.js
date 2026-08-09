@@ -5,7 +5,7 @@
  */
 import { mapNoteKeys } from './mapNoteKeys.js';
 import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
-import { registers, currentRegisterIndex, updateCurrentRegisterIndex } from '../systemState.js';
+import { registers, currentRegisterIndex, updateCurrentRegisterIndex } from '../system/state.js';
 
 /**
  * Moves the note keys one register in the given direction, if there is one.

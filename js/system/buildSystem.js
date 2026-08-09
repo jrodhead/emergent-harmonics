@@ -1,6 +1,6 @@
 import { generateRootNotes, buildRegisters, homeRegisterIndex } from './generateSystem.js';
 import { getConfig, getPrimaryScale } from '../config/systemConfigState.js';
-import { resolveScaleNotes } from '../config/resolveScaleNotes.js';
+import { resolveScaleNotes } from '../config/rootScales.js';
 import { renderRootKeyTable, displayActiveRootNote } from '../keys/renderRootKeyTable.js';
 import { mapNoteKeys } from '../keys/mapNoteKeys.js';
 import {
@@ -11,7 +11,7 @@ import {
   updateCurrentRootIndex,
   updateRootNotes,
   rootNotes,
-} from '../systemState.js';
+} from '../system/state.js';
 
 /**
  * Generates the registers for a root note and points the note keys at them.

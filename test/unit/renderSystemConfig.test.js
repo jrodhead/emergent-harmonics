@@ -102,10 +102,10 @@ describe('renderRootScaleOptions', () => {
   });
 
   it('selects exactly the option the note is set to', () => {
-    const html = renderRootScaleOptions('bluesScaleNotes');
+    const html = renderRootScaleOptions('blues');
 
     assert.equal(occurrences(html, ' selected'), 1);
-    assert.match(html, /value="bluesScaleNotes" selected/);
+    assert.match(html, /value="blues" selected/);
   });
 
   it('surfaces a value that matches no option instead of showing another one', () => {
@@ -201,7 +201,7 @@ describe('renderNotes', () => {
   });
 
   it('explains that a short primary scale repeats up the root keys', () => {
-    assert.match(renderNotes(getPrimaryScale()), /Keys 7-9 repeat these notes an octave higher/);
+    assert.match(renderNotes(getPrimaryScale()), /Keys 7-9 repeat these notes a period higher/);
   });
 
   it('says nothing about repeats once the notes fill the root keys', () => {

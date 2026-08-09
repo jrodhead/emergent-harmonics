@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { formatFrequency, formatRatio, describeRatio } from '../../js/format.js';
+import { formatFrequency, formatRatio, describeRatio, formatDegree } from '../../js/format.js';
 
 describe('formatFrequency', () => {
   it('shows at most two decimals', () => {
@@ -42,5 +42,23 @@ describe('describeRatio', () => {
     assert.equal(describeRatio(0), '—');
     assert.equal(describeRatio(-1), '—');
     assert.equal(describeRatio(Number.NaN), '—');
+  });
+});
+
+describe('formatDegree', () => {
+  it('shows a degree in the root period as itself', () => {
+    assert.equal(formatDegree('V'), 'V');
+    assert.equal(formatDegree('V', 0), 'V');
+  });
+
+  it('marks how many periods a degree has been shifted, in either direction', () => {
+    assert.equal(formatDegree('I', 1), 'I +1');
+    assert.equal(formatDegree('I', 3), 'I +3');
+    assert.equal(formatDegree('VII', -2), 'VII −2');
+  });
+
+  it('treats a shift that is not a number as no shift at all', () => {
+    assert.equal(formatDegree('V', Number.NaN), 'V');
+    assert.equal(formatDegree('V', undefined), 'V');
   });
 });

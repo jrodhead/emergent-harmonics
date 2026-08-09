@@ -253,9 +253,9 @@ describe('scales', () => {
   it('take on the notes of a preset when one is loaded', () => {
     const { id } = getPrimaryScale();
 
-    loadPresetIntoScale(id, 'minorPentatonicScaleNotes');
+    loadPresetIntoScale(id, 'minorPentatonic');
 
-    assert.equal(getScale(id).name, 'minorPentatonicScaleNotes');
+    assert.equal(getScale(id).name, 'Minor pentatonic');
     assert.equal(getScale(id).notes.length, 5);
   });
 });
@@ -335,12 +335,12 @@ describe('replaceConfig', () => {
     assert.equal(config.scales[0].notes[0].rootScaleId, 'a');
   });
 
-  it('canonicalises a root scale given as an alias', () => {
+  it('keeps a root scale that names a built-in preset', () => {
     const config = replaceConfig({
-      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, rootScaleId: 'minor' }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, rootScaleId: 'naturalMinor' }] }],
     });
 
-    assert.equal(config.scales[0].notes[0].rootScaleId, 'naturalMinorScaleNotes');
+    assert.equal(config.scales[0].notes[0].rootScaleId, 'naturalMinor');
   });
 
   it('keeps a root scale that points at another scale in the file', () => {
@@ -432,35 +432,6 @@ describe('persistence', () => {
     assert.equal(getConfig().primaryRootFrequency, 432);
     assert.equal(getPrimaryScale().name, 'Solarian');
     assert.equal(getPrimaryScale().notes[0].ratioToRoot, 1.5);
-  });
-
-  it('restores a system saved under the version 1 names', () => {
-    writeStoredValue(STORAGE_KEY, JSON.stringify({
-      version: 1,
-      primaryRootFrequency: 432,
-      primaryDiapasonId: 'diapason-2',
-      diapasons: [
-        { id: 'diapason-1', name: 'Lower', notes: [{ ratioToRoot: 1, triadType: 'diapason-1' }] },
-        {
-          id: 'diapason-2',
-          name: 'Solarian',
-          notes: [{
-            ratioToRoot: 1.5,
-            relationshipToRootName: 'Perfect 5th',
-            triadType: 'hd110067NotesInOneDiapason',
-          }],
-        },
-      ],
-    }));
-
-    loadStoredConfig();
-
-    assert.equal(getConfig().version, 2);
-    assert.equal(getConfig().scales.length, 2);
-    assert.equal(getPrimaryScale().name, 'Solarian');
-    assert.equal(getPrimaryScale().notes[0].intervalName, 'Perfect 5th');
-    // The preset it pointed at was renamed along with the word.
-    assert.equal(getPrimaryScale().notes[0].rootScaleId, 'hd110067NotesInOneScale');
   });
 
   it('validates what it restores, so a hand-edited file cannot break the app', () => {

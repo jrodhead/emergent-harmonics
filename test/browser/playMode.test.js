@@ -137,12 +137,12 @@ describe('play modes', { skip }, () => {
       assert.deepEqual(await app.evaluate(`
         ${dispatchKey('keydown', '0')}
         ${dispatchKey('keydown', 'q')}
-        const before = document.getElementById('q').querySelector('.note-frequency').textContent;
+        const before = document.getElementById('q').querySelector('.frequency').textContent;
 
         ${dispatchKey('keyup', '0')}
         ${dispatchKey('keydown', '1')}
 
-        return [before !== document.getElementById('q').querySelector('.note-frequency').textContent,
+        return [before !== document.getElementById('q').querySelector('.frequency').textContent,
                 document.getElementById('q').classList.contains('active')];
       `), [true, true]);
     });

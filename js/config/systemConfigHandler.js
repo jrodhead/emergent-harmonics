@@ -22,7 +22,7 @@ import {
 import { getSelectedScale, getSelectedScaleId, setSelectedScaleId } from './selectedScale.js';
 import { renderSystemConfig } from './renderSystemConfig.js';
 import { initPreviewKeys, stopAllPreviews, retunePreview, markSoundingNotes } from './previewKeyHandler.js';
-import { presetNames } from './presets.js';
+import { presetOptions } from '../presets/registry.js';
 import { buildSystemFromConfig } from '../system/buildSystem.js';
 import { formatFrequency, formatRatio, describeRatio } from '../format.js';
 import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/generateSystem.js';
@@ -224,8 +224,8 @@ export function initSystemConfig() {
   presetSelect = document.getElementById('presetSelect');
   importFileInput = document.getElementById('importConfigFile');
 
-  presetSelect.innerHTML = presetNames
-    .map((name) => `<option value="${name}">${name}</option>`)
+  presetSelect.innerHTML = presetOptions()
+    .map(({ value, label }) => `<option value="${value}">${label}</option>`)
     .join('');
 
   loadStoredConfig();

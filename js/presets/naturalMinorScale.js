@@ -3,7 +3,7 @@ export const naturalMinorScaleNotes = [
     degree: "I",
     ratioToRoot: 1/1,
     intervalName: "Root",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "II",
@@ -21,13 +21,13 @@ export const naturalMinorScaleNotes = [
     degree: "IV",
     ratioToRoot: 4/3,
     intervalName: "Perfect 4th",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "V",
     ratioToRoot: 3/2,
     intervalName: "Perfect 5th",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "VI",

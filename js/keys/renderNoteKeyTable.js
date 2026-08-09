@@ -1,25 +1,25 @@
-import { formatFrequency, formatRatio } from '../format.js';
+import { formatFrequency, formatRatio, formatDegree } from '../format.js';
 
 /**
- * Renders the note key map table based on the provided note key map.
+ * Draws the note keys: what each one sounds, and where it sits in the scale.
  *
- * @param {Object} noteKeyMap - The note key map containing note information.
+ * @param {Array} noteKeyMap - The keys, with the note each one plays.
  */
 export function renderNoteKeyTable(noteKeyMap) {
   let noteGridHTML = `
     <div class="grid-container">
-      <h2>Note Selectors</h2>
+      <h2>Note keys</h2>
       <div class="note-group">
   `;
 
   noteKeyMap.forEach(({ key, frequency, definition, periodShift }) => {
     noteGridHTML += `
       <div id="${key}" class="note">
-        <div class="degree">${definition.degree} - ${periodShift}</div>
+        <div class="degree">${formatDegree(definition.degree, periodShift)}</div>
         <div class="key-name">${key}</div>
         <div class="ratio">ratio: ${formatRatio(definition.ratioToRoot)}</div>
-        <div class="relationship">${definition.intervalName}</div>
-        <div class="note-frequency">${formatFrequency(frequency)}Hz</div>
+        <div class="interval-name">${definition.intervalName}</div>
+        <div class="frequency">${formatFrequency(frequency)}Hz</div>
       </div>
     `;
   });

@@ -11,7 +11,7 @@ import {
 } from '../../js/system/generateSystem.js';
 import { presetNotes } from '../../js/presets/registry.js';
 
-const majorScale = presetNotes('majorScaleNotes');
+const majorScale = presetNotes('major');
 const singleNote = [{ ratioToRoot: 1 }];
 
 describe('buildRegisters', () => {
@@ -150,7 +150,7 @@ describe('generateRootNotes', () => {
   });
 
   it('caps at the ten root keys that can address a root', () => {
-    const twelveNotes = presetNotes('equalTemperamentNoteGenerator', 12);
+    const twelveNotes = presetNotes('equalTemperament', 12);
 
     assert.equal(twelveNotes.length, 12);
     assert.equal(generateRootNotes(100, twelveNotes).length, MAX_ROOT_NOTES);

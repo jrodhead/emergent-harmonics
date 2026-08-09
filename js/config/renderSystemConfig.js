@@ -142,17 +142,18 @@ export const renderNotes = (scale) => {
     </div>
 
     <p class="config-hint">
-      Every note sits between the root and its octave: ${formatFrequency(minimum)}Hz to ${formatFrequency(maximum)}Hz.
+      Every note sits inside one period, from the root to double it:
+      ${formatFrequency(minimum)}Hz to ${formatFrequency(maximum)}Hz.
       Hold the key shown on a note to hear it; the notes run across the keyboard rows ${previewRows}.
       ${overflowsRootKeys
         ? `<strong>Only the first ${MAX_ROOT_NOTES} notes get a root key</strong>, since the roots live on keys 0-9.</br>`
         : ''}
       ${repeatsOnRootKeys
-        ? `Keys ${scale.notes.length}-${MAX_ROOT_NOTES - 1} repeat these notes an octave higher each time round,
+        ? `Keys ${scale.notes.length}-${MAX_ROOT_NOTES - 1} repeat these notes a period higher each time round,
            so every root key has a note to build from.</br>`
         : ''}
       ${overflowsPreviewKeys
-        ? `<strong>Only the first ${PREVIEW_KEYS.length} notes can be previewed</strong>, since the top row runs out.`
+        ? `<strong>Only the first ${PREVIEW_KEYS.length} notes can be previewed</strong>, since the keyboard runs out.`
         : ''}
     </p>
 

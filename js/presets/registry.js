@@ -4,79 +4,57 @@ import { diminishedScaleNotes } from './diminishedScale.js';
 import { majorPentatonicScaleNotes } from './majorPentatonicScale.js';
 import { minorPentatonicScaleNotes } from './minorPentatonicScale.js';
 import { bluesScaleNotes } from './bluesScale.js';
-import { hd110067NotesInOneScale } from './hd110067.js';
+import { hd110067Notes } from './hd110067.js';
 import { equalTemperamentNotes } from './equalTemperament.js';
 import { fibonacciNotes } from './fibonacciScale.js';
 import { exploratoryNotes } from './exploratory.js';
 import { pythagoreanNotes } from './pythagorean.js';
 
 /**
- * The note sets that ship with the app, ready to be loaded and then edited.
- * Equal temperament is the one that is computed rather than written out, since
- * it depends on how many notes the octave is being divided into.
+ * The scales that ship with the app, ready to be loaded and then edited. The
+ * id is what a configuration stores; the label is what the screen shows.
+ *
+ * Equal temperament is the one computed rather than written out, since it
+ * depends on how many notes the period is being divided into.
  */
-const EQUAL_TEMPERAMENT = 'equalTemperamentNoteGenerator';
-
 const presets = new Map([
-  ['majorScaleNotes', majorScaleNotes],
-  ['naturalMinorScaleNotes', naturalMinorScaleNotes],
-  ['diminishedScaleNotes', diminishedScaleNotes],
-  ['majorPentatonicScaleNotes', majorPentatonicScaleNotes],
-  ['minorPentatonicScaleNotes', minorPentatonicScaleNotes],
-  ['bluesScaleNotes', bluesScaleNotes],
-  ['pythagoreanNotes', pythagoreanNotes],
-  ['hd110067NotesInOneScale', hd110067NotesInOneScale],
-  ['exploratoryNotes', exploratoryNotes],
-  ['fibonacciNotes', fibonacciNotes],
-  [EQUAL_TEMPERAMENT, equalTemperamentNotes],
+  ['major', { label: 'Major', notes: majorScaleNotes }],
+  ['naturalMinor', { label: 'Natural minor', notes: naturalMinorScaleNotes }],
+  ['diminished', { label: 'Diminished', notes: diminishedScaleNotes }],
+  ['majorPentatonic', { label: 'Major pentatonic', notes: majorPentatonicScaleNotes }],
+  ['minorPentatonic', { label: 'Minor pentatonic', notes: minorPentatonicScaleNotes }],
+  ['blues', { label: 'Blues', notes: bluesScaleNotes }],
+  ['pythagorean', { label: 'Pythagorean', notes: pythagoreanNotes }],
+  ['hd110067', { label: 'HD 110067', notes: hd110067Notes }],
+  ['exploratory', { label: 'Exploratory', notes: exploratoryNotes }],
+  ['fibonacci', { label: 'Fibonacci', notes: fibonacciNotes }],
+  ['equalTemperament', { label: 'Equal temperament', notes: equalTemperamentNotes }],
 ]);
 
-// The short names the note tables use to point at each other, mapped onto the
-// preset names the configuration screen shows.
-const aliases = new Map([
-  ['major', 'majorScaleNotes'],
-  ['minor', 'naturalMinorScaleNotes'],
-  ['diminished', 'diminishedScaleNotes'],
-  // Written into systems saved back when a scale was called a diapason.
-  ['hd110067NotesInOneDiapason', 'hd110067NotesInOneScale'],
-]);
+export const presetIds = [...presets.keys()];
 
-export const presetNames = [...presets.keys()];
+/** Every preset as the screen offers it: the id to store, the name to show. */
+export const presetOptions = () => presetIds.map((id) => ({ value: id, label: presets.get(id).label }));
+
+/** What to call a preset on screen, or nothing if the id names no preset. */
+export const presetLabel = (presetId) => presets.get(presetId)?.label;
+
+export const isPreset = (presetId) => presets.has(presetId);
 
 /**
  * The notes of a built-in preset.
  *
- * @param {string} name - A preset name, or one of the short aliases.
- * @param {number} [noteCount] - How many notes to divide the octave into, for
+ * @param {string} presetId
+ * @param {number} [noteCount] - How many notes to divide the period into, for
  *   the presets that are computed rather than written out.
  * @returns {Array} Notes, each with at least a ratioToRoot.
  */
-export function presetNotes(name, noteCount) {
-  const notes = presets.get(canonicalPresetName(name));
+export function presetNotes(presetId, noteCount) {
+  const preset = presets.get(presetId);
 
-  if (!notes) {
-    throw new Error(`Unknown preset: ${name}`);
+  if (!preset) {
+    throw new Error(`Unknown preset: ${presetId}`);
   }
 
-  return typeof notes === 'function' ? notes(noteCount) : notes;
-}
-
-/**
- * Whether a name refers to one of the built-in presets, as opposed to a
- * user-authored scale from the system configuration screen.
- *
- * @param {string} name
- * @returns {boolean}
- */
-export const isPreset = (name) => presets.has(canonicalPresetName(name));
-
-/**
- * The canonical name for a preset, so a name written as an alias always
- * matches one of the names offered in the configuration screen.
- *
- * @param {string} name
- * @returns {string}
- */
-export function canonicalPresetName(name) {
-  return aliases.get(name) ?? name;
+  return typeof preset.notes === 'function' ? preset.notes(noteCount) : preset.notes;
 }

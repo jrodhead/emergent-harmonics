@@ -16,13 +16,16 @@ export const formatRatio = (ratio) => {
 };
 
 /**
- * Marks a degree with the periods it has been shifted, so a repeated degree
- * reads apart from the one it repeats: I, I′, I″.
+ * A degree with the periods it has been shifted from the root: V, V +1, V −2.
+ * The same degree appears on several keys at once, on the note keys and on the
+ * root keys both, and the shift is what tells them apart.
  */
 export const formatDegree = (degree, periodShift = 0) => {
-  const shift = Number.isFinite(periodShift) ? Math.max(0, Math.trunc(periodShift)) : 0;
+  const shift = Number.isFinite(periodShift) ? Math.trunc(periodShift) : 0;
 
-  return `${degree}${'′'.repeat(shift)}`;
+  if (shift === 0) return `${degree}`;
+
+  return `${degree} ${shift > 0 ? '+' : '−'}${Math.abs(shift)}`;
 };
 
 /**

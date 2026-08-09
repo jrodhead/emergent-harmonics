@@ -9,13 +9,13 @@ export const majorScaleNotes = [
     degree: "II",
     ratioToRoot: 9/8,
     intervalName: "Major 2nd",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "III",
     ratioToRoot: 5/4,
     intervalName: "Major 3rd",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "IV",
@@ -33,7 +33,7 @@ export const majorScaleNotes = [
     degree: "VI",
     ratioToRoot: 5/3,
     intervalName: "Major 6th",
-    rootScaleId: "minor"
+    rootScaleId: "naturalMinor"
   },
   {
     degree: "VII",

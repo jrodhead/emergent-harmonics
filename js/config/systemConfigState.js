@@ -1,13 +1,14 @@
 import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/generateSystem.js';
-import { isPreset, canonicalPresetName } from '../presets/registry.js';
-import { presetToNotes, presetNames, degreeForIndex } from './presets.js';
+import { isPreset, presetLabel, presetOptions } from '../presets/registry.js';
+import { presetToNotes } from './presetToScale.js';
+import { degreeForIndex } from './degrees.js';
 import { PERIOD_RATIO, foldRatioIntoPeriod } from '../system/period.js';
 import { describeRatio } from '../format.js';
 import { readStoredValue, writeStoredValue, clearStoredValue } from '../storage.js';
 
 export const STORAGE_KEY = 'emergentHarmonics.systemConfig';
 const CONFIG_VERSION = 2;
-const DEFAULT_PRESET = 'majorScaleNotes';
+const DEFAULT_PRESET = 'major';
 const DEFAULT_ROOT_FREQUENCY = 27;
 
 // A note's ratio to its root always sits inside one period: 1 is the root,
@@ -39,7 +40,7 @@ const createDefaultConfig = () => {
     version: CONFIG_VERSION,
     primaryRootFrequency: DEFAULT_ROOT_FREQUENCY,
     primaryScaleId: id,
-    scales: [{ id, name: 'Major', notes: presetToNotes(DEFAULT_PRESET, id) }],
+    scales: [{ id, name: presetLabel(DEFAULT_PRESET), notes: presetToNotes(DEFAULT_PRESET, id) }],
   };
 };
 
@@ -116,12 +117,12 @@ export const renameScale = (scaleId, name) => {
   notify();
 };
 
-export const loadPresetIntoScale = (scaleId, presetName) => {
+export const loadPresetIntoScale = (scaleId, presetId) => {
   const scale = getScale(scaleId);
   if (!scale) return;
 
-  scale.notes = presetToNotes(presetName, scaleId);
-  scale.name = presetName;
+  scale.notes = presetToNotes(presetId, scaleId);
+  scale.name = presetLabel(presetId) ?? scale.name;
   notify();
 };
 
@@ -205,36 +206,19 @@ export const updateNote = (scaleId, noteIndex, patch, { silent = false } = {}) =
  */
 export const rootScaleOptions = () => ({
   configured: config.scales.map((scale) => ({ value: scale.id, label: scale.name })),
-  builtIn: presetNames.map((name) => ({ value: name, label: name })),
+  builtIn: presetOptions(),
 });
-
-/**
- * Version 1 of the configuration called a scale a diapason, the scale a note
- * generates when it is the root its triad type, and an interval's name its
- * relationship to the root. Those words are gone from the app, but files and
- * saved systems written before they went still use them, so every one of them
- * is read under either name.
- */
-const scalesOf = (candidate) => candidate.scales ?? candidate.diapasons;
-
-const primaryScaleIdOf = (candidate) => candidate.primaryScaleId ?? candidate.primaryDiapasonId;
-
-const rootScaleIdOf = (note) => note?.rootScaleId ?? note?.triadType;
-
-const intervalNameOf = (note) => note?.intervalName ?? note?.relationshipToRootName;
 
 const validateConfig = (candidate) => {
   if (!candidate || typeof candidate !== 'object') {
     throw new Error('Configuration must be an object');
   }
 
-  const candidateScales = scalesOf(candidate);
-
-  if (!Array.isArray(candidateScales) || candidateScales.length === 0) {
+  if (!Array.isArray(candidate.scales) || candidate.scales.length === 0) {
     throw new Error('Configuration must contain at least one scale');
   }
 
-  const scales = candidateScales.map((scale, scaleIndex) => {
+  const scales = candidate.scales.map((scale, scaleIndex) => {
     const id = typeof scale?.id === 'string' && scale.id ? scale.id : `scale-${scaleIndex + 1}`;
     const notes = Array.isArray(scale?.notes) ? scale.notes : [];
 
@@ -252,9 +236,9 @@ const validateConfig = (candidate) => {
           // A degree is positional, so it is taken from the order in the file
           // rather than from whatever the file claims it is.
           degree: degreeForIndex(noteIndex),
-          intervalName: intervalNameOf(note) ?? describeRatio(ratio),
+          intervalName: note?.intervalName ?? describeRatio(ratio),
           ratioToRoot: Number.isFinite(ratio) ? clamp(foldRatioIntoPeriod(ratio), MIN_RATIO, MAX_RATIO) : MIN_RATIO,
-          rootScaleId: rootScaleIdOf(note),
+          rootScaleId: note?.rootScaleId,
         };
       }),
     };
@@ -268,9 +252,7 @@ const validateConfig = (candidate) => {
     scale.notes.forEach((note) => {
       if (scaleIds.has(note.rootScaleId)) return;
 
-      note.rootScaleId = isPreset(note.rootScaleId)
-        ? canonicalPresetName(note.rootScaleId)
-        : scale.id;
+      if (!isPreset(note.rootScaleId)) note.rootScaleId = scale.id;
     });
   });
 
@@ -281,7 +263,7 @@ const validateConfig = (candidate) => {
     primaryRootFrequency: Number.isFinite(rootFrequency)
       ? clamp(rootFrequency, MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY)
       : DEFAULT_ROOT_FREQUENCY,
-    primaryScaleId: scaleIds.has(primaryScaleIdOf(candidate)) ? primaryScaleIdOf(candidate) : scales[0].id,
+    primaryScaleId: scaleIds.has(candidate.primaryScaleId) ? candidate.primaryScaleId : scales[0].id,
     scales,
   };
 };
