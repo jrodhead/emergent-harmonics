@@ -1,21 +1,21 @@
-import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/musicalSystemGenerator.js';
+import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/generateSystem.js';
 import { isPreset, canonicalPresetName } from '../presets/registry.js';
-import { presetToNotes, presetNames, degreeForIndex, foldRatioIntoDiapason } from './presets.js';
+import { presetToNotes, presetNames, degreeForIndex, foldRatioIntoPeriod } from './presets.js';
 import { describeRatio } from '../format.js';
 import { readStoredValue, writeStoredValue, clearStoredValue } from '../storage.js';
 
 export const STORAGE_KEY = 'emergentHarmonics.systemConfig';
-const CONFIG_VERSION = 1;
+const CONFIG_VERSION = 2;
 const DEFAULT_PRESET = 'majorScaleNotes';
 const DEFAULT_ROOT_FREQUENCY = 27;
 
-// A note's ratio to its root always sits inside one diapason: 1 is the root,
+// A note's ratio to its root always sits inside one octave: 1 is the root,
 // 2 is the octave above it.
 export const MIN_RATIO = 1;
 export const MAX_RATIO = 2;
 
-let nextDiapasonNumber = 1;
-const newDiapasonId = () => `diapason-${nextDiapasonNumber++}`;
+let nextScaleNumber = 1;
+const newScaleId = () => `scale-${nextScaleNumber++}`;
 
 const listeners = new Set();
 
@@ -32,13 +32,13 @@ const notify = () => {
 export const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
 
 const createDefaultConfig = () => {
-  const id = newDiapasonId();
+  const id = newScaleId();
 
   return {
     version: CONFIG_VERSION,
     primaryRootFrequency: DEFAULT_ROOT_FREQUENCY,
-    primaryDiapasonId: id,
-    diapasons: [{ id, name: 'Major', notes: presetToNotes(DEFAULT_PRESET, id) }],
+    primaryScaleId: id,
+    scales: [{ id, name: 'Major', notes: presetToNotes(DEFAULT_PRESET, id) }],
   };
 };
 
@@ -46,12 +46,12 @@ let config = createDefaultConfig();
 
 export const getConfig = () => config;
 
-export const getDiapason = (diapasonId) => config.diapasons.find((diapason) => diapason.id === diapasonId);
+export const getScale = (scaleId) => config.scales.find((scale) => scale.id === scaleId);
 
-export const getPrimaryDiapason = () => getDiapason(config.primaryDiapasonId) ?? config.diapasons[0];
+export const getPrimaryScale = () => getScale(config.primaryScaleId) ?? config.scales[0];
 
 /** The frequency a note's Hz value is bounded by: root to its octave. */
-export const diapasonBounds = () => ({
+export const noteBounds = () => ({
   minimum: config.primaryRootFrequency,
   maximum: config.primaryRootFrequency * MAX_RATIO,
 });
@@ -67,19 +67,19 @@ export const setRootFrequency = (frequency) => {
   notify();
 };
 
-export const setPrimaryDiapason = (diapasonId) => {
-  if (!getDiapason(diapasonId)) return;
+export const setPrimaryScale = (scaleId) => {
+  if (!getScale(scaleId)) return;
 
-  config.primaryDiapasonId = diapasonId;
+  config.primaryScaleId = scaleId;
   notify();
 };
 
-export const addDiapason = () => {
-  const id = newDiapasonId();
+export const addScale = () => {
+  const id = newScaleId();
 
-  config.diapasons.push({
+  config.scales.push({
     id,
-    name: `Diapason ${config.diapasons.length + 1}`,
+    name: `Scale ${config.scales.length + 1}`,
     notes: presetToNotes(DEFAULT_PRESET, id),
   });
   notify();
@@ -87,46 +87,46 @@ export const addDiapason = () => {
   return id;
 };
 
-export const removeDiapason = (diapasonId) => {
-  // The system needs at least one diapason to generate from.
-  if (config.diapasons.length <= 1) return;
+export const removeScale = (scaleId) => {
+  // The system needs at least one scale to generate from.
+  if (config.scales.length <= 1) return;
 
-  config.diapasons = config.diapasons.filter((diapason) => diapason.id !== diapasonId);
+  config.scales = config.scales.filter((scale) => scale.id !== scaleId);
 
-  if (config.primaryDiapasonId === diapasonId) {
-    config.primaryDiapasonId = config.diapasons[0].id;
+  if (config.primaryScaleId === scaleId) {
+    config.primaryScaleId = config.scales[0].id;
   }
 
-  // Notes pointing at the removed diapason fall back to their own.
-  config.diapasons.forEach((diapason) => {
-    diapason.notes.forEach((note) => {
-      if (note.triadType === diapasonId) note.triadType = diapason.id;
+  // Notes pointing at the removed scale fall back to their own.
+  config.scales.forEach((scale) => {
+    scale.notes.forEach((note) => {
+      if (note.triadType === scaleId) note.triadType = scale.id;
     });
   });
 
   notify();
 };
 
-export const renameDiapason = (diapasonId, name) => {
-  const diapason = getDiapason(diapasonId);
-  if (!diapason) return;
+export const renameScale = (scaleId, name) => {
+  const scale = getScale(scaleId);
+  if (!scale) return;
 
-  diapason.name = name;
+  scale.name = name;
   notify();
 };
 
-export const loadPresetIntoDiapason = (diapasonId, presetName) => {
-  const diapason = getDiapason(diapasonId);
-  if (!diapason) return;
+export const loadPresetIntoScale = (scaleId, presetName) => {
+  const scale = getScale(scaleId);
+  if (!scale) return;
 
-  diapason.notes = presetToNotes(presetName, diapasonId);
-  diapason.name = presetName;
+  scale.notes = presetToNotes(presetName, scaleId);
+  scale.name = presetName;
   notify();
 };
 
 /**
- * Whether a note can be taken out of its diapason. The first note is the root
- * every other note is measured against, so the diapason always keeps it.
+ * Whether a note can be taken out of its scale. The first note is the root
+ * every other note is measured against, so the scale always keeps it.
  *
  * @param {number} noteIndex
  * @returns {boolean}
@@ -134,52 +134,52 @@ export const loadPresetIntoDiapason = (diapasonId, presetName) => {
 export const canRemoveNote = (noteIndex) => noteIndex > 0;
 
 /**
- * A degree is a note's position in the diapason, so removing a note closes the
+ * A degree is a note's position in the scale, so removing a note closes the
  * gap: dropping III leaves what were IV and V as the new III and IV.
  */
-const renumberDegrees = (diapason) => {
-  diapason.notes.forEach((note, noteIndex) => {
+const renumberDegrees = (scale) => {
+  scale.notes.forEach((note, noteIndex) => {
     note.degree = degreeForIndex(noteIndex);
   });
 };
 
-export const addNote = (diapasonId) => {
-  const diapason = getDiapason(diapasonId);
-  if (!diapason) return;
+export const addNote = (scaleId) => {
+  const scale = getScale(scaleId);
+  if (!scale) return;
 
-  const highestRatio = diapason.notes.reduce((highest, note) => Math.max(highest, note.ratioToRoot), MIN_RATIO);
+  const highestRatio = scale.notes.reduce((highest, note) => Math.max(highest, note.ratioToRoot), MIN_RATIO);
   // Drop the new note halfway between the highest existing note and the octave,
   // so it lands somewhere audible and in bounds without any guessing.
   const ratioToRoot = clamp((highestRatio + MAX_RATIO) / 2, MIN_RATIO, MAX_RATIO);
 
-  diapason.notes.push({
-    degree: degreeForIndex(diapason.notes.length),
+  scale.notes.push({
+    degree: degreeForIndex(scale.notes.length),
     relationshipToRootName: describeRatio(ratioToRoot),
     ratioToRoot,
-    triadType: diapasonId,
+    triadType: scaleId,
   });
-  renumberDegrees(diapason);
+  renumberDegrees(scale);
   notify();
 };
 
-export const removeNote = (diapasonId, noteIndex) => {
-  const diapason = getDiapason(diapasonId);
-  if (!diapason) return;
+export const removeNote = (scaleId, noteIndex) => {
+  const scale = getScale(scaleId);
+  if (!scale) return;
 
-  if (!canRemoveNote(noteIndex) || noteIndex >= diapason.notes.length) return;
+  if (!canRemoveNote(noteIndex) || noteIndex >= scale.notes.length) return;
 
-  diapason.notes.splice(noteIndex, 1);
-  renumberDegrees(diapason);
+  scale.notes.splice(noteIndex, 1);
+  renumberDegrees(scale);
   notify();
 };
 
 /**
  * Applies a partial change to one note. Ratio changes are clamped into the
- * diapason; everything else is taken as given.
+ * scale; everything else is taken as given.
  */
-export const updateNote = (diapasonId, noteIndex, patch, { silent = false } = {}) => {
-  const diapason = getDiapason(diapasonId);
-  const note = diapason?.notes[noteIndex];
+export const updateNote = (scaleId, noteIndex, patch, { silent = false } = {}) => {
+  const scale = getScale(scaleId);
+  const note = scale?.notes[noteIndex];
   if (!note) return;
 
   if (patch.ratioToRoot !== undefined) {
@@ -199,34 +199,45 @@ export const updateNote = (diapasonId, noteIndex, patch, { silent = false } = {}
 };
 
 /**
- * Every name a note's triadType can point at: the other configured diapasons,
+ * Every name a note's triadType can point at: the other configured scales,
  * then the built-in calculators.
  */
 export const triadTypeOptions = () => ({
-  configured: config.diapasons.map((diapason) => ({ value: diapason.id, label: diapason.name })),
+  configured: config.scales.map((scale) => ({ value: scale.id, label: scale.name })),
   builtIn: presetNames.map((name) => ({ value: name, label: name })),
 });
+
+/**
+ * Version 1 of the configuration called a scale a diapason. The word is gone
+ * from the app, but files and saved systems written before it went still say
+ * it, so they are read under either name.
+ */
+const scalesOf = (candidate) => candidate.scales ?? candidate.diapasons;
+
+const primaryScaleIdOf = (candidate) => candidate.primaryScaleId ?? candidate.primaryDiapasonId;
 
 const validateConfig = (candidate) => {
   if (!candidate || typeof candidate !== 'object') {
     throw new Error('Configuration must be an object');
   }
 
-  if (!Array.isArray(candidate.diapasons) || candidate.diapasons.length === 0) {
-    throw new Error('Configuration must contain at least one diapason');
+  const candidateScales = scalesOf(candidate);
+
+  if (!Array.isArray(candidateScales) || candidateScales.length === 0) {
+    throw new Error('Configuration must contain at least one scale');
   }
 
-  const diapasons = candidate.diapasons.map((diapason, diapasonIndex) => {
-    const id = typeof diapason?.id === 'string' && diapason.id ? diapason.id : `diapason-${diapasonIndex + 1}`;
-    const notes = Array.isArray(diapason?.notes) ? diapason.notes : [];
+  const scales = candidateScales.map((scale, scaleIndex) => {
+    const id = typeof scale?.id === 'string' && scale.id ? scale.id : `scale-${scaleIndex + 1}`;
+    const notes = Array.isArray(scale?.notes) ? scale.notes : [];
 
     if (notes.length === 0) {
-      throw new Error(`Diapason "${id}" has no notes`);
+      throw new Error(`Scale "${id}" has no notes`);
     }
 
     return {
       id,
-      name: typeof diapason?.name === 'string' && diapason.name ? diapason.name : id,
+      name: typeof scale?.name === 'string' && scale.name ? scale.name : id,
       notes: notes.map((note, noteIndex) => {
         const ratio = Number(note?.ratioToRoot);
 
@@ -235,24 +246,24 @@ const validateConfig = (candidate) => {
           // rather than from whatever the file claims it is.
           degree: degreeForIndex(noteIndex),
           relationshipToRootName: note?.relationshipToRootName ?? describeRatio(ratio),
-          ratioToRoot: Number.isFinite(ratio) ? clamp(foldRatioIntoDiapason(ratio), MIN_RATIO, MAX_RATIO) : MIN_RATIO,
+          ratioToRoot: Number.isFinite(ratio) ? clamp(foldRatioIntoPeriod(ratio), MIN_RATIO, MAX_RATIO) : MIN_RATIO,
           triadType: note?.triadType,
         };
       }),
     };
   });
 
-  const diapasonIds = new Set(diapasons.map((diapason) => diapason.id));
+  const scaleIds = new Set(scales.map((scale) => scale.id));
 
   // Anything the imported file points at that we cannot resolve falls back to
-  // the diapason the note belongs to.
-  diapasons.forEach((diapason) => {
-    diapason.notes.forEach((note) => {
-      if (diapasonIds.has(note.triadType)) return;
+  // the scale the note belongs to.
+  scales.forEach((scale) => {
+    scale.notes.forEach((note) => {
+      if (scaleIds.has(note.triadType)) return;
 
       note.triadType = isPreset(note.triadType)
         ? canonicalPresetName(note.triadType)
-        : diapason.id;
+        : scale.id;
     });
   });
 
@@ -263,8 +274,8 @@ const validateConfig = (candidate) => {
     primaryRootFrequency: Number.isFinite(rootFrequency)
       ? clamp(rootFrequency, MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY)
       : DEFAULT_ROOT_FREQUENCY,
-    primaryDiapasonId: diapasonIds.has(candidate.primaryDiapasonId) ? candidate.primaryDiapasonId : diapasons[0].id,
-    diapasons,
+    primaryScaleId: scaleIds.has(primaryScaleIdOf(candidate)) ? primaryScaleIdOf(candidate) : scales[0].id,
+    scales,
   };
 };
 
@@ -276,9 +287,9 @@ export const replaceConfig = (candidate) => {
   config = validateConfig(candidate);
 
   // Keep generated ids clear of the ones we just took on.
-  config.diapasons.forEach((diapason) => {
-    const generated = /^diapason-(\d+)$/.exec(diapason.id);
-    if (generated) nextDiapasonNumber = Math.max(nextDiapasonNumber, Number(generated[1]) + 1);
+  config.scales.forEach((scale) => {
+    const generated = /^scale-(\d+)$/.exec(scale.id);
+    if (generated) nextScaleNumber = Math.max(nextScaleNumber, Number(generated[1]) + 1);
   });
 
   notify();

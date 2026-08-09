@@ -105,7 +105,7 @@ button#play {
   margin: 1rem .5rem .5rem;
 }
 
-#current-diapason-data,
+#current-register-data,
 .note,
 .root-selector {
   background: #fff;
@@ -117,20 +117,20 @@ button#play {
   align-items: center;
 }
 
-#current-diapason-data {
+#current-register-data {
   background-color: transparent;
   border-color: transparent;
   color: #fff;
 }
 
-#current-diapason-index,
+#current-register-index,
 .key-name {
   font-size: 3rem;
   font-weight: bold;
   text-transform: capitalize;
 }
 
-#current-diapason-data > div,
+#current-register-data > div,
 .note > div,
 .root-selector > div {
   overflow: hidden;
@@ -231,14 +231,14 @@ body[data-view="config"] #systemConfig,
   color: #c5c5c5;
 }
 
-.config-diapason-tabs {
+.config-scale-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
   padding: 0 .5rem;
 }
 
-.config-diapason-tab {
+.config-scale-tab {
   display: flex;
   align-items: stretch;
   border: 1px solid #ccc;
@@ -249,8 +249,8 @@ body[data-view="config"] #systemConfig,
   overflow: hidden;
 }
 
-.config-diapason-select,
-.config-diapason-remove {
+.config-scale-select,
+.config-scale-remove {
   font-family: inherit;
   font-size: 1rem;
   border: 0;
@@ -259,48 +259,48 @@ body[data-view="config"] #systemConfig,
   cursor: pointer;
 }
 
-.config-diapason-select {
+.config-scale-select {
   text-align: left;
   padding: .5rem .75rem;
 }
 
-.config-diapason-remove {
+.config-scale-remove {
   border-left: 1px solid #ccc;
   padding: 0 .5rem;
 }
 
-.config-diapason-remove[disabled] {
+.config-scale-remove[disabled] {
   cursor: not-allowed;
   opacity: .4;
 }
 
-.config-diapason-tab.selected {
+.config-scale-tab.selected {
   background: rgb(32, 155, 49);
   color: #fff;
 }
 
-.config-diapason-tab.selected .config-diapason-remove {
+.config-scale-tab.selected .config-scale-remove {
   border-left-color: rgba(255, 255, 255, .5);
 }
 
-.config-diapason-count,
-.config-diapason-primary {
+.config-scale-count,
+.config-scale-primary {
   display: block;
   font-size: .75rem;
 }
 
-.config-diapason-primary {
+.config-scale-primary {
   font-weight: bold;
 }
 
-.config-add-diapason {
+.config-add-scale {
   border: 1px solid #ccc;
   border-radius: .5rem;
   background: #fff;
   padding: .5rem .75rem;
 }
 
-.config-diapason-header {
+.config-scale-header {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;

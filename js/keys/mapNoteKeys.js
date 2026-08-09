@@ -1,18 +1,18 @@
 import { buildNoteKeyMap } from './buildNoteKeyMap.js';
 import { renderNoteKeyTable } from './renderNoteKeyTable.js';
-import { currentDiapasonIndex } from '../systemState.js';
+import { currentRegisterIndex } from '../systemState.js';
 
 export let noteKeyMap = [];
 
 /**
- * Points the note keys at the diapasons the keyboard is currently sitting on,
+ * Points the note keys at the registers the keyboard is currently sitting on,
  * and draws them.
  *
- * @param {Array} system - Diapasons, low to high.
+ * @param {Array} registers - Registers, low to high.
  * @returns {Array} The key map that was applied.
  */
-export function mapNoteKeys(system) {
-  noteKeyMap = buildNoteKeyMap(system, currentDiapasonIndex);
+export function mapNoteKeys(registers) {
+  noteKeyMap = buildNoteKeyMap(registers, currentRegisterIndex);
   renderNoteKeyTable(noteKeyMap);
 
   // The table just redrew from scratch, so any note already held needs to be

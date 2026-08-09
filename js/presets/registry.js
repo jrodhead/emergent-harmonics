@@ -4,7 +4,7 @@ import { diminishedScaleNotes } from './diminishedScale.js';
 import { majorPentatonicScaleNotes } from './majorPentatonicScale.js';
 import { minorPentatonicScaleNotes } from './minorPentatonicScale.js';
 import { bluesScaleNotes } from './bluesScale.js';
-import { hd110067NotesInOneDiapason } from './hd110067.js';
+import { hd110067NotesInOneScale } from './hd110067.js';
 import { equalTemperamentNotes } from './equalTemperament.js';
 import { fibonacciNotes } from './fibonacciScale.js';
 import { exploratoryNotes } from './exploratory.js';
@@ -25,7 +25,7 @@ const presets = new Map([
   ['minorPentatonicScaleNotes', minorPentatonicScaleNotes],
   ['bluesScaleNotes', bluesScaleNotes],
   ['pythagoreanNotes', pythagoreanNotes],
-  ['hd110067NotesInOneDiapason', hd110067NotesInOneDiapason],
+  ['hd110067NotesInOneScale', hd110067NotesInOneScale],
   ['exploratoryNotes', exploratoryNotes],
   ['fibonacciNotes', fibonacciNotes],
   [EQUAL_TEMPERAMENT, equalTemperamentNotes],
@@ -37,6 +37,8 @@ const aliases = new Map([
   ['major', 'majorScaleNotes'],
   ['minor', 'naturalMinorScaleNotes'],
   ['diminished', 'diminishedScaleNotes'],
+  // Written into systems saved back when a scale was called a diapason.
+  ['hd110067NotesInOneDiapason', 'hd110067NotesInOneScale'],
 ]);
 
 export const presetNames = [...presets.keys()];
@@ -61,7 +63,7 @@ export function presetNotes(name, noteCount) {
 
 /**
  * Whether a name refers to one of the built-in presets, as opposed to a
- * user-authored diapason from the system configuration screen.
+ * user-authored scale from the system configuration screen.
  *
  * @param {string} name
  * @returns {boolean}

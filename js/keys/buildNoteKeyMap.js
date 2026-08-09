@@ -1,77 +1,77 @@
-import { isValidSystem } from './isValidSystem.js';
+import { hasPlayableRegisters } from './hasPlayableRegisters.js';
 
 export const KEY_ROWS = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
 
 /**
- * Lays the diapasons of a system across the three note key rows, starting at
- * the given diapason and climbing a diapason per row. A row longer than its
- * diapason keeps running into the diapasons above it, and a diapason longer
+ * Lays the registers of a system across the three note key rows, starting at
+ * the given register and climbing a register per row. A row longer than its
+ * register keeps running into the registers above it, and a register longer
  * than a row spills onto the row below before the climb resumes.
  *
  * Kept free of the DOM so the mapping can be checked on its own.
  *
- * @param {Array} system - Diapasons, low to high.
- * @param {number} startDiapasonIndex - The diapason the first row starts on.
+ * @param {Array} registers - Registers, low to high.
+ * @param {number} startRegisterIndex - The register the first row starts on.
  * @returns {Array} Entries of { key, frequency, relationshipToRoot, octaveShift }.
  */
-export function buildNoteKeyMap(system, startDiapasonIndex) {
-  if (!isValidSystem(system)) {
-    console.error('Invalid system or root provided:', system);
+export function buildNoteKeyMap(registers, startRegisterIndex) {
+  if (!hasPlayableRegisters(registers)) {
+    console.error('Nothing to lay across the keys:', registers);
     return [];
   }
 
   const noteKeyMap = [];
-  let diapasonIndex = startDiapasonIndex;
+  let registerIndex = startRegisterIndex;
   let noteIndex = 0;
 
   for (const rowKeys of KEY_ROWS) {
-    const rowDiapason = system[diapasonIndex];
+    const rowRegister = registers[registerIndex];
 
-    if (!rowDiapason) {
-      console.error('Invalid diapason index:', diapasonIndex);
+    if (!rowRegister) {
+      console.error('Invalid register index:', registerIndex);
       break;
     }
 
-    if (!Array.isArray(rowDiapason.notes)) {
-      console.error('Invalid notes in the diapason:', rowDiapason.notes);
+    if (!Array.isArray(rowRegister.notes)) {
+      console.error('Invalid notes in the register:', rowRegister.notes);
       break;
     }
 
-    // Walk the row's keys, climbing through as many diapasons as it takes to
-    // fill them: a short diapason hands over to the one above it, and again
+    // Walk the row's keys, climbing through as many registers as it takes to
+    // fill them: a short register hands over to the one above it, and again
     // above that, so no key on a filled row is left silent.
-    let fillDiapasonIndex = diapasonIndex;
+    let fillRegisterIndex = registerIndex;
     let fillNoteIndex = noteIndex;
 
     for (let keyIndex = 0; keyIndex < rowKeys.length; keyIndex++) {
-      let diapason = system[fillDiapasonIndex];
+      let register = registers[fillRegisterIndex];
 
-      while (diapason && Array.isArray(diapason.notes) && !diapason.notes[fillNoteIndex]) {
-        fillDiapasonIndex++;
+      while (register && Array.isArray(register.notes) && !register.notes[fillNoteIndex]) {
+        fillRegisterIndex++;
         fillNoteIndex = 0;
-        diapason = system[fillDiapasonIndex];
+        register = registers[fillRegisterIndex];
       }
 
       // Nothing left above the row: the keyboard stops rather than wrapping.
-      if (!diapason || !Array.isArray(diapason.notes)) break;
+      if (!register || !Array.isArray(register.notes)) break;
 
-      const note = diapason.notes[fillNoteIndex];
+      const note = register.notes[fillNoteIndex];
 
       noteKeyMap.push({
         key: rowKeys[keyIndex],
         frequency: note.frequency,
         relationshipToRoot: note.relationshipToRoot,
-        octaveShift: diapason.octaveShift,
+        octaveShift: register.octaveShift,
       });
 
       fillNoteIndex++;
     }
 
-    // A diapason too long for one row carries on across the next one. Once it
-    // has been laid out in full the climb resumes from the diapason above the
+    // A register too long for one row carries on across the next one. Once it
+    // has been laid out in full the climb resumes from the register above the
     // one this row started on, even if this row already borrowed its opening
     // notes to fill itself out.
-    const spilled = fillDiapasonIndex === diapasonIndex && fillNoteIndex < rowDiapason.notes.length;
+    const spilled = fillRegisterIndex === registerIndex && fillNoteIndex < rowRegister.notes.length;
 
     if (spilled) {
       noteIndex = fillNoteIndex;
@@ -79,9 +79,9 @@ export function buildNoteKeyMap(system, startDiapasonIndex) {
     }
 
     // Rows above the top of the audible range have nothing left to show.
-    diapasonIndex++;
+    registerIndex++;
     noteIndex = 0;
-    if (diapasonIndex >= system.length) break;
+    if (registerIndex >= registers.length) break;
   }
 
   return noteKeyMap;

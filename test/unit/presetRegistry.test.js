@@ -45,8 +45,8 @@ describe('isPreset', () => {
     assert.equal(isPreset('equalTemperamentNoteGenerator'), true);
   });
 
-  it('rejects anything else, including a diapason id', () => {
-    assert.equal(isPreset('diapason-1'), false);
+  it('rejects anything else, including a scale id', () => {
+    assert.equal(isPreset('scale-1'), false);
     assert.equal(isPreset(undefined), false);
     assert.equal(isPreset('constructor'), false);
   });
@@ -61,7 +61,7 @@ describe('canonicalPresetName', () => {
 
   it('leaves a name that is already canonical alone', () => {
     assert.equal(canonicalPresetName('bluesScaleNotes'), 'bluesScaleNotes');
-    assert.equal(canonicalPresetName('diapason-1'), 'diapason-1');
+    assert.equal(canonicalPresetName('scale-1'), 'scale-1');
   });
 
   it('resolves every alias to a name it offers', () => {

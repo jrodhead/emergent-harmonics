@@ -30,9 +30,9 @@ describe('the system configuration screen', { skip }, () => {
       `), [true, true]);
     });
 
-    it('starts from one major-scale diapason at 27Hz', async () => {
+    it('starts from one major-scale scale at 27Hz', async () => {
       assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
-      assert.equal(await app.evaluate("return document.querySelectorAll('.config-diapason-select').length"), 1);
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-scale-select').length"), 1);
       assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
     });
 
@@ -104,7 +104,7 @@ describe('the system configuration screen', { skip }, () => {
       `), '500');
     });
 
-    it('snaps a frequency past the octave back into the diapason', async () => {
+    it('snaps a frequency past the octave back into the scale', async () => {
       assert.deepEqual(await app.evaluate(`
         const root = document.getElementById('configRootFrequency');
         root.value = '400';
@@ -138,7 +138,7 @@ describe('the system configuration screen', { skip }, () => {
         root.click();
         return [document.querySelectorAll('.config-note[data-note-index]').length,
                 root.disabled, root.title];
-      `), [7, true, 'The root of the diapason cannot be removed']);
+      `), [7, true, 'The root of the scale cannot be removed']);
     });
 
     it('stops at the root alone once every other note is removed', async () => {
@@ -177,33 +177,33 @@ describe('the system configuration screen', { skip }, () => {
       `), ['q', 'w', 'e', 'r', 't', 'y']);
     });
 
-    it('loads a calculator into the diapason being edited', async () => {
+    it('loads a calculator into the scale being edited', async () => {
       assert.deepEqual(await app.evaluate(`
         document.getElementById('presetSelect').value = 'minorPentatonicScaleNotes';
         document.getElementById('loadPreset').click();
         return [document.querySelectorAll('.config-note[data-note-index]').length,
-                document.getElementById('diapasonName').value];
+                document.getElementById('scaleName').value];
       `), [5, 'minorPentatonicScaleNotes']);
     });
   });
 
-  describe('diapasons', () => {
+  describe('scales', () => {
     it('can be added and become the one being edited', async () => {
       assert.deepEqual(await app.evaluate(`
-        document.getElementById('addDiapason').click();
-        const tabs = document.querySelectorAll('.config-diapason-select');
+        document.getElementById('addScale').click();
+        const tabs = document.querySelectorAll('.config-scale-select');
         return [tabs.length,
-                document.querySelector('.config-diapason-tab.selected .config-diapason-select').dataset.diapasonId
-                  === tabs[1].dataset.diapasonId];
+                document.querySelector('.config-scale-tab.selected .config-scale-select').dataset.scaleId
+                  === tabs[1].dataset.scaleId];
       `), [2, true]);
     });
 
     it('are legible against their own background', async () => {
-      await app.evaluate("document.getElementById('addDiapason').click();");
+      await app.evaluate("document.getElementById('addScale').click();");
 
       assert.deepEqual(await app.evaluate(`
-        return [...document.querySelectorAll('.config-diapason-tab')].map(tab => {
-          const name = tab.querySelector('.config-diapason-name');
+        return [...document.querySelectorAll('.config-scale-tab')].map(tab => {
+          const name = tab.querySelector('.config-scale-name');
           return getComputedStyle(name).color !== getComputedStyle(tab).backgroundColor
             && name.textContent.trim().length > 0;
         });
@@ -212,59 +212,59 @@ describe('the system configuration screen', { skip }, () => {
 
     it('become selectable as another note\'s triad type', async () => {
       assert.equal(await app.evaluate(`
-        document.getElementById('addDiapason').click();
+        document.getElementById('addScale').click();
         return document.querySelector('.config-note-triad').querySelectorAll('optgroup')[0].children.length;
       `), 2);
     });
 
     it('are deleted by the cross on their own tab', async () => {
-      await app.evaluate("document.getElementById('addDiapason').click();");
+      await app.evaluate("document.getElementById('addScale').click();");
 
       assert.equal(await app.evaluate(`
-        document.querySelector('.config-diapason-tab.selected .config-diapason-remove').click();
-        return document.querySelectorAll('.config-diapason-select').length;
+        document.querySelector('.config-scale-tab.selected .config-scale-remove').click();
+        return document.querySelectorAll('.config-scale-select').length;
       `), 1);
     });
 
     it('are deleted by a real mouse click, not just a synthetic one', async () => {
-      await app.evaluate("document.getElementById('addDiapason').click();");
-      await app.click('.config-diapason-tab.selected .config-diapason-remove');
-      await app.waitFor("document.querySelectorAll('.config-diapason-select').length === 1");
+      await app.evaluate("document.getElementById('addScale').click();");
+      await app.click('.config-scale-tab.selected .config-scale-remove');
+      await app.waitFor("document.querySelectorAll('.config-scale-select').length === 1");
 
-      assert.equal(await app.evaluate("return document.querySelectorAll('.config-diapason-select').length"), 1);
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-scale-select').length"), 1);
     });
 
     it('can be deleted while another one is being edited', async () => {
       assert.deepEqual(await app.evaluate(`
-        document.getElementById('addDiapason').click();
-        const selected = document.querySelector('.config-diapason-tab.selected .config-diapason-select').dataset.diapasonId;
-        const other = [...document.querySelectorAll('.config-diapason-tab')]
+        document.getElementById('addScale').click();
+        const selected = document.querySelector('.config-scale-tab.selected .config-scale-select').dataset.scaleId;
+        const other = [...document.querySelectorAll('.config-scale-tab')]
           .find(tab => !tab.classList.contains('selected'));
-        other.querySelector('.config-diapason-remove').click();
+        other.querySelector('.config-scale-remove').click();
 
-        return [document.querySelectorAll('.config-diapason-select').length,
-                document.querySelector('.config-diapason-tab.selected .config-diapason-select').dataset.diapasonId === selected];
+        return [document.querySelectorAll('.config-scale-select').length,
+                document.querySelector('.config-scale-tab.selected .config-scale-select').dataset.scaleId === selected];
       `), [1, true]);
     });
 
     it('promote the survivor to primary when the primary is deleted', async () => {
       assert.deepEqual(await app.evaluate(`
-        document.getElementById('addDiapason').click();
-        const first = document.querySelectorAll('.config-diapason-select')[0].dataset.diapasonId;
-        document.querySelectorAll('.config-diapason-remove')[0].click();
-        const left = document.querySelectorAll('.config-diapason-select');
+        document.getElementById('addScale').click();
+        const first = document.querySelectorAll('.config-scale-select')[0].dataset.scaleId;
+        document.querySelectorAll('.config-scale-remove')[0].click();
+        const left = document.querySelectorAll('.config-scale-select');
 
-        return [left.length, left[0].dataset.diapasonId !== first,
-                document.getElementById('primaryDiapason').checked];
+        return [left.length, left[0].dataset.scaleId !== first,
+                document.getElementById('primaryScale').checked];
       `), [1, true, true]);
     });
 
     it('cannot delete the last one, and say why', async () => {
       assert.deepEqual(await app.evaluate(`
-        const button = document.querySelector('.config-diapason-remove');
+        const button = document.querySelector('.config-scale-remove');
         button.click();
-        return [button.disabled, button.title, document.querySelectorAll('.config-diapason-select').length];
-      `), [true, 'A system needs at least one diapason', 1]);
+        return [button.disabled, button.title, document.querySelectorAll('.config-scale-select').length];
+      `), [true, 'A system needs at least one scale', 1]);
     });
   });
 
@@ -294,7 +294,7 @@ describe('the system configuration screen', { skip }, () => {
       assert.ok(fader.height > fader.width * 5, `${fader.width}x${fader.height} is not a vertical fader`);
     });
 
-    it('labels the fader with the ends of the diapason', async () => {
+    it('labels the fader with the ends of the scale', async () => {
       await app.evaluate(`
         const root = document.getElementById('configRootFrequency');
         root.value = '400';
@@ -644,14 +644,14 @@ describe('the system configuration screen', { skip }, () => {
         const root = document.getElementById('configRootFrequency');
         root.value = '400';
         root.dispatchEvent(new Event('change', { bubbles: true }));
-        document.getElementById('addDiapason').click();
+        document.getElementById('addScale').click();
       `);
 
       await app.reload();
 
       assert.deepEqual(await app.evaluate(`
         return [document.getElementById('configRootFrequency').value,
-                document.querySelectorAll('.config-diapason-select').length];
+                document.querySelectorAll('.config-scale-select').length];
       `), ['400', 2]);
     });
 
@@ -672,7 +672,7 @@ describe('the system configuration screen', { skip }, () => {
   describe('overall', () => {
     it('runs without logging an error or throwing', async () => {
       await app.evaluate(`
-        document.getElementById('addDiapason').click();
+        document.getElementById('addScale').click();
         document.getElementById('addNote').click();
         document.querySelector('[data-show-view="play"]').click();
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '2', bubbles: true }));

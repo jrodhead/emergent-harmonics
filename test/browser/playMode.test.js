@@ -59,7 +59,7 @@ describe('play modes', { skip }, () => {
   });
 
   describe('latch mode (default)', () => {
-    it('sounds an note key on its own, without holding a root key', async () => {
+    it('sounds a note key on its own, without holding a root key', async () => {
       assert.deepEqual(await app.evaluate(`
         ${dispatchKey('keydown', 'q')}
         const lit = document.getElementById('q').classList.contains('active');

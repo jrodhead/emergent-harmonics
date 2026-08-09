@@ -1,16 +1,16 @@
 import {
   getConfig,
-  addDiapason,
+  addScale,
   addNote,
-  removeDiapason,
+  removeScale,
   removeNote,
-  renameDiapason,
+  renameScale,
   replaceConfig,
   resetConfig,
-  setPrimaryDiapason,
+  setPrimaryScale,
   setRootFrequency,
   updateNote,
-  loadPresetIntoDiapason,
+  loadPresetIntoScale,
   loadStoredConfig,
   subscribe,
   ratioToFrequency,
@@ -19,13 +19,13 @@ import {
   MIN_RATIO,
   MAX_RATIO,
 } from './systemConfigState.js';
-import { getSelectedDiapason, getSelectedDiapasonId, setSelectedDiapasonId } from './selectedDiapason.js';
+import { getSelectedScale, getSelectedScaleId, setSelectedScaleId } from './selectedScale.js';
 import { renderSystemConfig } from './renderSystemConfig.js';
 import { initPreviewKeys, stopAllPreviews, retunePreview, markSoundingNotes } from './previewKeyHandler.js';
 import { presetNames } from './presets.js';
 import { buildSystemFromConfig } from '../system/buildSystem.js';
 import { formatFrequency, formatRatio, describeRatio } from '../format.js';
-import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/musicalSystemGenerator.js';
+import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/generateSystem.js';
 
 // Looked up in initSystemConfig rather than at import time, so that importing
 // this module never depends on a document being there.
@@ -59,7 +59,7 @@ const noteIndexFor = (element) => {
 const applyRatio = (row, noteIndex, ratio) => {
   const bounded = clamp(ratio, MIN_RATIO, MAX_RATIO);
 
-  updateNote(getSelectedDiapasonId(), noteIndex, { ratioToRoot: bounded }, { silent: true });
+  updateNote(getSelectedScaleId(), noteIndex, { ratioToRoot: bounded }, { silent: true });
 
   const frequency = ratioToFrequency(bounded);
 
@@ -81,7 +81,7 @@ const applyRatio = (row, noteIndex, ratio) => {
     const derived = describeRatio(bounded);
     nameInput.value = derived;
     nameInput.dataset.derived = 'true';
-    updateNote(getSelectedDiapasonId(), noteIndex, { relationshipToRootName: derived }, { silent: true });
+    updateNote(getSelectedScaleId(), noteIndex, { relationshipToRootName: derived }, { silent: true });
   }
 };
 
@@ -100,7 +100,7 @@ const handleConfigInput = (ev) => {
     if (Number.isFinite(frequency)) applyRatio(row, noteIndex, frequencyToRatio(frequency));
   } else if (target.classList.contains('config-note-name')) {
     target.dataset.derived = 'false';
-    updateNote(getSelectedDiapasonId(), noteIndex, { relationshipToRootName: target.value }, { silent: true });
+    updateNote(getSelectedScaleId(), noteIndex, { relationshipToRootName: target.value }, { silent: true });
   }
 };
 
@@ -120,13 +120,13 @@ const handleConfigChange = (ev) => {
     return;
   }
 
-  if (target.id === 'diapasonName') {
-    renameDiapason(getSelectedDiapasonId(), target.value.trim() || getSelectedDiapason().name);
+  if (target.id === 'scaleName') {
+    renameScale(getSelectedScaleId(), target.value.trim() || getSelectedScale().name);
     return;
   }
 
-  if (target.id === 'primaryDiapason') {
-    setPrimaryDiapason(getSelectedDiapasonId());
+  if (target.id === 'primaryScale') {
+    setPrimaryScale(getSelectedScaleId());
     return;
   }
 
@@ -134,7 +134,7 @@ const handleConfigChange = (ev) => {
   if (noteIndex < 0) return;
 
   if (target.classList.contains('config-note-triad')) {
-    updateNote(getSelectedDiapasonId(), noteIndex, { triadType: target.value });
+    updateNote(getSelectedScaleId(), noteIndex, { triadType: target.value });
     return;
   }
 
@@ -145,8 +145,8 @@ const handleConfigChange = (ev) => {
   // Committing a value regenerates the system and snaps any out-of-range field
   // back to the clamped value that was actually stored.
   if (isFrequencyField || target.classList.contains('config-note-name')) {
-    const note = getSelectedDiapason().notes[noteIndex];
-    updateNote(getSelectedDiapasonId(), noteIndex, { ratioToRoot: note.ratioToRoot });
+    const note = getSelectedScale().notes[noteIndex];
+    updateNote(getSelectedScaleId(), noteIndex, { ratioToRoot: note.ratioToRoot });
   }
 };
 
@@ -154,40 +154,40 @@ const handleConfigChange = (ev) => {
 
 const handleConfigClick = (ev) => {
   const target = ev.target;
-  const remove = target.closest('.config-diapason-remove');
+  const remove = target.closest('.config-scale-remove');
 
   if (remove) {
-    // Selection moves off the diapason first, so the redraw lands on whichever
+    // Selection moves off the scale first, so the redraw lands on whichever
     // one is left rather than on the deleted id.
-    if (remove.dataset.diapasonId === getSelectedDiapasonId()) setSelectedDiapasonId(null);
+    if (remove.dataset.scaleId === getSelectedScaleId()) setSelectedScaleId(null);
     stopAllPreviews();
-    removeDiapason(remove.dataset.diapasonId);
+    removeScale(remove.dataset.scaleId);
     return;
   }
 
-  const select = target.closest('.config-diapason-select');
+  const select = target.closest('.config-scale-select');
 
   if (select) {
     stopAllPreviews();
-    setSelectedDiapasonId(select.dataset.diapasonId);
+    setSelectedScaleId(select.dataset.scaleId);
     render();
     return;
   }
 
-  if (target.id === 'addDiapason') {
-    setSelectedDiapasonId(addDiapason());
+  if (target.id === 'addScale') {
+    setSelectedScaleId(addScale());
     render();
     return;
   }
 
   if (target.id === 'addNote') {
-    addNote(getSelectedDiapasonId());
+    addNote(getSelectedScaleId());
     return;
   }
 
   if (target.classList.contains('config-note-remove')) {
     stopAllPreviews();
-    removeNote(getSelectedDiapasonId(), noteIndexFor(target));
+    removeNote(getSelectedScaleId(), noteIndexFor(target));
   }
 };
 
@@ -207,7 +207,7 @@ const exportConfig = () => {
 const importConfig = async (file) => {
   try {
     replaceConfig(JSON.parse(await file.text()));
-    setSelectedDiapasonId(null);
+    setSelectedScaleId(null);
     syncToolbar();
     render();
   } catch (error) {
@@ -248,13 +248,13 @@ export function initSystemConfig() {
 
   document.getElementById('loadPreset').addEventListener('click', () => {
     stopAllPreviews();
-    loadPresetIntoDiapason(getSelectedDiapasonId(), presetSelect.value);
+    loadPresetIntoScale(getSelectedScaleId(), presetSelect.value);
   });
 
   document.getElementById('resetConfig').addEventListener('click', () => {
     stopAllPreviews();
     resetConfig();
-    setSelectedDiapasonId(null);
+    setSelectedScaleId(null);
     syncToolbar();
     render();
   });

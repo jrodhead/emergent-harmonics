@@ -62,7 +62,7 @@ export const noteKeyHandler = (ev) => {
 document.body.addEventListener('keydown', noteKeyHandler);
 document.body.addEventListener('keyup', noteKeyHandler);
 
-// The key map just redrew (new root, new diapason), so any already-held note
+// The key map just redrew (new root, new register), so any already-held note
 // needs to be re-sounded against the fresh elements and frequencies rather
 // than left showing a stale (or now-missing) active state.
 document.body.addEventListener('noteKeyMapChanged', () => {

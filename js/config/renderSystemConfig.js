@@ -1,15 +1,15 @@
 import {
   getConfig,
-  diapasonBounds,
+  noteBounds,
   ratioToFrequency,
   triadTypeOptions,
   canRemoveNote,
   MIN_RATIO,
   MAX_RATIO,
 } from './systemConfigState.js';
-import { getSelectedDiapason } from './selectedDiapason.js';
+import { getSelectedScale } from './selectedScale.js';
 import { PREVIEW_KEYS, PREVIEW_KEY_ROWS, previewKeyForIndex } from './previewKeyHandler.js';
-import { MAX_ROOT_NOTES } from '../system/musicalSystemGenerator.js';
+import { MAX_ROOT_NOTES } from '../system/generateSystem.js';
 import { formatFrequency, formatRatio, describeRatio } from '../format.js';
 
 export const escapeHtml = (value) => String(value ?? '')
@@ -18,27 +18,27 @@ export const escapeHtml = (value) => String(value ?? '')
   .replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;');
 
-export const renderDiapasonTabs = (selectedDiapasonId) => {
+export const renderScaleTabs = (selectedScaleId) => {
   const config = getConfig();
-  // The system needs at least one diapason to generate from.
-  const onlyDiapason = config.diapasons.length === 1;
+  // The system needs at least one scale to generate from.
+  const onlyScale = config.scales.length === 1;
 
   return `
-    <h2>Diapasons</h2>
-    <div class="config-diapason-tabs">
-      ${config.diapasons.map((diapason) => `
-        <div class="config-diapason-tab${diapason.id === selectedDiapasonId ? ' selected' : ''}">
-          <button type="button" class="config-diapason-select" data-diapason-id="${escapeHtml(diapason.id)}">
-            <span class="config-diapason-name">${escapeHtml(diapason.name)}</span>
-            <span class="config-diapason-count">${diapason.notes.length} notes</span>
-            ${diapason.id === config.primaryDiapasonId ? '<span class="config-diapason-primary">primary</span>' : ''}
+    <h2>Scales</h2>
+    <div class="config-scale-tabs">
+      ${config.scales.map((scale) => `
+        <div class="config-scale-tab${scale.id === selectedScaleId ? ' selected' : ''}">
+          <button type="button" class="config-scale-select" data-scale-id="${escapeHtml(scale.id)}">
+            <span class="config-scale-name">${escapeHtml(scale.name)}</span>
+            <span class="config-scale-count">${scale.notes.length} notes</span>
+            ${scale.id === config.primaryScaleId ? '<span class="config-scale-primary">primary</span>' : ''}
           </button>
-          <button type="button" class="config-diapason-remove" data-diapason-id="${escapeHtml(diapason.id)}"
-                  title="${onlyDiapason ? 'A system needs at least one diapason' : `Delete ${escapeHtml(diapason.name)}`}"
-                  ${onlyDiapason ? 'disabled' : ''}>&#10005;</button>
+          <button type="button" class="config-scale-remove" data-scale-id="${escapeHtml(scale.id)}"
+                  title="${onlyScale ? 'A system needs at least one scale' : `Delete ${escapeHtml(scale.name)}`}"
+                  ${onlyScale ? 'disabled' : ''}>&#10005;</button>
         </div>
       `).join('')}
-      <button type="button" id="addDiapason" class="config-add config-add-diapason">+ Add diapason</button>
+      <button type="button" id="addScale" class="config-add config-add-scale">+ Add scale</button>
     </div>
   `;
 };
@@ -55,13 +55,13 @@ export const renderTriadTypeOptions = (selectedTriadType) => {
 
   return `
     ${unmatched ? option({ value: selectedTriadType, label: `${selectedTriadType} (unknown)` }) : ''}
-    <optgroup label="Configured diapasons">${configured.map(option).join('')}</optgroup>
+    <optgroup label="Configured scales">${configured.map(option).join('')}</optgroup>
     <optgroup label="Built-in calculators">${builtIn.map(option).join('')}</optgroup>
   `;
 };
 
 export const renderNote = (note, noteIndex) => {
-  const { minimum, maximum } = diapasonBounds();
+  const { minimum, maximum } = noteBounds();
   const frequency = ratioToFrequency(note.ratioToRoot);
   const removable = canRemoveNote(noteIndex);
   const previewKey = previewKeyForIndex(noteIndex);
@@ -73,7 +73,7 @@ export const renderNote = (note, noteIndex) => {
       <div class="config-note-heading">
         <span class="config-note-degree">${escapeHtml(note.degree)}</span>
         <button type="button" class="config-note-remove"
-                title="${removable ? 'Remove this note' : 'The root of the diapason cannot be removed'}"
+                title="${removable ? 'Remove this note' : 'The root of the scale cannot be removed'}"
                 ${removable ? '' : 'disabled'}>&#10005;</button>
       </div>
 
@@ -116,13 +116,13 @@ export const renderNote = (note, noteIndex) => {
   `;
 };
 
-export const renderNotes = (diapason) => {
+export const renderNotes = (scale) => {
   const config = getConfig();
-  const { minimum, maximum } = diapasonBounds();
-  const isPrimary = diapason.id === config.primaryDiapasonId;
-  const overflowsRootKeys = isPrimary && diapason.notes.length > MAX_ROOT_NOTES;
-  const repeatsOnRootKeys = isPrimary && diapason.notes.length < MAX_ROOT_NOTES;
-  const overflowsPreviewKeys = diapason.notes.length > PREVIEW_KEYS.length;
+  const { minimum, maximum } = noteBounds();
+  const isPrimary = scale.id === config.primaryScaleId;
+  const overflowsRootKeys = isPrimary && scale.notes.length > MAX_ROOT_NOTES;
+  const repeatsOnRootKeys = isPrimary && scale.notes.length < MAX_ROOT_NOTES;
+  const overflowsPreviewKeys = scale.notes.length > PREVIEW_KEYS.length;
 
   // Named by their ends rather than key by key: there are three rows of them.
   const previewRows = PREVIEW_KEY_ROWS
@@ -131,12 +131,12 @@ export const renderNotes = (diapason) => {
 
   return `
     <h2>Notes</h2>
-    <div class="config-diapason-header">
-      <label>Diapason name
-        <input type="text" id="diapasonName" value="${escapeHtml(diapason.name)}">
+    <div class="config-scale-header">
+      <label>Scale name
+        <input type="text" id="scaleName" value="${escapeHtml(scale.name)}">
       </label>
       <label>
-        <input type="radio" name="primaryDiapason" id="primaryDiapason"${isPrimary ? ' checked' : ''}>
+        <input type="radio" name="primaryScale" id="primaryScale"${isPrimary ? ' checked' : ''}>
         Primary (generates the root notes on keys 0-9)
       </label>
     </div>
@@ -148,7 +148,7 @@ export const renderNotes = (diapason) => {
         ? `<strong>Only the first ${MAX_ROOT_NOTES} notes get a root key</strong>, since the roots live on keys 0-9.</br>`
         : ''}
       ${repeatsOnRootKeys
-        ? `Keys ${diapason.notes.length}-${MAX_ROOT_NOTES - 1} repeat these notes an octave higher each time round,
+        ? `Keys ${scale.notes.length}-${MAX_ROOT_NOTES - 1} repeat these notes an octave higher each time round,
            so every root key has a note to build from.</br>`
         : ''}
       ${overflowsPreviewKeys
@@ -157,7 +157,7 @@ export const renderNotes = (diapason) => {
     </p>
 
     <div class="config-note-list">
-      ${diapason.notes.map(renderNote).join('')}
+      ${scale.notes.map(renderNote).join('')}
       <button type="button" id="addNote" class="config-note config-add">+ Add note</button>
     </div>
   `;
@@ -168,8 +168,8 @@ export const renderNotes = (diapason) => {
  * markup so that typing in it is never interrupted by a redraw.
  */
 export function renderSystemConfig() {
-  const diapason = getSelectedDiapason();
+  const scale = getSelectedScale();
 
-  document.getElementById('configDiapasons').innerHTML = renderDiapasonTabs(diapason.id);
-  document.getElementById('configNotes').innerHTML = renderNotes(diapason);
+  document.getElementById('configScales').innerHTML = renderScaleTabs(scale.id);
+  document.getElementById('configNotes').innerHTML = renderNotes(scale);
 }

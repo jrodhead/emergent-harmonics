@@ -1,14 +1,14 @@
 import { playSound, stopSound, setSoundFrequency } from '../audio/audioHandler.js';
 import { isTypingTarget } from '../keys/keyEventGuard.js';
 import { KEY_ROWS } from '../keys/buildNoteKeyMap.js';
-import { getSelectedDiapason } from './selectedDiapason.js';
+import { getSelectedScale } from './selectedScale.js';
 import { ratioToFrequency } from './systemConfigState.js';
 
 /**
- * The playing keys audition the notes of the diapason being edited, in order,
+ * The playing keys audition the notes of the scale being edited, in order,
  * so a configuration can be heard while it is built. They are the same keys in
  * the same order the notes will be played from, and there are as many of them
- * as the keyboard has, so every note a diapason can hold can be heard.
+ * as the keyboard has, so every note a scale can hold can be heard.
  */
 export const PREVIEW_KEY_ROWS = KEY_ROWS;
 export const PREVIEW_KEYS = [...KEY_ROWS.join('')];
@@ -24,7 +24,7 @@ const soundingNotes = new Set();
 const noteRow = (noteIndex) => document.querySelector(`.config-note[data-note-index="${noteIndex}"]`);
 
 const startPreview = (noteIndex) => {
-  const note = getSelectedDiapason().notes[noteIndex];
+  const note = getSelectedScale().notes[noteIndex];
   if (!note) return;
 
   soundingNotes.add(noteIndex);

@@ -1,25 +1,24 @@
-import { generateRootNotes, generateScaleNotes, homeDiapasonIndex } from './musicalSystemGenerator.js';
-import { getConfig, getPrimaryDiapason } from '../config/systemConfigState.js';
-import { resolveNoteSet } from '../config/resolveNoteSet.js';
+import { generateRootNotes, buildRegisters, homeRegisterIndex } from './generateSystem.js';
+import { getConfig, getPrimaryScale } from '../config/systemConfigState.js';
+import { resolveScaleNotes } from '../config/resolveScaleNotes.js';
 import { renderRootKeyTable, displayActiveRootNote } from '../keys/renderRootKeyTable.js';
 import { mapNoteKeys } from '../keys/mapNoteKeys.js';
 import {
-  activeScaleNotesGlobal,
   currentOctaveShift,
   isValidRootIndex,
-  updateActiveScaleNotesGlobal,
-  updateCurrentDiapasonIndex,
+  updateRegisters,
+  updateCurrentRegisterIndex,
   updateCurrentRootIndex,
-  updateRootNotesGlobal,
-  rootNotesGlobal,
+  updateRootNotes,
+  rootNotes,
 } from '../systemState.js';
 
 /**
- * Generates the diapasons for a root note and points the note keys at them.
+ * Generates the registers for a root note and points the note keys at them.
  *
  * @param {number} rootIndex - Which of the root notes to build from.
  * @param {boolean} keepOctave - Stay in the octave the keys are already in,
- *   rather than dropping back to the root's own diapason.
+ *   rather than dropping back to the root's own register.
  */
 export function selectRootNote(rootIndex, { keepOctave = true } = {}) {
   if (!isValidRootIndex(rootIndex)) {
@@ -28,34 +27,34 @@ export function selectRootNote(rootIndex, { keepOctave = true } = {}) {
   }
 
   const previousOctaveShift = currentOctaveShift();
-  const rootNote = rootNotesGlobal[rootIndex];
-  const scaleNotesPerDiapason = generateScaleNotes(
+  const rootNote = rootNotes[rootIndex];
+  const generated = buildRegisters(
     rootNote.frequency,
-    resolveNoteSet(rootNote.relationshipToRoot.triadType),
+    resolveScaleNotes(rootNote.relationshipToRoot.triadType),
   );
 
   updateCurrentRootIndex(rootIndex);
-  updateActiveScaleNotesGlobal(scaleNotesPerDiapason);
+  updateRegisters(generated);
 
   // Changing root mid-play should not jump the keys into another register.
   const keptIndex = keepOctave
-    ? scaleNotesPerDiapason.findIndex((diapason) => diapason.octaveShift === previousOctaveShift)
+    ? generated.findIndex((register) => register.octaveShift === previousOctaveShift)
     : -1;
 
-  updateCurrentDiapasonIndex(keptIndex === -1 ? homeDiapasonIndex(scaleNotesPerDiapason) : keptIndex);
+  updateCurrentRegisterIndex(keptIndex === -1 ? homeRegisterIndex(generated) : keptIndex);
   displayActiveRootNote(rootIndex);
-  mapNoteKeys(activeScaleNotesGlobal);
+  mapNoteKeys(generated);
 }
 
 /**
  * Rebuilds the whole playable system from the current configuration: the root
- * notes on the root keys, and the diapasons on the note keys.
+ * notes on the root keys, and the registers on the note keys.
  */
 export function buildSystemFromConfig() {
   const config = getConfig();
-  const rootNotes = generateRootNotes(config.primaryRootFrequency, getPrimaryDiapason().notes);
+  const generated = generateRootNotes(config.primaryRootFrequency, getPrimaryScale().notes);
 
-  updateRootNotesGlobal(rootNotes);
-  renderRootKeyTable(rootNotes);
+  updateRootNotes(generated);
+  renderRootKeyTable(generated);
   selectRootNote(0, { keepOctave: false });
 }

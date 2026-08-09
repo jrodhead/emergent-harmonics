@@ -9,9 +9,9 @@ const NUMERALS = [
 ];
 
 /**
- * A note's degree is its position in the diapason, written the way scale
+ * A note's degree is its position in the scale, written the way scale
  * degrees are conventionally written. Built up rather than listed, since a
- * diapason can hold as many notes as the keyboard has keys.
+ * scale can hold as many notes as the keyboard has keys.
  */
 export const degreeForIndex = (index) => {
   let remaining = index + 1;
@@ -27,11 +27,11 @@ export const degreeForIndex = (index) => {
 };
 
 /**
- * Folds a ratio into a single diapason, so every note of a configured diapason
+ * Folds a ratio into a single octave, so every note of a configured scale
  * sits between the root and its octave. Presets written across several octaves
  * (or below the root) keep their pitch classes.
  */
-export const foldRatioIntoDiapason = (ratio) => {
+export const foldRatioIntoPeriod = (ratio) => {
   if (!Number.isFinite(ratio) || ratio <= 0) return 1;
 
   let folded = ratio;
@@ -43,17 +43,17 @@ export const foldRatioIntoDiapason = (ratio) => {
 
 /**
  * Turns a built-in calculator into notes that can be edited on the
- * configuration screen: folded into one diapason, ordered, de-duplicated, and
+ * configuration screen: folded into one octave, ordered, de-duplicated, and
  * with every field the UI shows filled in.
  *
  * @param {string} presetName - The name of a built-in preset.
- * @param {string} ownDiapasonId - Diapason to point unresolvable triadTypes at.
+ * @param {string} ownScaleId - Scale to point unresolvable triadTypes at.
  */
-export const presetToNotes = (presetName, ownDiapasonId) => {
+export const presetToNotes = (presetName, ownScaleId) => {
   const seenRatios = new Set();
 
   return presetNotes(presetName)
-    .map((note) => ({ ...note, ratioToRoot: foldRatioIntoDiapason(note.ratioToRoot) }))
+    .map((note) => ({ ...note, ratioToRoot: foldRatioIntoPeriod(note.ratioToRoot) }))
     .filter((note) => {
       const key = note.ratioToRoot.toFixed(6);
       if (seenRatios.has(key)) return false;
@@ -66,7 +66,7 @@ export const presetToNotes = (presetName, ownDiapasonId) => {
       relationshipToRootName: note.relationshipToRootName ?? describeRatio(note.ratioToRoot),
       ratioToRoot: note.ratioToRoot,
       // Presets whose triadType names another built-in keep that relationship;
-      // the rest fall back to the diapason they belong to.
-      triadType: isPreset(note.triadType) ? canonicalPresetName(note.triadType) : ownDiapasonId,
+      // the rest fall back to the scale they belong to.
+      triadType: isPreset(note.triadType) ? canonicalPresetName(note.triadType) : ownScaleId,
     }));
 };

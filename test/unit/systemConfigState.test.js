@@ -3,24 +3,24 @@ import assert from 'node:assert/strict';
 
 import {
   getConfig,
-  getDiapason,
-  getPrimaryDiapason,
-  addDiapason,
+  getScale,
+  getPrimaryScale,
+  addScale,
   addNote,
-  removeDiapason,
+  removeScale,
   removeNote,
-  renameDiapason,
+  renameScale,
   replaceConfig,
   resetConfig,
   clearStoredConfig,
-  setPrimaryDiapason,
+  setPrimaryScale,
   setRootFrequency,
   updateNote,
-  loadPresetIntoDiapason,
+  loadPresetIntoScale,
   loadStoredConfig,
   saveConfig,
   subscribe,
-  diapasonBounds,
+  noteBounds,
   ratioToFrequency,
   frequencyToRatio,
   triadTypeOptions,
@@ -31,20 +31,20 @@ import {
 } from '../../js/config/systemConfigState.js';
 import { readStoredValue, writeStoredValue } from '../../js/storage.js';
 import { isPreset } from '../../js/presets/registry.js';
-import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../../js/system/musicalSystemGenerator.js';
+import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../../js/system/generateSystem.js';
 
 beforeEach(() => {
   clearStoredConfig();
 });
 
 describe('the default configuration', () => {
-  it('is a single primary diapason of the major scale', () => {
+  it('is a single primary scale of the major scale', () => {
     const config = getConfig();
 
-    assert.equal(config.diapasons.length, 1);
-    assert.equal(config.primaryDiapasonId, config.diapasons[0].id);
+    assert.equal(config.scales.length, 1);
+    assert.equal(config.primaryScaleId, config.scales[0].id);
     assert.equal(config.primaryRootFrequency, 27);
-    assert.equal(config.diapasons[0].notes.length, 7);
+    assert.equal(config.scales[0].notes.length, 7);
   });
 });
 
@@ -67,7 +67,7 @@ describe('the root frequency', () => {
   it('bounds a note between the root and its octave', () => {
     setRootFrequency(400);
 
-    assert.deepEqual(diapasonBounds(), { minimum: 400, maximum: 800 });
+    assert.deepEqual(noteBounds(), { minimum: 400, maximum: 800 });
   });
 
   it('converts between ratio and frequency in both directions', () => {
@@ -79,193 +79,193 @@ describe('the root frequency', () => {
 });
 
 describe('notes', () => {
-  it('can be added inside the diapason', () => {
-    const { id } = getPrimaryDiapason();
-    const before = getDiapason(id).notes.length;
+  it('can be added inside the scale', () => {
+    const { id } = getPrimaryScale();
+    const before = getScale(id).notes.length;
 
     addNote(id);
 
-    const notes = getDiapason(id).notes;
+    const notes = getScale(id).notes;
     assert.equal(notes.length, before + 1);
     assert.ok(notes.at(-1).ratioToRoot >= MIN_RATIO && notes.at(-1).ratioToRoot <= MAX_RATIO);
   });
 
   it('can be removed down to a floor of the root alone', () => {
-    const { id } = getPrimaryDiapason();
+    const { id } = getPrimaryScale();
 
     for (let attempt = 0; attempt < 20; attempt++) removeNote(id, 1);
 
-    assert.equal(getDiapason(id).notes.length, 1);
-    assert.equal(getDiapason(id).notes[0].degree, 'I');
+    assert.equal(getScale(id).notes.length, 1);
+    assert.equal(getScale(id).notes[0].degree, 'I');
   });
 
-  it('keep the root, which is what the rest of the diapason is measured from', () => {
-    const { id } = getPrimaryDiapason();
-    const root = getDiapason(id).notes[0];
+  it('keep the root, which is what the rest of the scale is measured from', () => {
+    const { id } = getPrimaryScale();
+    const root = getScale(id).notes[0];
 
     removeNote(id, 0);
 
-    assert.equal(getDiapason(id).notes.length, 7);
-    assert.equal(getDiapason(id).notes[0], root);
+    assert.equal(getScale(id).notes.length, 7);
+    assert.equal(getScale(id).notes[0], root);
   });
 
   it('renumber the degrees left behind, closing the gap', () => {
-    const { id } = getPrimaryDiapason();
+    const { id } = getPrimaryScale();
 
     // Seven degrees configured; drop III.
     removeNote(id, 2);
 
     assert.deepEqual(
-      getDiapason(id).notes.map((note) => note.degree),
+      getScale(id).notes.map((note) => note.degree),
       ['I', 'II', 'III', 'IV', 'V', 'VI'],
     );
   });
 
   it('renumber without disturbing the notes themselves', () => {
-    const { id } = getPrimaryDiapason();
-    const namesBefore = getDiapason(id).notes.map((note) => note.relationshipToRootName);
-    const ratiosBefore = getDiapason(id).notes.map((note) => note.ratioToRoot);
+    const { id } = getPrimaryScale();
+    const namesBefore = getScale(id).notes.map((note) => note.relationshipToRootName);
+    const ratiosBefore = getScale(id).notes.map((note) => note.ratioToRoot);
 
     removeNote(id, 2);
 
-    const notes = getDiapason(id).notes;
+    const notes = getScale(id).notes;
     assert.deepEqual(notes.map((note) => note.relationshipToRootName), namesBefore.toSpliced(2, 1));
     assert.deepEqual(notes.map((note) => note.ratioToRoot), ratiosBefore.toSpliced(2, 1));
   });
 
   it('number an added note as the next degree', () => {
-    const { id } = getPrimaryDiapason();
+    const { id } = getPrimaryScale();
 
     removeNote(id, 2);
     addNote(id);
 
     assert.deepEqual(
-      getDiapason(id).notes.map((note) => note.degree),
+      getScale(id).notes.map((note) => note.degree),
       ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'],
     );
   });
 
   it('ignore a note index that is past the end', () => {
-    const { id } = getPrimaryDiapason();
+    const { id } = getPrimaryScale();
 
     removeNote(id, 99);
 
-    assert.equal(getDiapason(id).notes.length, 7);
+    assert.equal(getScale(id).notes.length, 7);
   });
 
-  it('clamp their ratio into the diapason when edited', () => {
-    const { id } = getPrimaryDiapason();
+  it('clamp their ratio into the scale when edited', () => {
+    const { id } = getPrimaryScale();
 
     updateNote(id, 0, { ratioToRoot: 5 });
-    assert.equal(getDiapason(id).notes[0].ratioToRoot, MAX_RATIO);
+    assert.equal(getScale(id).notes[0].ratioToRoot, MAX_RATIO);
 
     updateNote(id, 0, { ratioToRoot: 0.1 });
-    assert.equal(getDiapason(id).notes[0].ratioToRoot, MIN_RATIO);
+    assert.equal(getScale(id).notes[0].ratioToRoot, MIN_RATIO);
   });
 
   it('ignore a ratio that is not a number', () => {
-    const { id } = getPrimaryDiapason();
+    const { id } = getPrimaryScale();
     updateNote(id, 0, { ratioToRoot: 1.25 });
 
     updateNote(id, 0, { ratioToRoot: Number.NaN });
 
-    assert.equal(getDiapason(id).notes[0].ratioToRoot, 1.25);
+    assert.equal(getScale(id).notes[0].ratioToRoot, 1.25);
   });
 
   it('accept other fields without touching the ratio', () => {
-    const { id } = getPrimaryDiapason();
-    const ratio = getDiapason(id).notes[0].ratioToRoot;
+    const { id } = getPrimaryScale();
+    const ratio = getScale(id).notes[0].ratioToRoot;
 
     updateNote(id, 0, { relationshipToRootName: 'Tonic' });
 
-    assert.equal(getDiapason(id).notes[0].relationshipToRootName, 'Tonic');
-    assert.equal(getDiapason(id).notes[0].ratioToRoot, ratio);
+    assert.equal(getScale(id).notes[0].relationshipToRootName, 'Tonic');
+    assert.equal(getScale(id).notes[0].ratioToRoot, ratio);
   });
 
-  it('do nothing when the note or diapason is not there', () => {
+  it('do nothing when the note or scale is not there', () => {
     assert.doesNotThrow(() => updateNote('missing', 0, { ratioToRoot: 1.5 }));
-    assert.doesNotThrow(() => updateNote(getPrimaryDiapason().id, 99, { ratioToRoot: 1.5 }));
+    assert.doesNotThrow(() => updateNote(getPrimaryScale().id, 99, { ratioToRoot: 1.5 }));
     assert.doesNotThrow(() => removeNote('missing', 0));
     assert.doesNotThrow(() => addNote('missing'));
   });
 });
 
-describe('diapasons', () => {
+describe('scales', () => {
   it('can be added, renamed, and made primary', () => {
-    const second = addDiapason();
+    const second = addScale();
 
-    assert.equal(getConfig().diapasons.length, 2);
+    assert.equal(getConfig().scales.length, 2);
 
-    renameDiapason(second, 'Solarian');
-    assert.equal(getDiapason(second).name, 'Solarian');
+    renameScale(second, 'Solarian');
+    assert.equal(getScale(second).name, 'Solarian');
 
-    setPrimaryDiapason(second);
-    assert.equal(getPrimaryDiapason().id, second);
+    setPrimaryScale(second);
+    assert.equal(getPrimaryScale().id, second);
   });
 
   it('can be removed', () => {
-    const second = addDiapason();
+    const second = addScale();
 
-    removeDiapason(second);
+    removeScale(second);
 
-    assert.equal(getConfig().diapasons.length, 1);
-    assert.equal(getDiapason(second), undefined);
+    assert.equal(getConfig().scales.length, 1);
+    assert.equal(getScale(second), undefined);
   });
 
-  it('promote another diapason to primary when the primary is removed', () => {
-    const second = addDiapason();
-    const first = getConfig().diapasons[0].id;
+  it('promote another scale to primary when the primary is removed', () => {
+    const second = addScale();
+    const first = getConfig().scales[0].id;
 
-    setPrimaryDiapason(first);
-    removeDiapason(first);
+    setPrimaryScale(first);
+    removeScale(first);
 
-    assert.equal(getConfig().diapasons.length, 1);
-    assert.equal(getPrimaryDiapason().id, second);
+    assert.equal(getConfig().scales.length, 1);
+    assert.equal(getPrimaryScale().id, second);
   });
 
-  it('repoint notes that referenced a removed diapason', () => {
-    const second = addDiapason();
-    const first = getConfig().diapasons[0].id;
+  it('repoint notes that referenced a removed scale', () => {
+    const second = addScale();
+    const first = getConfig().scales[0].id;
 
     updateNote(second, 0, { triadType: first });
-    removeDiapason(first);
+    removeScale(first);
 
-    getDiapason(second).notes.forEach((note) => {
+    getScale(second).notes.forEach((note) => {
       assert.ok(note.triadType === second || isPreset(note.triadType));
     });
   });
 
   it('cannot be removed when it is the last one', () => {
-    removeDiapason(getPrimaryDiapason().id);
+    removeScale(getPrimaryScale().id);
 
-    assert.equal(getConfig().diapasons.length, 1);
+    assert.equal(getConfig().scales.length, 1);
   });
 
-  it('ignore a rename or promotion of a diapason that is not there', () => {
-    const primary = getPrimaryDiapason().id;
+  it('ignore a rename or promotion of a scale that is not there', () => {
+    const primary = getPrimaryScale().id;
 
-    setPrimaryDiapason('missing');
-    assert.doesNotThrow(() => renameDiapason('missing', 'nope'));
+    setPrimaryScale('missing');
+    assert.doesNotThrow(() => renameScale('missing', 'nope'));
 
-    assert.equal(getPrimaryDiapason().id, primary);
+    assert.equal(getPrimaryScale().id, primary);
   });
 
   it('take on the notes of a calculator when one is loaded', () => {
-    const { id } = getPrimaryDiapason();
+    const { id } = getPrimaryScale();
 
-    loadPresetIntoDiapason(id, 'minorPentatonicScaleNotes');
+    loadPresetIntoScale(id, 'minorPentatonicScaleNotes');
 
-    assert.equal(getDiapason(id).name, 'minorPentatonicScaleNotes');
-    assert.equal(getDiapason(id).notes.length, 5);
+    assert.equal(getScale(id).name, 'minorPentatonicScaleNotes');
+    assert.equal(getScale(id).notes.length, 5);
   });
 });
 
 describe('triadTypeOptions', () => {
-  it('offers the configured diapasons and the built-in calculators separately', () => {
-    const second = addDiapason();
+  it('offers the configured scales and the built-in calculators separately', () => {
+    const second = addScale();
     const { configured, builtIn } = triadTypeOptions();
 
-    assert.deepEqual(configured.map((option) => option.value), [getConfig().diapasons[0].id, second]);
+    assert.deepEqual(configured.map((option) => option.value), [getConfig().scales[0].id, second]);
     assert.ok(builtIn.every((option) => isPreset(option.value)));
   });
 });
@@ -276,7 +276,7 @@ describe('subscribers', () => {
     const unsubscribe = subscribe(() => { notifications += 1; });
 
     setRootFrequency(440);
-    addNote(getPrimaryDiapason().id);
+    addNote(getPrimaryScale().id);
 
     assert.equal(notifications, 2);
 
@@ -289,10 +289,10 @@ describe('subscribers', () => {
     let notifications = 0;
     const unsubscribe = subscribe(() => { notifications += 1; });
 
-    updateNote(getPrimaryDiapason().id, 0, { ratioToRoot: 1.5 }, { silent: true });
+    updateNote(getPrimaryScale().id, 0, { ratioToRoot: 1.5 }, { silent: true });
 
     assert.equal(notifications, 0);
-    assert.equal(getPrimaryDiapason().notes[0].ratioToRoot, 1.5);
+    assert.equal(getPrimaryScale().notes[0].ratioToRoot, 1.5);
     unsubscribe();
   });
 });
@@ -301,96 +301,96 @@ describe('replaceConfig', () => {
   it('takes on a valid configuration', () => {
     const config = replaceConfig({
       primaryRootFrequency: 432,
-      primaryDiapasonId: 'solo',
-      diapasons: [{ id: 'solo', name: 'Solo', notes: [{ ratioToRoot: 1.5, triadType: 'solo' }] }],
+      primaryScaleId: 'solo',
+      scales: [{ id: 'solo', name: 'Solo', notes: [{ ratioToRoot: 1.5, triadType: 'solo' }] }],
     });
 
     assert.equal(config.primaryRootFrequency, 432);
-    assert.equal(config.primaryDiapasonId, 'solo');
-    assert.equal(config.diapasons[0].notes[0].ratioToRoot, 1.5);
+    assert.equal(config.primaryScaleId, 'solo');
+    assert.equal(config.scales[0].notes[0].ratioToRoot, 1.5);
   });
 
   it('clamps a root frequency outside the audible range', () => {
     const config = replaceConfig({
       primaryRootFrequency: 99999,
-      diapasons: [{ id: 'a', notes: [{ ratioToRoot: 1 }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1 }] }],
     });
 
     assert.equal(config.primaryRootFrequency, MAX_AUDIBLE_FREQUENCY);
   });
 
-  it('folds a ratio that sits outside the diapason', () => {
+  it('folds a ratio that sits outside the scale', () => {
     const config = replaceConfig({
-      diapasons: [{ id: 'a', notes: [{ ratioToRoot: 8 }, { ratioToRoot: 0.75 }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 8 }, { ratioToRoot: 0.75 }] }],
     });
 
-    assert.deepEqual(config.diapasons[0].notes.map((note) => note.ratioToRoot), [1, 1.5]);
+    assert.deepEqual(config.scales[0].notes.map((note) => note.ratioToRoot), [1, 1.5]);
   });
 
-  it('repoints a triad type that names nothing at its own diapason', () => {
+  it('repoints a triad type that names nothing at its own scale', () => {
     const config = replaceConfig({
-      diapasons: [{ id: 'a', notes: [{ ratioToRoot: 1, triadType: 'ghost' }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, triadType: 'ghost' }] }],
     });
 
-    assert.equal(config.diapasons[0].notes[0].triadType, 'a');
+    assert.equal(config.scales[0].notes[0].triadType, 'a');
   });
 
   it('canonicalises a triad type given as an alias', () => {
     const config = replaceConfig({
-      diapasons: [{ id: 'a', notes: [{ ratioToRoot: 1, triadType: 'minor' }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, triadType: 'minor' }] }],
     });
 
-    assert.equal(config.diapasons[0].notes[0].triadType, 'naturalMinorScaleNotes');
+    assert.equal(config.scales[0].notes[0].triadType, 'naturalMinorScaleNotes');
   });
 
-  it('keeps a triad type that points at another diapason in the file', () => {
+  it('keeps a triad type that points at another scale in the file', () => {
     const config = replaceConfig({
-      diapasons: [
+      scales: [
         { id: 'a', notes: [{ ratioToRoot: 1, triadType: 'b' }] },
         { id: 'b', notes: [{ ratioToRoot: 1, triadType: 'a' }] },
       ],
     });
 
-    assert.equal(config.diapasons[0].notes[0].triadType, 'b');
+    assert.equal(config.scales[0].notes[0].triadType, 'b');
   });
 
-  it('falls back to the first diapason when the primary names nothing', () => {
+  it('falls back to the first scale when the primary names nothing', () => {
     const config = replaceConfig({
-      primaryDiapasonId: 'missing',
-      diapasons: [{ id: 'a', notes: [{ ratioToRoot: 1 }] }],
+      primaryScaleId: 'missing',
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1 }] }],
     });
 
-    assert.equal(config.primaryDiapasonId, 'a');
+    assert.equal(config.primaryScaleId, 'a');
   });
 
   it('fills in missing degrees and names', () => {
     const config = replaceConfig({
-      diapasons: [{ id: 'a', notes: [{ ratioToRoot: 1 }, { ratioToRoot: 1.5 }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1 }, { ratioToRoot: 1.5 }] }],
     });
 
-    assert.deepEqual(config.diapasons[0].notes.map((note) => note.degree), ['I', 'II']);
-    config.diapasons[0].notes.forEach((note) => assert.ok(note.relationshipToRootName));
+    assert.deepEqual(config.scales[0].notes.map((note) => note.degree), ['I', 'II']);
+    config.scales[0].notes.forEach((note) => assert.ok(note.relationshipToRootName));
   });
 
   it('rejects a file that could not be played', () => {
     assert.throws(() => replaceConfig(null), /must be an object/);
-    assert.throws(() => replaceConfig({ diapasons: [] }), /at least one diapason/);
-    assert.throws(() => replaceConfig({ diapasons: [{ id: 'a', notes: [] }] }), /has no notes/);
+    assert.throws(() => replaceConfig({ scales: [] }), /at least one scale/);
+    assert.throws(() => replaceConfig({ scales: [{ id: 'a', notes: [] }] }), /has no notes/);
   });
 
   it('leaves the existing configuration untouched when it rejects one', () => {
     setRootFrequency(440);
 
-    assert.throws(() => replaceConfig({ diapasons: [] }));
+    assert.throws(() => replaceConfig({ scales: [] }));
     assert.equal(getConfig().primaryRootFrequency, 440);
   });
 
   it('keeps generated ids clear of the ones it took on', () => {
     replaceConfig({
-      diapasons: [{ id: 'diapason-9', notes: [{ ratioToRoot: 1 }] }],
+      scales: [{ id: 'scale-9', notes: [{ ratioToRoot: 1 }] }],
     });
 
-    assert.notEqual(addDiapason(), 'diapason-9');
+    assert.notEqual(addScale(), 'scale-9');
   });
 });
 
@@ -399,52 +399,72 @@ describe('persistence', () => {
 
   it('writes the current configuration to storage', () => {
     setRootFrequency(432);
-    renameDiapason(getPrimaryDiapason().id, 'Solarian');
+    renameScale(getPrimaryScale().id, 'Solarian');
     saveConfig();
 
     assert.equal(storedConfig().primaryRootFrequency, 432);
-    assert.equal(storedConfig().diapasons[0].name, 'Solarian');
+    assert.equal(storedConfig().scales[0].name, 'Solarian');
   });
 
   it('saves on every change, without waiting to be asked', () => {
     setRootFrequency(300);
     assert.equal(storedConfig().primaryRootFrequency, 300);
 
-    addNote(getPrimaryDiapason().id);
-    assert.equal(storedConfig().diapasons[0].notes.length, 8);
+    addNote(getPrimaryScale().id);
+    assert.equal(storedConfig().scales[0].notes.length, 8);
   });
 
   it('saves a silent edit too, so a drag is not lost on reload', () => {
-    updateNote(getPrimaryDiapason().id, 0, { ratioToRoot: 1.75 }, { silent: true });
+    updateNote(getPrimaryScale().id, 0, { ratioToRoot: 1.75 }, { silent: true });
 
-    assert.equal(storedConfig().diapasons[0].notes[0].ratioToRoot, 1.75);
+    assert.equal(storedConfig().scales[0].notes[0].ratioToRoot, 1.75);
   });
 
   it('restores what was stored', () => {
     writeStoredValue(STORAGE_KEY, JSON.stringify({
       primaryRootFrequency: 432,
-      primaryDiapasonId: 'solo',
-      diapasons: [{ id: 'solo', name: 'Solarian', notes: [{ ratioToRoot: 1.5, triadType: 'solo' }] }],
+      primaryScaleId: 'solo',
+      scales: [{ id: 'solo', name: 'Solarian', notes: [{ ratioToRoot: 1.5, triadType: 'solo' }] }],
     }));
 
     loadStoredConfig();
 
     assert.equal(getConfig().primaryRootFrequency, 432);
-    assert.equal(getPrimaryDiapason().name, 'Solarian');
-    assert.equal(getPrimaryDiapason().notes[0].ratioToRoot, 1.5);
+    assert.equal(getPrimaryScale().name, 'Solarian');
+    assert.equal(getPrimaryScale().notes[0].ratioToRoot, 1.5);
+  });
+
+  it('restores a system saved back when a scale was called a diapason', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({
+      version: 1,
+      primaryRootFrequency: 432,
+      primaryDiapasonId: 'diapason-2',
+      diapasons: [
+        { id: 'diapason-1', name: 'Lower', notes: [{ ratioToRoot: 1, triadType: 'diapason-1' }] },
+        { id: 'diapason-2', name: 'Solarian', notes: [{ ratioToRoot: 1.5, triadType: 'hd110067NotesInOneDiapason' }] },
+      ],
+    }));
+
+    loadStoredConfig();
+
+    assert.equal(getConfig().version, 2);
+    assert.equal(getConfig().scales.length, 2);
+    assert.equal(getPrimaryScale().name, 'Solarian');
+    // The preset it pointed at was renamed along with the word.
+    assert.equal(getPrimaryScale().notes[0].triadType, 'hd110067NotesInOneScale');
   });
 
   it('validates what it restores, so a hand-edited file cannot break the app', () => {
     writeStoredValue(STORAGE_KEY, JSON.stringify({
       primaryRootFrequency: 999999,
-      diapasons: [{ id: 'a', notes: [{ ratioToRoot: 8, triadType: 'ghost' }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 8, triadType: 'ghost' }] }],
     }));
 
     const config = loadStoredConfig();
 
     assert.equal(config.primaryRootFrequency, MAX_AUDIBLE_FREQUENCY);
-    assert.equal(config.diapasons[0].notes[0].ratioToRoot, 1);
-    assert.equal(config.diapasons[0].notes[0].triadType, 'a');
+    assert.equal(config.scales[0].notes[0].ratioToRoot, 1);
+    assert.equal(config.scales[0].notes[0].triadType, 'a');
   });
 
   it('keeps the default when nothing has been stored', () => {
@@ -464,16 +484,16 @@ describe('persistence', () => {
 
     const config = loadStoredConfig();
 
-    assert.ok(config.diapasons.length >= 1);
+    assert.ok(config.scales.length >= 1);
   });
 
   it('starts fresh when what was stored is valid JSON but not a system', (t) => {
     t.mock.method(console, 'error', () => {});
-    writeStoredValue(STORAGE_KEY, JSON.stringify({ diapasons: [] }));
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ scales: [] }));
 
     const config = loadStoredConfig();
 
-    assert.ok(config.diapasons.length >= 1);
+    assert.ok(config.scales.length >= 1);
   });
 });
 
