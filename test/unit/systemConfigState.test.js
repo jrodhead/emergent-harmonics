@@ -90,12 +90,67 @@ describe('notes', () => {
     assert.ok(notes.at(-1).ratioToRoot >= MIN_RATIO && notes.at(-1).ratioToRoot <= MAX_RATIO);
   });
 
-  it('can be removed down to a floor of one', () => {
+  it('can be removed down to a floor of the root alone', () => {
     const { id } = getPrimaryDiapason();
 
-    for (let attempt = 0; attempt < 20; attempt++) removeNote(id, 0);
+    for (let attempt = 0; attempt < 20; attempt++) removeNote(id, 1);
 
     assert.equal(getDiapason(id).notes.length, 1);
+    assert.equal(getDiapason(id).notes[0].degree, 'I');
+  });
+
+  it('keep the root, which is what the rest of the diapason is measured from', () => {
+    const { id } = getPrimaryDiapason();
+    const root = getDiapason(id).notes[0];
+
+    removeNote(id, 0);
+
+    assert.equal(getDiapason(id).notes.length, 7);
+    assert.equal(getDiapason(id).notes[0], root);
+  });
+
+  it('renumber the degrees left behind, closing the gap', () => {
+    const { id } = getPrimaryDiapason();
+
+    // Seven degrees configured; drop III.
+    removeNote(id, 2);
+
+    assert.deepEqual(
+      getDiapason(id).notes.map((note) => note.degree),
+      ['I', 'II', 'III', 'IV', 'V', 'VI'],
+    );
+  });
+
+  it('renumber without disturbing the notes themselves', () => {
+    const { id } = getPrimaryDiapason();
+    const namesBefore = getDiapason(id).notes.map((note) => note.relationshipToRootName);
+    const ratiosBefore = getDiapason(id).notes.map((note) => note.ratioToRoot);
+
+    removeNote(id, 2);
+
+    const notes = getDiapason(id).notes;
+    assert.deepEqual(notes.map((note) => note.relationshipToRootName), namesBefore.toSpliced(2, 1));
+    assert.deepEqual(notes.map((note) => note.ratioToRoot), ratiosBefore.toSpliced(2, 1));
+  });
+
+  it('number an added note as the next degree', () => {
+    const { id } = getPrimaryDiapason();
+
+    removeNote(id, 2);
+    addNote(id);
+
+    assert.deepEqual(
+      getDiapason(id).notes.map((note) => note.degree),
+      ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'],
+    );
+  });
+
+  it('ignore a note index that is past the end', () => {
+    const { id } = getPrimaryDiapason();
+
+    removeNote(id, 99);
+
+    assert.equal(getDiapason(id).notes.length, 7);
   });
 
   it('clamp their ratio into the diapason when edited', () => {

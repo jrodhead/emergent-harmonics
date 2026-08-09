@@ -124,6 +124,25 @@ export const loadPresetIntoDiapason = (diapasonId, presetName) => {
   notify();
 };
 
+/**
+ * Whether a note can be taken out of its diapason. The first note is the root
+ * every other note is measured against, so the diapason always keeps it.
+ *
+ * @param {number} noteIndex
+ * @returns {boolean}
+ */
+export const canRemoveNote = (noteIndex) => noteIndex > 0;
+
+/**
+ * A degree is a note's position in the diapason, so removing a note closes the
+ * gap: dropping III leaves what were IV and V as the new III and IV.
+ */
+const renumberDegrees = (diapason) => {
+  diapason.notes.forEach((note, noteIndex) => {
+    note.degree = degreeForIndex(noteIndex);
+  });
+};
+
 export const addNote = (diapasonId) => {
   const diapason = getDiapason(diapasonId);
   if (!diapason) return;
@@ -139,6 +158,7 @@ export const addNote = (diapasonId) => {
     ratioToRoot,
     triadType: diapasonId,
   });
+  renumberDegrees(diapason);
   notify();
 };
 
@@ -146,10 +166,10 @@ export const removeNote = (diapasonId, noteIndex) => {
   const diapason = getDiapason(diapasonId);
   if (!diapason) return;
 
-  // A diapason bottoms out at a single note.
-  if (diapason.notes.length <= 1) return;
+  if (!canRemoveNote(noteIndex) || noteIndex >= diapason.notes.length) return;
 
   diapason.notes.splice(noteIndex, 1);
+  renumberDegrees(diapason);
   notify();
 };
 
@@ -211,7 +231,9 @@ const validateConfig = (candidate) => {
         const ratio = Number(note?.ratioToRoot);
 
         return {
-          degree: note?.degree ?? degreeForIndex(noteIndex),
+          // A degree is positional, so it is taken from the order in the file
+          // rather than from whatever the file claims it is.
+          degree: degreeForIndex(noteIndex),
           relationshipToRootName: note?.relationshipToRootName ?? describeRatio(ratio),
           ratioToRoot: Number.isFinite(ratio) ? clamp(foldRatioIntoDiapason(ratio), MIN_RATIO, MAX_RATIO) : MIN_RATIO,
           triadType: note?.triadType,

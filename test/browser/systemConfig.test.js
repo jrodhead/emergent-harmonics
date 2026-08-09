@@ -127,20 +127,54 @@ describe('the system configuration screen', { skip }, () => {
       `), 8);
 
       assert.equal(await app.evaluate(`
-        document.querySelectorAll('.config-note-remove')[0].click();
+        document.querySelectorAll('.config-note-remove')[1].click();
         return document.querySelectorAll('.config-note[data-note-index]').length;
       `), 7);
     });
 
-    it('stops at a single note, which cannot be removed', async () => {
+    it('cannot remove the root, whose button says why', async () => {
+      assert.deepEqual(await app.evaluate(`
+        const root = document.querySelectorAll('.config-note-remove')[0];
+        root.click();
+        return [document.querySelectorAll('.config-note[data-note-index]').length,
+                root.disabled, root.title];
+      `), [7, true, 'The root of the diapason cannot be removed']);
+    });
+
+    it('stops at the root alone once every other note is removed', async () => {
       assert.deepEqual(await app.evaluate(`
         for (let attempt = 0; attempt < 10; attempt++) {
-          const button = document.querySelector('.config-note-remove');
-          if (!button.disabled) button.click();
+          const button = document.querySelectorAll('.config-note-remove')[1];
+          if (button && !button.disabled) button.click();
         }
         return [document.querySelectorAll('.config-note[data-note-index]').length,
-                document.querySelector('.config-note-remove').disabled];
-      `), [1, true]);
+                document.querySelector('.config-note-degree').textContent.trim()];
+      `), [1, 'I']);
+    });
+
+    it('closes the gap in the degrees when a note in the middle is removed', async () => {
+      // Trim to five degrees, then drop III: IV and V become the new III and IV.
+      assert.deepEqual(await app.evaluate(`
+        document.querySelectorAll('.config-note-remove')[6].click();
+        document.querySelectorAll('.config-note-remove')[5].click();
+        document.querySelectorAll('.config-note-remove')[2].click();
+        return [...document.querySelectorAll('.config-note-degree')].map(degree => degree.textContent.trim());
+      `), ['I', 'II', 'III', 'IV']);
+    });
+
+    it('renumbers the degrees shown on the root keys too', async () => {
+      assert.deepEqual(await app.evaluate(`
+        document.querySelectorAll('.config-note-remove')[2].click();
+        document.querySelector('[data-show-view="play"]').click();
+        return [...document.querySelectorAll('.root-selector .degree')].map(degree => degree.textContent.trim());
+      `), ['I', 'II', 'III', 'IV', 'V', 'VI']);
+    });
+
+    it('shifts the preview keys up with the notes that remain', async () => {
+      assert.deepEqual(await app.evaluate(`
+        document.querySelectorAll('.config-note-remove')[2].click();
+        return [...document.querySelectorAll('.config-note-key')].map(key => key.textContent.trim());
+      `), ['q', 'w', 'e', 'r', 't', 'y']);
     });
 
     it('loads a calculator into the diapason being edited', async () => {

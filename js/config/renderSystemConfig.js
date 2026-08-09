@@ -3,6 +3,7 @@ import {
   diapasonBounds,
   ratioToFrequency,
   triadTypeOptions,
+  canRemoveNote,
   MIN_RATIO,
   MAX_RATIO,
 } from './systemConfigState.js';
@@ -59,10 +60,10 @@ export const renderTriadTypeOptions = (selectedTriadType) => {
   `;
 };
 
-export const renderNote = (note, noteIndex, diapason) => {
+export const renderNote = (note, noteIndex) => {
   const { minimum, maximum } = diapasonBounds();
   const frequency = ratioToFrequency(note.ratioToRoot);
-  const onlyNote = diapason.notes.length === 1;
+  const removable = canRemoveNote(noteIndex);
   const previewKey = previewKeyForIndex(noteIndex);
 
   return `
@@ -72,7 +73,9 @@ export const renderNote = (note, noteIndex, diapason) => {
         ${previewKey
           ? `<span class="config-note-key" title="Hold ${escapeHtml(previewKey)} to hear this note">${escapeHtml(previewKey)}</span>`
           : '<span class="config-note-key none" title="Past the last preview key">&mdash;</span>'}
-        <button type="button" class="config-note-remove" title="Remove this note"${onlyNote ? ' disabled' : ''}>&#10005;</button>
+        <button type="button" class="config-note-remove"
+                title="${removable ? 'Remove this note' : 'The root of the diapason cannot be removed'}"
+                ${removable ? '' : 'disabled'}>&#10005;</button>
       </div>
 
       <label>Name
@@ -134,7 +137,7 @@ export const renderNotes = (diapason) => {
     </p>
 
     <div class="config-note-list">
-      ${diapason.notes.map((note, noteIndex) => renderNote(note, noteIndex, diapason)).join('')}
+      ${diapason.notes.map(renderNote).join('')}
       <button type="button" id="addNote" class="config-note config-add">+ Add note</button>
     </div>
   `;

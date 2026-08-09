@@ -122,7 +122,7 @@ describe('renderNote', () => {
   it('bounds the frequency field and slider by the diapason', () => {
     setRootFrequency(400);
 
-    const html = renderNote(firstNote(), 0, getPrimaryDiapason());
+    const html = renderNote(firstNote(), 0);
 
     assert.match(html, /class="config-note-hz"[^>]*min="400"[^>]*max="800"/s);
     assert.match(html, /class="config-note-slider"[^>]*min="400"[^>]*max="800"/s);
@@ -132,42 +132,49 @@ describe('renderNote', () => {
     setRootFrequency(400);
     updateNote(getPrimaryDiapason().id, 0, { ratioToRoot: 1.5 });
 
-    const html = renderNote(firstNote(), 0, getPrimaryDiapason());
+    const html = renderNote(firstNote(), 0);
 
     assert.match(html, /class="config-note-ratio"[^>]*value="1.5"/s);
     assert.match(html, /class="config-note-hz"[^>]*value="600"/s);
   });
 
   it('shows the top-row key that auditions the note', () => {
-    assert.match(renderNote(firstNote(), 0, getPrimaryDiapason()), /class="config-note-key"[^>]*>q</s);
-    assert.match(renderNote(firstNote(), 4, getPrimaryDiapason()), /class="config-note-key"[^>]*>t</s);
+    assert.match(renderNote(firstNote(), 0), /class="config-note-key"[^>]*>q</s);
+    assert.match(renderNote(firstNote(), 4), /class="config-note-key"[^>]*>t</s);
   });
 
   it('marks a note past the last preview key as having none', () => {
-    const html = renderNote(firstNote(), PREVIEW_KEYS.length, getPrimaryDiapason());
+    const html = renderNote(firstNote(), PREVIEW_KEYS.length);
 
     assert.match(html, /config-note-key none/);
   });
 
-  it('disables remove when the note is the only one left', () => {
-    const soleNote = { ...firstNote() };
-    const diapason = { ...getPrimaryDiapason(), notes: [soleNote] };
+  it('disables remove on the root, and says why', () => {
+    const html = renderNote(firstNote(), 0);
 
-    assert.match(renderNote(soleNote, 0, diapason), /config-note-remove[^>]*disabled/s);
+    assert.match(html, /config-note-remove[^>]*disabled/s);
+    assert.match(html, /The root of the diapason cannot be removed/);
+  });
+
+  it('enables remove on every note below the root', () => {
+    const html = renderNote(firstNote(), 3);
+
+    assert.doesNotMatch(html, /config-note-remove[^>]*disabled/s);
+    assert.match(html, /title="Remove this note"/);
   });
 
   it('flags a name that is only a description of the ratio, so it can follow it', () => {
     const derived = { ratioToRoot: 1.5, degree: 'V', relationshipToRootName: '702 cents', triadType: 'x' };
     const named = { ...derived, relationshipToRootName: 'Perfect 5th' };
 
-    assert.match(renderNote(derived, 0, getPrimaryDiapason()), /data-derived="true"/);
-    assert.match(renderNote(named, 0, getPrimaryDiapason()), /data-derived="false"/);
+    assert.match(renderNote(derived, 0), /data-derived="true"/);
+    assert.match(renderNote(named, 0), /data-derived="false"/);
   });
 
   it('escapes a note name so it cannot break the markup', () => {
     const note = { ...firstNote(), relationshipToRootName: '"><img src=x>' };
 
-    assert.doesNotMatch(renderNote(note, 0, getPrimaryDiapason()), /<img/);
+    assert.doesNotMatch(renderNote(note, 0), /<img/);
   });
 });
 
