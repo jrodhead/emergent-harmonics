@@ -22,15 +22,15 @@ describe('resolveScaleNotes', () => {
     assert.equal(resolveScaleNotes(second), getConfig().scales[1].notes);
   });
 
-  it('resolves a built-in calculator by name', () => {
+  it('resolves a built-in preset by name', () => {
     assert.equal(resolveScaleNotes('bluesScaleNotes'), presetNotes('bluesScaleNotes'));
   });
 
-  it('resolves a built-in calculator given by its alias', () => {
+  it('resolves a built-in preset given by its alias', () => {
     assert.equal(resolveScaleNotes('minor'), presetNotes('naturalMinorScaleNotes'));
   });
 
-  it('prefers a configured scale over a calculator with the same name', () => {
+  it('prefers a configured scale over a preset with the same name', () => {
     replaceConfig({
       primaryScaleId: 'majorScaleNotes',
       scales: [{ id: 'majorScaleNotes', name: 'Mine', notes: [{ ratioToRoot: 1.25 }] }],
@@ -54,12 +54,12 @@ describe('resolveScaleNotes', () => {
     assert.equal(warn.mock.callCount(), 1);
   });
 
-  it('always resolves every triad type in the default configuration', () => {
+  it('always resolves every root scale in the default configuration', () => {
     getConfig().scales.forEach((scale) => {
       scale.notes.forEach((note) => {
-        const notes = resolveScaleNotes(note.triadType);
+        const notes = resolveScaleNotes(note.rootScaleId);
 
-        assert.ok(Array.isArray(notes) && notes.length > 0, `${note.triadType} resolves`);
+        assert.ok(Array.isArray(notes) && notes.length > 0, `${note.rootScaleId} resolves`);
       });
     });
   });

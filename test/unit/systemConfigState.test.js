@@ -23,7 +23,7 @@ import {
   noteBounds,
   ratioToFrequency,
   frequencyToRatio,
-  triadTypeOptions,
+  rootScaleOptions,
   clamp,
   MIN_RATIO,
   MAX_RATIO,
@@ -123,13 +123,13 @@ describe('notes', () => {
 
   it('renumber without disturbing the notes themselves', () => {
     const { id } = getPrimaryScale();
-    const namesBefore = getScale(id).notes.map((note) => note.relationshipToRootName);
+    const namesBefore = getScale(id).notes.map((note) => note.intervalName);
     const ratiosBefore = getScale(id).notes.map((note) => note.ratioToRoot);
 
     removeNote(id, 2);
 
     const notes = getScale(id).notes;
-    assert.deepEqual(notes.map((note) => note.relationshipToRootName), namesBefore.toSpliced(2, 1));
+    assert.deepEqual(notes.map((note) => note.intervalName), namesBefore.toSpliced(2, 1));
     assert.deepEqual(notes.map((note) => note.ratioToRoot), ratiosBefore.toSpliced(2, 1));
   });
 
@@ -176,9 +176,9 @@ describe('notes', () => {
     const { id } = getPrimaryScale();
     const ratio = getScale(id).notes[0].ratioToRoot;
 
-    updateNote(id, 0, { relationshipToRootName: 'Tonic' });
+    updateNote(id, 0, { intervalName: 'Tonic' });
 
-    assert.equal(getScale(id).notes[0].relationshipToRootName, 'Tonic');
+    assert.equal(getScale(id).notes[0].intervalName, 'Tonic');
     assert.equal(getScale(id).notes[0].ratioToRoot, ratio);
   });
 
@@ -227,11 +227,11 @@ describe('scales', () => {
     const second = addScale();
     const first = getConfig().scales[0].id;
 
-    updateNote(second, 0, { triadType: first });
+    updateNote(second, 0, { rootScaleId: first });
     removeScale(first);
 
     getScale(second).notes.forEach((note) => {
-      assert.ok(note.triadType === second || isPreset(note.triadType));
+      assert.ok(note.rootScaleId === second || isPreset(note.rootScaleId));
     });
   });
 
@@ -250,7 +250,7 @@ describe('scales', () => {
     assert.equal(getPrimaryScale().id, primary);
   });
 
-  it('take on the notes of a calculator when one is loaded', () => {
+  it('take on the notes of a preset when one is loaded', () => {
     const { id } = getPrimaryScale();
 
     loadPresetIntoScale(id, 'minorPentatonicScaleNotes');
@@ -260,10 +260,10 @@ describe('scales', () => {
   });
 });
 
-describe('triadTypeOptions', () => {
-  it('offers the configured scales and the built-in calculators separately', () => {
+describe('rootScaleOptions', () => {
+  it('offers the configured scales and the built-in presets separately', () => {
     const second = addScale();
-    const { configured, builtIn } = triadTypeOptions();
+    const { configured, builtIn } = rootScaleOptions();
 
     assert.deepEqual(configured.map((option) => option.value), [getConfig().scales[0].id, second]);
     assert.ok(builtIn.every((option) => isPreset(option.value)));
@@ -302,7 +302,7 @@ describe('replaceConfig', () => {
     const config = replaceConfig({
       primaryRootFrequency: 432,
       primaryScaleId: 'solo',
-      scales: [{ id: 'solo', name: 'Solo', notes: [{ ratioToRoot: 1.5, triadType: 'solo' }] }],
+      scales: [{ id: 'solo', name: 'Solo', notes: [{ ratioToRoot: 1.5, rootScaleId: 'solo' }] }],
     });
 
     assert.equal(config.primaryRootFrequency, 432);
@@ -327,31 +327,31 @@ describe('replaceConfig', () => {
     assert.deepEqual(config.scales[0].notes.map((note) => note.ratioToRoot), [1, 1.5]);
   });
 
-  it('repoints a triad type that names nothing at its own scale', () => {
+  it('repoints a root scale that names nothing at its own scale', () => {
     const config = replaceConfig({
-      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, triadType: 'ghost' }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, rootScaleId: 'ghost' }] }],
     });
 
-    assert.equal(config.scales[0].notes[0].triadType, 'a');
+    assert.equal(config.scales[0].notes[0].rootScaleId, 'a');
   });
 
-  it('canonicalises a triad type given as an alias', () => {
+  it('canonicalises a root scale given as an alias', () => {
     const config = replaceConfig({
-      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, triadType: 'minor' }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 1, rootScaleId: 'minor' }] }],
     });
 
-    assert.equal(config.scales[0].notes[0].triadType, 'naturalMinorScaleNotes');
+    assert.equal(config.scales[0].notes[0].rootScaleId, 'naturalMinorScaleNotes');
   });
 
-  it('keeps a triad type that points at another scale in the file', () => {
+  it('keeps a root scale that points at another scale in the file', () => {
     const config = replaceConfig({
       scales: [
-        { id: 'a', notes: [{ ratioToRoot: 1, triadType: 'b' }] },
-        { id: 'b', notes: [{ ratioToRoot: 1, triadType: 'a' }] },
+        { id: 'a', notes: [{ ratioToRoot: 1, rootScaleId: 'b' }] },
+        { id: 'b', notes: [{ ratioToRoot: 1, rootScaleId: 'a' }] },
       ],
     });
 
-    assert.equal(config.scales[0].notes[0].triadType, 'b');
+    assert.equal(config.scales[0].notes[0].rootScaleId, 'b');
   });
 
   it('falls back to the first scale when the primary names nothing', () => {
@@ -369,7 +369,7 @@ describe('replaceConfig', () => {
     });
 
     assert.deepEqual(config.scales[0].notes.map((note) => note.degree), ['I', 'II']);
-    config.scales[0].notes.forEach((note) => assert.ok(note.relationshipToRootName));
+    config.scales[0].notes.forEach((note) => assert.ok(note.intervalName));
   });
 
   it('rejects a file that could not be played', () => {
@@ -424,7 +424,7 @@ describe('persistence', () => {
     writeStoredValue(STORAGE_KEY, JSON.stringify({
       primaryRootFrequency: 432,
       primaryScaleId: 'solo',
-      scales: [{ id: 'solo', name: 'Solarian', notes: [{ ratioToRoot: 1.5, triadType: 'solo' }] }],
+      scales: [{ id: 'solo', name: 'Solarian', notes: [{ ratioToRoot: 1.5, rootScaleId: 'solo' }] }],
     }));
 
     loadStoredConfig();
@@ -434,14 +434,22 @@ describe('persistence', () => {
     assert.equal(getPrimaryScale().notes[0].ratioToRoot, 1.5);
   });
 
-  it('restores a system saved back when a scale was called a diapason', () => {
+  it('restores a system saved under the version 1 names', () => {
     writeStoredValue(STORAGE_KEY, JSON.stringify({
       version: 1,
       primaryRootFrequency: 432,
       primaryDiapasonId: 'diapason-2',
       diapasons: [
         { id: 'diapason-1', name: 'Lower', notes: [{ ratioToRoot: 1, triadType: 'diapason-1' }] },
-        { id: 'diapason-2', name: 'Solarian', notes: [{ ratioToRoot: 1.5, triadType: 'hd110067NotesInOneDiapason' }] },
+        {
+          id: 'diapason-2',
+          name: 'Solarian',
+          notes: [{
+            ratioToRoot: 1.5,
+            relationshipToRootName: 'Perfect 5th',
+            triadType: 'hd110067NotesInOneDiapason',
+          }],
+        },
       ],
     }));
 
@@ -450,21 +458,22 @@ describe('persistence', () => {
     assert.equal(getConfig().version, 2);
     assert.equal(getConfig().scales.length, 2);
     assert.equal(getPrimaryScale().name, 'Solarian');
+    assert.equal(getPrimaryScale().notes[0].intervalName, 'Perfect 5th');
     // The preset it pointed at was renamed along with the word.
-    assert.equal(getPrimaryScale().notes[0].triadType, 'hd110067NotesInOneScale');
+    assert.equal(getPrimaryScale().notes[0].rootScaleId, 'hd110067NotesInOneScale');
   });
 
   it('validates what it restores, so a hand-edited file cannot break the app', () => {
     writeStoredValue(STORAGE_KEY, JSON.stringify({
       primaryRootFrequency: 999999,
-      scales: [{ id: 'a', notes: [{ ratioToRoot: 8, triadType: 'ghost' }] }],
+      scales: [{ id: 'a', notes: [{ ratioToRoot: 8, rootScaleId: 'ghost' }] }],
     }));
 
     const config = loadStoredConfig();
 
     assert.equal(config.primaryRootFrequency, MAX_AUDIBLE_FREQUENCY);
     assert.equal(config.scales[0].notes[0].ratioToRoot, 1);
-    assert.equal(config.scales[0].notes[0].triadType, 'a');
+    assert.equal(config.scales[0].notes[0].rootScaleId, 'a');
   });
 
   it('keeps the default when nothing has been stored', () => {

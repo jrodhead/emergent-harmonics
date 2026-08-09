@@ -13,7 +13,7 @@ const systemOf = (notesPerRegister, registerCount) => Array.from(
     notes: Array.from({ length: notesPerRegister }, (unusedNote, noteIndex) => ({
       noteIndex,
       frequency: (noteIndex + 1) * Math.pow(2, registerIndex),
-      relationshipToRoot: { degree: `${noteIndex}`, ratioToRoot: noteIndex + 1 },
+      definition: { degree: `${noteIndex}`, ratioToRoot: noteIndex + 1 },
     })),
   }),
 );
@@ -57,7 +57,7 @@ describe('buildNoteKeyMap', () => {
 
     assert.equal(firstKey.key, 'q');
     assert.equal(firstKey.frequency, system[0].notes[0].frequency);
-    assert.equal(firstKey.relationshipToRoot, system[0].notes[0].relationshipToRoot);
+    assert.equal(firstKey.definition, system[0].notes[0].definition);
   });
 
   it('stops at the top of the system instead of wrapping back to the bottom', () => {
@@ -88,10 +88,10 @@ describe('buildNoteKeyMap', () => {
     const firstRow = keyMap.slice(0, ROW_LENGTH);
     const secondRow = keyMap.slice(ROW_LENGTH, ROW_LENGTH * 2);
 
-    assert.deepEqual(firstRow.map((entry) => entry.relationshipToRoot.degree),
+    assert.deepEqual(firstRow.map((entry) => entry.definition.degree),
       ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
     // The four notes left over, then the opening of the register above.
-    assert.deepEqual(secondRow.map((entry) => entry.relationshipToRoot.degree),
+    assert.deepEqual(secondRow.map((entry) => entry.definition.degree),
       ['10', '11', '12', '13', '0', '1', '2', '3', '4', '5']);
     assert.deepEqual(secondRow.map((entry) => entry.octaveShift), [0, 0, 0, 0, 1, 1, 1, 1, 1, 1]);
   });
@@ -101,14 +101,14 @@ describe('buildNoteKeyMap', () => {
 
     // The second row finished the first register and borrowed from the second,
     // so the third row starts that second register over from its first note.
-    assert.deepEqual(thirdRow.map((entry) => entry.relationshipToRoot.degree),
+    assert.deepEqual(thirdRow.map((entry) => entry.definition.degree),
       ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']);
     assert.ok(thirdRow.every((entry) => entry.octaveShift === 1));
   });
 
   it('spills a register across every row it needs', () => {
     const keyMap = buildNoteKeyMap(systemOf(25, 3), 0);
-    const degrees = keyMap.map((entry) => entry.relationshipToRoot.degree);
+    const degrees = keyMap.map((entry) => entry.definition.degree);
 
     // All 25 notes are reachable before the register above gets a key.
     assert.deepEqual(degrees.slice(0, 25), Array.from({ length: 25 }, (unused, index) => `${index}`));

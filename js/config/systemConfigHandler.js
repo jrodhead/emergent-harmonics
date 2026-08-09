@@ -81,7 +81,7 @@ const applyRatio = (row, noteIndex, ratio) => {
     const derived = describeRatio(bounded);
     nameInput.value = derived;
     nameInput.dataset.derived = 'true';
-    updateNote(getSelectedScaleId(), noteIndex, { relationshipToRootName: derived }, { silent: true });
+    updateNote(getSelectedScaleId(), noteIndex, { intervalName: derived }, { silent: true });
   }
 };
 
@@ -100,7 +100,7 @@ const handleConfigInput = (ev) => {
     if (Number.isFinite(frequency)) applyRatio(row, noteIndex, frequencyToRatio(frequency));
   } else if (target.classList.contains('config-note-name')) {
     target.dataset.derived = 'false';
-    updateNote(getSelectedScaleId(), noteIndex, { relationshipToRootName: target.value }, { silent: true });
+    updateNote(getSelectedScaleId(), noteIndex, { intervalName: target.value }, { silent: true });
   }
 };
 
@@ -133,8 +133,8 @@ const handleConfigChange = (ev) => {
   const noteIndex = noteIndexFor(target);
   if (noteIndex < 0) return;
 
-  if (target.classList.contains('config-note-triad')) {
-    updateNote(getSelectedScaleId(), noteIndex, { triadType: target.value });
+  if (target.classList.contains('config-note-root-scale')) {
+    updateNote(getSelectedScaleId(), noteIndex, { rootScaleId: target.value });
     return;
   }
 

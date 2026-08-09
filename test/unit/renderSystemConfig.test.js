@@ -6,7 +6,7 @@ import {
   renderScaleTabs,
   renderNote,
   renderNotes,
-  renderTriadTypeOptions,
+  renderRootScaleOptions,
 } from '../../js/config/renderSystemConfig.js';
 import {
   getConfig,
@@ -93,23 +93,23 @@ describe('renderScaleTabs', () => {
   });
 });
 
-describe('renderTriadTypeOptions', () => {
-  it('groups the configured scales apart from the calculators', () => {
-    const html = renderTriadTypeOptions(getPrimaryScale().id);
+describe('renderRootScaleOptions', () => {
+  it('groups the configured scales apart from the presets', () => {
+    const html = renderRootScaleOptions(getPrimaryScale().id);
 
     assert.match(html, /<optgroup label="Configured scales">/);
-    assert.match(html, /<optgroup label="Built-in calculators">/);
+    assert.match(html, /<optgroup label="Built-in presets">/);
   });
 
   it('selects exactly the option the note is set to', () => {
-    const html = renderTriadTypeOptions('bluesScaleNotes');
+    const html = renderRootScaleOptions('bluesScaleNotes');
 
     assert.equal(occurrences(html, ' selected'), 1);
     assert.match(html, /value="bluesScaleNotes" selected/);
   });
 
   it('surfaces a value that matches no option instead of showing another one', () => {
-    const html = renderTriadTypeOptions('ghost');
+    const html = renderRootScaleOptions('ghost');
 
     assert.match(html, /ghost \(unknown\)/);
     assert.equal(occurrences(html, ' selected'), 1);
@@ -164,15 +164,15 @@ describe('renderNote', () => {
   });
 
   it('flags a name that is only a description of the ratio, so it can follow it', () => {
-    const derived = { ratioToRoot: 1.5, degree: 'V', relationshipToRootName: '702 cents', triadType: 'x' };
-    const named = { ...derived, relationshipToRootName: 'Perfect 5th' };
+    const derived = { ratioToRoot: 1.5, degree: 'V', intervalName: '702 cents', rootScaleId: 'x' };
+    const named = { ...derived, intervalName: 'Perfect 5th' };
 
     assert.match(renderNote(derived, 0), /data-derived="true"/);
     assert.match(renderNote(named, 0), /data-derived="false"/);
   });
 
   it('escapes a note name so it cannot break the markup', () => {
-    const note = { ...firstNote(), relationshipToRootName: '"><img src=x>' };
+    const note = { ...firstNote(), intervalName: '"><img src=x>' };
 
     assert.doesNotMatch(renderNote(note, 0), /<img/);
   });

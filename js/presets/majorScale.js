@@ -2,43 +2,43 @@ export const majorScaleNotes = [
   {
     degree: "I",
     ratioToRoot: 1/1,
-    relationshipToRootName: "Root",
-    triadType: "major"
+    intervalName: "Root",
+    rootScaleId: "major"
   },
   {
     degree: "II",
     ratioToRoot: 9/8,
-    relationshipToRootName: "Major 2nd",
-    triadType: "minor"
+    intervalName: "Major 2nd",
+    rootScaleId: "minor"
   },
   {
     degree: "III",
     ratioToRoot: 5/4,
-    relationshipToRootName: "Major 3rd",
-    triadType: "minor"
+    intervalName: "Major 3rd",
+    rootScaleId: "minor"
   },
   {
     degree: "IV",
     ratioToRoot: 4/3,
-    relationshipToRootName: "Perfect 4th",
-    triadType: "major"
+    intervalName: "Perfect 4th",
+    rootScaleId: "major"
   },
   {
     degree: "V",
     ratioToRoot: 3/2,
-    relationshipToRootName: "Perfect 5th",
-    triadType: "major"
+    intervalName: "Perfect 5th",
+    rootScaleId: "major"
   },
   {
     degree: "VI",
     ratioToRoot: 5/3,
-    relationshipToRootName: "Major 6th",
-    triadType: "minor"
+    intervalName: "Major 6th",
+    rootScaleId: "minor"
   },
   {
     degree: "VII",
     ratioToRoot: 15/8,
-    relationshipToRootName: "Major 7th",
-    triadType: "diminished"
+    intervalName: "Major 7th",
+    rootScaleId: "diminished"
   }
 ];

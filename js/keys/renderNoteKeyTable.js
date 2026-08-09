@@ -12,13 +12,13 @@ export function renderNoteKeyTable(noteKeyMap) {
       <div class="note-group">
   `;
 
-  noteKeyMap.forEach(({ key, frequency, relationshipToRoot, octaveShift }) => {
+  noteKeyMap.forEach(({ key, frequency, definition, octaveShift }) => {
     noteGridHTML += `
       <div id="${key}" class="note">
-        <div class="degree">${relationshipToRoot.degree} - ${octaveShift}</div>
+        <div class="degree">${definition.degree} - ${octaveShift}</div>
         <div class="key-name">${key}</div>
-        <div class="ratio">ratio: ${formatRatio(relationshipToRoot.ratioToRoot)}</div>
-        <div class="relationship">${relationshipToRoot.relationshipToRootName}</div>
+        <div class="ratio">ratio: ${formatRatio(definition.ratioToRoot)}</div>
+        <div class="relationship">${definition.intervalName}</div>
         <div class="note-frequency">${formatFrequency(frequency)}Hz</div>
       </div>
     `;

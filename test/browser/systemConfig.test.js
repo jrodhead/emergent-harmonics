@@ -36,7 +36,7 @@ describe('the system configuration screen', { skip }, () => {
       assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
     });
 
-    it('offers every calculator as a preset', async () => {
+    it('offers every preset as a preset', async () => {
       assert.ok(await app.evaluate("return document.getElementById('presetSelect').options.length >= 11"));
     });
 
@@ -47,9 +47,9 @@ describe('the system configuration screen', { skip }, () => {
       `), ['27', '27', '54']);
     });
 
-    it('keeps the per-degree triad types of the major scale', async () => {
+    it('keeps the per-degree root scales of the major scale', async () => {
       assert.deepEqual(await app.evaluate(`
-        return [...document.querySelectorAll('.config-note-triad')]
+        return [...document.querySelectorAll('.config-note-root-scale')]
           .map(select => select.selectedOptions[0].textContent.trim());
       `), [
         'majorScaleNotes', 'naturalMinorScaleNotes', 'naturalMinorScaleNotes', 'majorScaleNotes',
@@ -57,9 +57,9 @@ describe('the system configuration screen', { skip }, () => {
       ]);
     });
 
-    it('never shows a triad type the note is not actually set to', async () => {
+    it('never shows a root scale the note is not actually set to', async () => {
       assert.equal(await app.evaluate(`
-        return [...document.querySelectorAll('.config-note-triad')]
+        return [...document.querySelectorAll('.config-note-root-scale')]
           .every(select => select.value && !select.selectedOptions[0].textContent.includes('(unknown)'));
       `), true);
     });
@@ -177,7 +177,7 @@ describe('the system configuration screen', { skip }, () => {
       `), ['q', 'w', 'e', 'r', 't', 'y']);
     });
 
-    it('loads a calculator into the scale being edited', async () => {
+    it('loads a preset into the scale being edited', async () => {
       assert.deepEqual(await app.evaluate(`
         document.getElementById('presetSelect').value = 'minorPentatonicScaleNotes';
         document.getElementById('loadPreset').click();
@@ -210,10 +210,10 @@ describe('the system configuration screen', { skip }, () => {
       `), [true, true]);
     });
 
-    it('become selectable as another note\'s triad type', async () => {
+    it('become selectable as another note\'s root scale', async () => {
       assert.equal(await app.evaluate(`
         document.getElementById('addScale').click();
-        return document.querySelector('.config-note-triad').querySelectorAll('optgroup')[0].children.length;
+        return document.querySelector('.config-note-root-scale').querySelectorAll('optgroup')[0].children.length;
       `), 2);
     });
 

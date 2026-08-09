@@ -2,43 +2,43 @@ export const naturalMinorScaleNotes = [
   {
     degree: "I",
     ratioToRoot: 1/1,
-    relationshipToRootName: "Root",
-    triadType: "minor"
+    intervalName: "Root",
+    rootScaleId: "minor"
   },
   {
     degree: "II",
     ratioToRoot: 16/15,
-    relationshipToRootName: "Minor 2nd",
-    triadType: "diminished"
+    intervalName: "Minor 2nd",
+    rootScaleId: "diminished"
   },
   {
     degree: "III",
     ratioToRoot: 6/5,
-    relationshipToRootName: "Minor 3rd",
-    triadType: "major"
+    intervalName: "Minor 3rd",
+    rootScaleId: "major"
   },
   {
     degree: "IV",
     ratioToRoot: 4/3,
-    relationshipToRootName: "Perfect 4th",
-    triadType: "minor"
+    intervalName: "Perfect 4th",
+    rootScaleId: "minor"
   },
   {
     degree: "V",
     ratioToRoot: 3/2,
-    relationshipToRootName: "Perfect 5th",
-    triadType: "minor"
+    intervalName: "Perfect 5th",
+    rootScaleId: "minor"
   },
   {
     degree: "VI",
     ratioToRoot: 8/5,
-    relationshipToRootName: "Minor 6th",
-    triadType: "major"
+    intervalName: "Minor 6th",
+    rootScaleId: "major"
   },
   {
     degree: "VII",
     ratioToRoot: 9/5,
-    relationshipToRootName: "Minor 7th",
-    triadType: "major"
+    intervalName: "Minor 7th",
+    rootScaleId: "major"
   }
 ];

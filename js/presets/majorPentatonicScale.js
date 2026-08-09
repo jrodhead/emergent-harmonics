@@ -2,31 +2,31 @@ export const majorPentatonicScaleNotes = [
   {
     degree: "I",
     ratioToRoot: 1/1,
-    relationshipToRootName: "Root",
-    triadType: "majorPentatonicScaleNotes"
+    intervalName: "Root",
+    rootScaleId: "majorPentatonicScaleNotes"
   },
   {
     degree: "II",
     ratioToRoot: 9/8,
-    relationshipToRootName: "Major 2nd",
-    triadType: "minorPentatonicScaleNotes"
+    intervalName: "Major 2nd",
+    rootScaleId: "minorPentatonicScaleNotes"
   },
   {
     degree: "III",
     ratioToRoot: 5/4,
-    relationshipToRootName: "Major 3rd",
-    triadType: "majorPentatonicScaleNotes"
+    intervalName: "Major 3rd",
+    rootScaleId: "majorPentatonicScaleNotes"
   },
   {
     degree: "V",
     ratioToRoot: 3/2,
-    relationshipToRootName: "Perfect 5th",
-    triadType: "majorPentatonicScaleNotes"
+    intervalName: "Perfect 5th",
+    rootScaleId: "majorPentatonicScaleNotes"
   },
   {
     degree: "VI",
     ratioToRoot: 5/3,
-    relationshipToRootName: "Major 6th",
-    triadType: "minorPentatonicScaleNotes"
+    intervalName: "Major 6th",
+    rootScaleId: "minorPentatonicScaleNotes"
   }
 ];

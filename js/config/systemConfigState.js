@@ -100,7 +100,7 @@ export const removeScale = (scaleId) => {
   // Notes pointing at the removed scale fall back to their own.
   config.scales.forEach((scale) => {
     scale.notes.forEach((note) => {
-      if (note.triadType === scaleId) note.triadType = scale.id;
+      if (note.rootScaleId === scaleId) note.rootScaleId = scale.id;
     });
   });
 
@@ -154,9 +154,9 @@ export const addNote = (scaleId) => {
 
   scale.notes.push({
     degree: degreeForIndex(scale.notes.length),
-    relationshipToRootName: describeRatio(ratioToRoot),
+    intervalName: describeRatio(ratioToRoot),
     ratioToRoot,
-    triadType: scaleId,
+    rootScaleId: scaleId,
   });
   renumberDegrees(scale);
   notify();
@@ -199,22 +199,28 @@ export const updateNote = (scaleId, noteIndex, patch, { silent = false } = {}) =
 };
 
 /**
- * Every name a note's triadType can point at: the other configured scales,
- * then the built-in calculators.
+ * Every name a note's rootScaleId can point at: the other configured scales,
+ * then the built-in presets.
  */
-export const triadTypeOptions = () => ({
+export const rootScaleOptions = () => ({
   configured: config.scales.map((scale) => ({ value: scale.id, label: scale.name })),
   builtIn: presetNames.map((name) => ({ value: name, label: name })),
 });
 
 /**
- * Version 1 of the configuration called a scale a diapason. The word is gone
- * from the app, but files and saved systems written before it went still say
- * it, so they are read under either name.
+ * Version 1 of the configuration called a scale a diapason, the scale a note
+ * generates when it is the root its triad type, and an interval's name its
+ * relationship to the root. Those words are gone from the app, but files and
+ * saved systems written before they went still use them, so every one of them
+ * is read under either name.
  */
 const scalesOf = (candidate) => candidate.scales ?? candidate.diapasons;
 
 const primaryScaleIdOf = (candidate) => candidate.primaryScaleId ?? candidate.primaryDiapasonId;
+
+const rootScaleIdOf = (note) => note?.rootScaleId ?? note?.triadType;
+
+const intervalNameOf = (note) => note?.intervalName ?? note?.relationshipToRootName;
 
 const validateConfig = (candidate) => {
   if (!candidate || typeof candidate !== 'object') {
@@ -245,9 +251,9 @@ const validateConfig = (candidate) => {
           // A degree is positional, so it is taken from the order in the file
           // rather than from whatever the file claims it is.
           degree: degreeForIndex(noteIndex),
-          relationshipToRootName: note?.relationshipToRootName ?? describeRatio(ratio),
+          intervalName: intervalNameOf(note) ?? describeRatio(ratio),
           ratioToRoot: Number.isFinite(ratio) ? clamp(foldRatioIntoPeriod(ratio), MIN_RATIO, MAX_RATIO) : MIN_RATIO,
-          triadType: note?.triadType,
+          rootScaleId: rootScaleIdOf(note),
         };
       }),
     };
@@ -259,10 +265,10 @@ const validateConfig = (candidate) => {
   // the scale the note belongs to.
   scales.forEach((scale) => {
     scale.notes.forEach((note) => {
-      if (scaleIds.has(note.triadType)) return;
+      if (scaleIds.has(note.rootScaleId)) return;
 
-      note.triadType = isPreset(note.triadType)
-        ? canonicalPresetName(note.triadType)
+      note.rootScaleId = isPreset(note.rootScaleId)
+        ? canonicalPresetName(note.rootScaleId)
         : scale.id;
     });
   });

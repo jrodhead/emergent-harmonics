@@ -12,11 +12,11 @@ export const renderRootKeyTable = (rootNotes) => {
       <div class="root-group">
         ${Object.entries(rootNotes).map(([key, value]) => `
           <div id="root${key}" class="root-selector">
-            <div class="degree">${formatDegree(value.relationshipToRoot.degree, value.octaveShift)}</div>
+            <div class="degree">${formatDegree(value.definition.degree, value.octaveShift)}</div>
             <div class="key-name">${key}</div>
             <div class="root-frequency">${formatFrequency(value.frequency)}Hz</div>
-            <div class="root-name">${value.relationshipToRoot.relationshipToRootName}</div>
-            <div class="triad-type">${value.relationshipToRoot.triadType}</div>
+            <div class="root-name">${value.definition.intervalName}</div>
+            <div class="root-scale">${value.definition.rootScaleId}</div>
           </div>
         `).join('')}
       </div>

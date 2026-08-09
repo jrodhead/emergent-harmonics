@@ -136,8 +136,8 @@ button#play {
   overflow: hidden;
 }
 
-/* Calculator names are long, so let them wrap rather than get clipped. */
-.root-selector .triad-type {
+/* Preset names are long, so let them wrap rather than get clipped. */
+.root-selector .root-scale {
   font-size: .75rem;
   overflow-wrap: anywhere;
 }

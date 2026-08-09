@@ -1,50 +1,50 @@
 export const pythagoreanNotes = [
   {
-    relationshipToRootName: "Root",
+    intervalName: "Root",
     ratioToRoot: 1
   },
   {
-    relationshipToRootName: "Minor Second",
+    intervalName: "Minor Second",
     ratioToRoot: 16/15
   },
   {
-    relationshipToRootName: "Major Second",
+    intervalName: "Major Second",
     ratioToRoot: 9/8
   },
   {
-    relationshipToRootName: "Minor Third",
+    intervalName: "Minor Third",
     ratioToRoot: 6/5
   },
   {
-    relationshipToRootName: "Major Third",
+    intervalName: "Major Third",
     ratioToRoot: 5/4,
   },
   {
-    relationshipToRootName: "Perfect Fourth",
+    intervalName: "Perfect Fourth",
     ratioToRoot: 4/3
   },
   {
-    relationshipToRootName: "Tritone",
+    intervalName: "Tritone",
     ratioToRoot: 45/32
   },
   {
-    relationshipToRootName: "Perfect Fifth",
+    intervalName: "Perfect Fifth",
     ratioToRoot: 3/2
   },
   {
-    relationshipToRootName: "Minor Sixth",
+    intervalName: "Minor Sixth",
     ratioToRoot: 8/5
   },
   {
-    relationshipToRootName: "Major Sixth",
+    intervalName: "Major Sixth",
     ratioToRoot: 5/3
   },
   {
-    relationshipToRootName: "Minor Seventh",
+    intervalName: "Minor Seventh",
     ratioToRoot: 16/9
   },
   {
-    relationshipToRootName: "Major Seventh",
+    intervalName: "Major Seventh",
     ratioToRoot: 15/8
   }
 ];

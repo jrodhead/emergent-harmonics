@@ -94,7 +94,7 @@ describe('buildRegisters', () => {
 
     firstRegister.notes.forEach((note, index) => {
       assert.equal(note.noteIndex, index);
-      assert.equal(note.relationshipToRoot, majorScale[index]);
+      assert.equal(note.definition, majorScale[index]);
     });
   });
 });
@@ -134,7 +134,7 @@ describe('generateRootNotes', () => {
 
     assert.equal(rootNotes.length, MAX_ROOT_NOTES);
     // The tenth key is the root again, three octaves up, with its cycle cut short.
-    assert.deepEqual(rootNotes[9], { frequency: 800, octaveShift: 3, relationshipToRoot: threeNotes[0] });
+    assert.deepEqual(rootNotes[9], { frequency: 800, octaveShift: 3, definition: threeNotes[0] });
   });
 
   it('stops repeating once the roots climb out of the audible range', () => {
@@ -156,9 +156,9 @@ describe('generateRootNotes', () => {
     assert.equal(generateRootNotes(100, twelveNotes).length, MAX_ROOT_NOTES);
   });
 
-  it('carries the source note through as relationshipToRoot', () => {
+  it('carries the source note through as definition', () => {
     const [rootNote] = generateRootNotes(400, majorScale);
 
-    assert.equal(rootNote.relationshipToRoot, majorScale[0]);
+    assert.equal(rootNote.definition, majorScale[0]);
   });
 });

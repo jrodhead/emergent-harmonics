@@ -42,7 +42,7 @@ describe('degreeForIndex', () => {
 });
 
 describe('presetToNotes', () => {
-  it('produces editable notes for every calculator', () => {
+  it('produces editable notes for every preset', () => {
     presetNames.forEach((name) => {
       const notes = presetToNotes(name, 'scale-1');
 
@@ -50,13 +50,13 @@ describe('presetToNotes', () => {
 
       notes.forEach((note) => {
         assert.ok(note.degree, `${name} note has a degree`);
-        assert.ok(note.relationshipToRootName, `${name} note has a name`);
-        assert.ok(note.triadType, `${name} note has a triad type`);
+        assert.ok(note.intervalName, `${name} note has a name`);
+        assert.ok(note.rootScaleId, `${name} note has a root scale`);
       });
     });
   });
 
-  it('folds every calculator into a single scale', () => {
+  it('folds every preset into a single scale', () => {
     presetNames.forEach((name) => {
       presetToNotes(name, 'scale-1').forEach((note) => {
         assert.ok(
@@ -83,21 +83,21 @@ describe('presetToNotes', () => {
     assert.equal(new Set(ratios).size, ratios.length);
   });
 
-  it('gives every note a triad type that can actually be resolved', () => {
+  it('gives every note a root scale that can actually be resolved', () => {
     presetNames.forEach((name) => {
       presetToNotes(name, 'scale-1').forEach((note) => {
         assert.ok(
-          note.triadType === 'scale-1' || isPreset(note.triadType),
-          `${name}: ${note.triadType} resolves to nothing`,
+          note.rootScaleId === 'scale-1' || isPreset(note.rootScaleId),
+          `${name}: ${note.rootScaleId} resolves to nothing`,
         );
       });
     });
   });
 
-  it('keeps the per-degree triad relationships of the major scale', () => {
-    const triadTypes = presetToNotes('majorScaleNotes', 'scale-1').map((note) => note.triadType);
+  it('keeps the per-degree root scale relationships of the major scale', () => {
+    const rootScaleIds = presetToNotes('majorScaleNotes', 'scale-1').map((note) => note.rootScaleId);
 
-    assert.deepEqual(triadTypes, [
+    assert.deepEqual(rootScaleIds, [
       'majorScaleNotes',
       'naturalMinorScaleNotes',
       'naturalMinorScaleNotes',
@@ -108,28 +108,28 @@ describe('presetToNotes', () => {
     ]);
   });
 
-  it('canonicalises triad types so they match a calculator by name', () => {
+  it('canonicalises root scales so they match a preset by name', () => {
     presetToNotes('majorScaleNotes', 'scale-1').forEach((note) => {
-      assert.ok(presetNames.includes(note.triadType), `${note.triadType} is a listed calculator`);
+      assert.ok(presetNames.includes(note.rootScaleId), `${note.rootScaleId} is a listed preset`);
     });
   });
 
-  it('points a calculator with no triad type at its own scale', () => {
-    // pythagoreanNotes carries no triadType at all.
+  it('points a preset with no root scale at its own scale', () => {
+    // pythagoreanNotes carries no rootScaleId at all.
     presetToNotes('pythagoreanNotes', 'scale-7').forEach((note) => {
-      assert.equal(note.triadType, 'scale-7');
+      assert.equal(note.rootScaleId, 'scale-7');
     });
   });
 
-  it('keeps a triad type that names the calculator itself', () => {
+  it('keeps a root scale that names the preset itself', () => {
     presetToNotes('hd110067NotesInOneScale', 'scale-3').forEach((note) => {
-      assert.equal(note.triadType, 'hd110067NotesInOneScale');
+      assert.equal(note.rootScaleId, 'hd110067NotesInOneScale');
     });
   });
 
-  it('names intervals in cents when the calculator does not name them', () => {
+  it('names intervals in cents when the preset does not name them', () => {
     const [firstNote] = presetToNotes('exploratoryNotes', 'scale-1');
 
-    assert.match(firstNote.relationshipToRootName, /cents$/);
+    assert.match(firstNote.intervalName, /cents$/);
   });
 });

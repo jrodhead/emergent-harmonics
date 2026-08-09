@@ -34,7 +34,7 @@ export function generateRootNotes(primaryRootFrequency, notesToGenerate, {
     // can never sound, so the keys above it stay unmapped.
     if (!Number.isFinite(frequency) || frequency > maxFrequency) break;
 
-    rootNotes.push({ frequency, octaveShift, relationshipToRoot: note });
+    rootNotes.push({ frequency, octaveShift, definition: note });
   }
 
   return rootNotes;
@@ -66,7 +66,7 @@ export function buildRegisters(rootNoteFrequency, notesToGenerate, {
       notes: notesToGenerate.map((note, noteIndex) => ({
         noteIndex,
         frequency: rootNoteFrequency * note.ratioToRoot * multiplier,
-        relationshipToRoot: note,
+        definition: note,
       })),
     };
   };

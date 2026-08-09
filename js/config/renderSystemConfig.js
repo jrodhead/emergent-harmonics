@@ -2,7 +2,7 @@ import {
   getConfig,
   noteBounds,
   ratioToFrequency,
-  triadTypeOptions,
+  rootScaleOptions,
   canRemoveNote,
   MIN_RATIO,
   MAX_RATIO,
@@ -43,20 +43,20 @@ export const renderScaleTabs = (selectedScaleId) => {
   `;
 };
 
-export const renderTriadTypeOptions = (selectedTriadType) => {
-  const { configured, builtIn } = triadTypeOptions();
+export const renderRootScaleOptions = (selectedRootScaleId) => {
+  const { configured, builtIn } = rootScaleOptions();
   const option = ({ value, label }) => `
-    <option value="${escapeHtml(value)}"${value === selectedTriadType ? ' selected' : ''}>${escapeHtml(label)}</option>
+    <option value="${escapeHtml(value)}"${value === selectedRootScaleId ? ' selected' : ''}>${escapeHtml(label)}</option>
   `;
 
   // A select with no matching option would quietly show its first one instead,
   // which would misreport what the note is actually set to.
-  const unmatched = ![...configured, ...builtIn].some(({ value }) => value === selectedTriadType);
+  const unmatched = ![...configured, ...builtIn].some(({ value }) => value === selectedRootScaleId);
 
   return `
-    ${unmatched ? option({ value: selectedTriadType, label: `${selectedTriadType} (unknown)` }) : ''}
+    ${unmatched ? option({ value: selectedRootScaleId, label: `${selectedRootScaleId} (unknown)` }) : ''}
     <optgroup label="Configured scales">${configured.map(option).join('')}</optgroup>
-    <optgroup label="Built-in calculators">${builtIn.map(option).join('')}</optgroup>
+    <optgroup label="Built-in presets">${builtIn.map(option).join('')}</optgroup>
   `;
 };
 
@@ -79,8 +79,8 @@ export const renderNote = (note, noteIndex) => {
 
       <div class="config-note-fields">
         <label>Name
-          <input type="text" class="config-note-name" value="${escapeHtml(note.relationshipToRootName)}"
-                 data-derived="${note.relationshipToRootName === describeRatio(note.ratioToRoot)}">
+          <input type="text" class="config-note-name" value="${escapeHtml(note.intervalName)}"
+                 data-derived="${note.intervalName === describeRatio(note.ratioToRoot)}">
         </label>
 
         <label>Ratio to root
@@ -88,9 +88,9 @@ export const renderNote = (note, noteIndex) => {
                  min="${MIN_RATIO}" max="${MAX_RATIO}" step="0.0001" value="${formatRatio(note.ratioToRoot)}">
         </label>
 
-        <label>Triad type
-          <select class="config-note-triad" title="${escapeHtml(note.triadType)}">
-            ${renderTriadTypeOptions(note.triadType)}
+        <label>Root scale
+          <select class="config-note-root-scale" title="${escapeHtml(note.rootScaleId)}">
+            ${renderRootScaleOptions(note.rootScaleId)}
           </select>
         </label>
       </div>

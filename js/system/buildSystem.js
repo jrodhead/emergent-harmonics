@@ -30,7 +30,7 @@ export function selectRootNote(rootIndex, { keepOctave = true } = {}) {
   const rootNote = rootNotes[rootIndex];
   const generated = buildRegisters(
     rootNote.frequency,
-    resolveScaleNotes(rootNote.relationshipToRoot.triadType),
+    resolveScaleNotes(rootNote.definition.rootScaleId),
   );
 
   updateCurrentRootIndex(rootIndex);

@@ -42,12 +42,12 @@ export const foldRatioIntoPeriod = (ratio) => {
 };
 
 /**
- * Turns a built-in calculator into notes that can be edited on the
+ * Turns a built-in preset into notes that can be edited on the
  * configuration screen: folded into one octave, ordered, de-duplicated, and
  * with every field the UI shows filled in.
  *
  * @param {string} presetName - The name of a built-in preset.
- * @param {string} ownScaleId - Scale to point unresolvable triadTypes at.
+ * @param {string} ownScaleId - Scale to point unresolvable rootScaleIds at.
  */
 export const presetToNotes = (presetName, ownScaleId) => {
   const seenRatios = new Set();
@@ -63,10 +63,10 @@ export const presetToNotes = (presetName, ownScaleId) => {
     .sort((a, b) => a.ratioToRoot - b.ratioToRoot)
     .map((note, index) => ({
       degree: degreeForIndex(index),
-      relationshipToRootName: note.relationshipToRootName ?? describeRatio(note.ratioToRoot),
+      intervalName: note.intervalName ?? describeRatio(note.ratioToRoot),
       ratioToRoot: note.ratioToRoot,
-      // Presets whose triadType names another built-in keep that relationship;
+      // Presets whose rootScaleId names another built-in keep that relationship;
       // the rest fall back to the scale they belong to.
-      triadType: isPreset(note.triadType) ? canonicalPresetName(note.triadType) : ownScaleId,
+      rootScaleId: isPreset(note.rootScaleId) ? canonicalPresetName(note.rootScaleId) : ownScaleId,
     }));
 };

@@ -2,43 +2,43 @@ export const diminishedScaleNotes = [
   {
     degree: "I",
     ratioToRoot: 1 / 1,
-    relationshipToRootName: "Root",
-    triadType: "major"
+    intervalName: "Root",
+    rootScaleId: "major"
   },
   {
     degree: "II",
     ratioToRoot: 16/15,
-    relationshipToRootName: "Minor second",
-    triadType: "minor"
+    intervalName: "Minor second",
+    rootScaleId: "minor"
   },
   {
     degree: "III",
     ratioToRoot: 6/5,
-    relationshipToRootName: "Minor third",
-    triadType: "minor"
+    intervalName: "Minor third",
+    rootScaleId: "minor"
   },
   {
     degree: "IV",
     ratioToRoot: 4/3,
-    relationshipToRootName: "Perfect fourth",
-    triadType: "major"
+    intervalName: "Perfect fourth",
+    rootScaleId: "major"
   },
   {
     degree: "V",
     ratioToRoot: 3/2,
-    relationshipToRootName: "Diminished fifth",
-    triadType: "diminished"
+    intervalName: "Diminished fifth",
+    rootScaleId: "diminished"
   },
   {
     degree: "VI",
     ratioToRoot: 8/5,
-    relationshipToRootName: "Minor sixth",
-    triadType: "minor"
+    intervalName: "Minor sixth",
+    rootScaleId: "minor"
   },
   {
     degree: "VII",
     ratioToRoot: 16/9,
-    relationshipToRootName: "Minor seventh",
-    triadType: "minor"
+    intervalName: "Minor seventh",
+    rootScaleId: "minor"
   }
 ];

@@ -12,7 +12,7 @@ export const KEY_ROWS = ['qwertyuiop', 'asdfghjkl;', 'zxcvbnm,./'];
  *
  * @param {Array} registers - Registers, low to high.
  * @param {number} startRegisterIndex - The register the first row starts on.
- * @returns {Array} Entries of { key, frequency, relationshipToRoot, octaveShift }.
+ * @returns {Array} Entries of { key, frequency, definition, octaveShift }.
  */
 export function buildNoteKeyMap(registers, startRegisterIndex) {
   if (!hasPlayableRegisters(registers)) {
@@ -60,7 +60,7 @@ export function buildNoteKeyMap(registers, startRegisterIndex) {
       noteKeyMap.push({
         key: rowKeys[keyIndex],
         frequency: note.frequency,
-        relationshipToRoot: note.relationshipToRoot,
+        definition: note.definition,
         octaveShift: register.octaveShift,
       });
 
