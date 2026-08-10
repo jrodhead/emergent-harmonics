@@ -115,6 +115,24 @@ export const addScale = () => {
   return id;
 };
 
+/**
+ * Notes left pointing at a scale that is no longer there fall back to their
+ * own. A degree naming a built-in preset still names something, so it stays.
+ *
+ * @param {Array} scales - The scales that are left.
+ */
+const repointOrphanedNotes = (scales) => {
+  const scaleIds = new Set(scales.map((scale) => scale.id));
+
+  scales.forEach((scale) => {
+    scale.notes.forEach((note) => {
+      if (scaleIds.has(note.rootScaleId) || isPreset(note.rootScaleId)) return;
+
+      note.rootScaleId = scale.id;
+    });
+  });
+};
+
 export const removeScale = (scaleId) => {
   // The system needs at least one scale to generate from.
   if (config.scales.length <= 1) return;
@@ -125,12 +143,7 @@ export const removeScale = (scaleId) => {
     config.primaryScaleId = config.scales[0].id;
   }
 
-  // Notes pointing at the removed scale fall back to their own.
-  config.scales.forEach((scale) => {
-    scale.notes.forEach((note) => {
-      if (note.rootScaleId === scaleId) note.rootScaleId = scale.id;
-    });
-  });
+  repointOrphanedNotes(config.scales);
 
   notify();
 };
@@ -151,6 +164,11 @@ const scaleHolding = (presetId, exceptScaleId) => config.scales
  * Loads a preset into a scale, bringing in the scales its degrees build. Those
  * come in alongside it, once each: a family already on the screen is pointed
  * at rather than copied again, so anything already edited there is kept.
+ *
+ * The primary scale is what the whole system is built from, so loading into it
+ * says what the system is: the scales its degrees no longer reach go, rather
+ * than lingering from whatever was loaded before. Loading into any other scale
+ * leaves the rest of the screen alone.
  *
  * @param {string} scaleId - The scale being loaded into.
  * @param {string} presetId
@@ -174,6 +192,13 @@ export const loadPresetIntoScale = (scaleId, presetId) => {
   Object.assign(scale, scaleFromPreset(presetId, scaleIdByPreset));
   brought.forEach((member) => config.scales.push(scaleFromPreset(member, scaleIdByPreset)));
 
+  if (scaleId === config.primaryScaleId) {
+    const family = new Set(scaleIdByPreset.values());
+
+    config.scales = config.scales.filter((member) => family.has(member.id));
+    repointOrphanedNotes(config.scales);
+  }
+
   notify();
 
   return brought.map((member) => scaleIdByPreset.get(member));
@@ -183,6 +208,25 @@ export const loadPresetIntoScale = (scaleId, presetId) => {
 export const presetsBroughtIn = (presetId) => (isPreset(presetId) ? presetFamily(presetId) : [])
   .filter((member) => member !== presetId && !scaleHolding(member))
   .map(presetLabel);
+
+/**
+ * The scales a load of this preset would clear, by name. Only a load into the
+ * primary scale clears anything: the family it takes on is the whole system.
+ *
+ * @param {string} scaleId - The scale that would be loaded into.
+ * @param {string} presetId
+ * @returns {Array} The names of the scales that would go, if any.
+ */
+export const scalesClearedBy = (scaleId, presetId) => {
+  if (scaleId !== config.primaryScaleId || !isPreset(presetId)) return [];
+
+  // A family member with nowhere to be yet leaves an undefined here, which
+  // names no scale, so nothing is kept by it.
+  const kept = new Set(presetFamily(presetId)
+    .map((member) => (member === presetId ? scaleId : scaleHolding(member, scaleId)?.id)));
+
+  return config.scales.filter((scale) => !kept.has(scale.id)).map((scale) => scale.name);
+};
 
 /**
  * Whether a note can be taken out of its scale. The first note is the root
@@ -306,18 +350,11 @@ const validateConfig = (candidate) => {
     };
   });
 
-  const scaleIds = new Set(scales.map((scale) => scale.id));
-
   // Anything the imported file points at that we cannot resolve falls back to
   // the scale the note belongs to.
-  scales.forEach((scale) => {
-    scale.notes.forEach((note) => {
-      if (scaleIds.has(note.rootScaleId)) return;
+  repointOrphanedNotes(scales);
 
-      if (!isPreset(note.rootScaleId)) note.rootScaleId = scale.id;
-    });
-  });
-
+  const scaleIds = new Set(scales.map((scale) => scale.id));
   const rootFrequency = Number(candidate.primaryRootFrequency);
 
   return {

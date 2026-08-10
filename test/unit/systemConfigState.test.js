@@ -18,6 +18,7 @@ import {
   updateNote,
   loadPresetIntoScale,
   presetsBroughtIn,
+  scalesClearedBy,
   loadStoredConfig,
   saveConfig,
   subscribe,
@@ -339,6 +340,49 @@ describe('loading a preset', () => {
     assert.equal(getScale(minorPentatonic.id).notes[0].ratioToRoot, 1.05);
   });
 
+  it('clears the scales the new primary family does not reach', () => {
+    const primary = getPrimaryScale().id;
+    loadPresetIntoScale(primary, 'major');
+
+    assert.ok(namesOf().includes('Natural minor'), `${namesOf()} should hold the major family`);
+
+    loadPresetIntoScale(primary, 'majorPentatonic');
+
+    assert.deepEqual(namesOf().sort(), ['Major pentatonic', 'Minor pentatonic']);
+  });
+
+  it('clears the scales added by hand, when it is the primary being loaded into', () => {
+    addScale();
+
+    loadPresetIntoScale(getPrimaryScale().id, 'blues');
+
+    assert.deepEqual(namesOf(), ['Blues']);
+  });
+
+  it('leaves the other scales alone when it is not the primary being loaded into', () => {
+    const primary = getPrimaryScale().id;
+    loadPresetIntoScale(primary, 'major');
+    const before = namesOf().length;
+
+    loadPresetIntoScale(addScale(), 'blues');
+
+    assert.equal(namesOf().length, before + 1);
+    assert.ok(namesOf().includes('Natural minor'), `${namesOf()} should still hold the major family`);
+  });
+
+  it('falls a kept scale back to itself where it pointed at one that is gone', () => {
+    const primary = getPrimaryScale().id;
+    loadPresetIntoScale(primary, 'majorPentatonic');
+
+    const minorPentatonic = getConfig().scales.find((scale) => scale.fromPreset === 'minorPentatonic');
+    const byHand = addScale();
+    updateNote(minorPentatonic.id, 1, { rootScaleId: byHand });
+
+    loadPresetIntoScale(primary, 'majorPentatonic');
+
+    assert.equal(getScale(minorPentatonic.id).notes[1].rootScaleId, minorPentatonic.id);
+  });
+
   it('replaces the notes of the scale it was loaded into, edits and all', () => {
     const scaleId = addScale();
     updateNote(scaleId, 0, { ratioToRoot: 1.05 });
@@ -377,6 +421,33 @@ describe('presetsBroughtIn', () => {
   it('names nothing for something that is not a preset', () => {
     assert.deepEqual(presetsBroughtIn('scale-1'), []);
     assert.deepEqual(presetsBroughtIn(undefined), []);
+  });
+});
+
+describe('scalesClearedBy', () => {
+  it('names the scales a load into the primary would not reach', () => {
+    const primary = getPrimaryScale().id;
+    renameScale(addScale(), 'Mine');
+
+    assert.deepEqual(scalesClearedBy(primary, 'blues'), ['Mine']);
+  });
+
+  it('names nothing already held by the family being loaded', () => {
+    const primary = getPrimaryScale().id;
+    loadPresetIntoScale(primary, 'major');
+
+    // The whole major family is on the screen, so loading it again clears none of it.
+    assert.deepEqual(scalesClearedBy(primary, 'major'), []);
+  });
+
+  it('names nothing for a load into a scale that is not the primary', () => {
+    renameScale(addScale(), 'Mine');
+
+    assert.deepEqual(scalesClearedBy(addScale(), 'blues'), []);
+  });
+
+  it('names nothing for something that is not a preset', () => {
+    assert.deepEqual(scalesClearedBy(getPrimaryScale().id, 'nonsense'), []);
   });
 });
 

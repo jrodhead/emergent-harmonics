@@ -12,6 +12,7 @@ import {
   updateNote,
   loadPresetIntoScale,
   presetsBroughtIn,
+  scalesClearedBy,
   loadStoredConfig,
   subscribe,
   ratioToFrequency,
@@ -39,6 +40,9 @@ let importFileInput;
 /** Redraws the screen, keeping any note that is sounding marked as such. */
 const render = () => {
   renderSystemConfig();
+  // The hint speaks about the scale being loaded into, so it follows the
+  // selection as well as the preset picker.
+  syncPresetFamilyHint();
   markSoundingNotes();
 };
 
@@ -47,15 +51,19 @@ const syncToolbar = () => {
 };
 
 /**
- * Says what else a preset would bring in with it. Its degrees build other
- * scales, and those come in alongside it so they can be edited too.
+ * Says what else a load would do to the screen. Its degrees build other
+ * scales, and those come in alongside it so they can be edited too; a load
+ * into the primary scale also clears whatever its degrees no longer reach.
  */
 const syncPresetFamilyHint = () => {
   const brought = presetsBroughtIn(presetSelect.value);
+  const cleared = scalesClearedBy(getSelectedScaleId(), presetSelect.value);
+  const says = [];
 
-  presetFamilyHint.textContent = brought.length
-    ? `also brings in ${brought.join(' and ')}, which its degrees build`
-    : '';
+  if (brought.length) says.push(`also brings in ${brought.join(' and ')}, which its degrees build`);
+  if (cleared.length) says.push(`clears ${cleared.join(' and ')}, which its degrees no longer reach`);
+
+  presetFamilyHint.textContent = says.join(', and ');
 };
 
 const noteIndexFor = (element) => {
@@ -243,7 +251,6 @@ export function initSystemConfig() {
     .map(({ value, label }) => `<option value="${value}">${label}</option>`)
     .join('');
 
-  syncPresetFamilyHint();
   presetSelect.addEventListener('change', syncPresetFamilyHint);
 
   loadStoredConfig();
@@ -255,7 +262,6 @@ export function initSystemConfig() {
   // playable system, so switching to the keyboard always plays what is shown.
   subscribe(() => {
     render();
-    syncPresetFamilyHint();
     buildSystemFromConfig();
   });
 
@@ -268,7 +274,6 @@ export function initSystemConfig() {
   document.getElementById('loadPreset').addEventListener('click', () => {
     stopAllPreviews();
     loadPresetIntoScale(getSelectedScaleId(), presetSelect.value);
-    syncPresetFamilyHint();
   });
 
   document.getElementById('resetConfig').addEventListener('click', () => {

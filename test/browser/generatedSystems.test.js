@@ -95,6 +95,30 @@ describe('the systems the app generates', { skip }, () => {
       ]);
     });
 
+    it('says what a load into the primary scale will clear, before it is loaded', async () => {
+      await load('major');
+
+      assert.deepEqual(await app.evaluate(`
+        const select = document.getElementById('presetSelect');
+        const hintFor = (value) => {
+          select.value = value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          return document.getElementById('presetFamilyHint').textContent.trim();
+        };
+        const onThePrimary = [hintFor('blues'), hintFor('majorPentatonic')];
+
+        // Loading into a scale of its own leaves the rest of the screen alone.
+        document.getElementById('addScale').click();
+
+        return [...onThePrimary, hintFor('blues')];
+      `), [
+        'clears Natural minor and Diminished, which its degrees no longer reach',
+        'also brings in Minor pentatonic, which its degrees build,'
+          + ' and clears Natural minor and Diminished, which its degrees no longer reach',
+        '',
+      ]);
+    });
+
     it('modulates into the scale a degree builds, on the root key for that degree', async () => {
       await load('major');
 
