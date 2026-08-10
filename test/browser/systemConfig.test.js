@@ -676,6 +676,193 @@ describe('the system configuration screen', { skip }, () => {
     });
   });
 
+  describe('exporting and importing a system', () => {
+    /**
+     * Catches the file the app hands to the browser, rather than letting it
+     * download, and keeps hold of what it put inside.
+     */
+    const catchDownload = () => app.evaluate(`
+      window.__exported = null;
+      window.__downloadName = null;
+
+      URL.createObjectURL = (blob) => {
+        blob.text().then((text) => { window.__exported = text; });
+        return 'blob:caught';
+      };
+      URL.revokeObjectURL = () => {};
+      HTMLAnchorElement.prototype.click = function () { window.__downloadName = this.download; };
+    `);
+
+    const exported = async () => {
+      await app.evaluate("document.getElementById('exportConfig').click();");
+      await app.waitFor('window.__exported !== null', 'the system to be written out');
+
+      return JSON.parse(await app.evaluate('return window.__exported'));
+    };
+
+    /** Hands the app a file, the way choosing one in the file picker does. */
+    const importFile = (contents) => app.evaluate(`
+      window.__alerted = null;
+      window.alert = (message) => { window.__alerted = message; };
+
+      const transfer = new DataTransfer();
+      transfer.items.add(new File([${JSON.stringify(contents)}], 'system.json', { type: 'application/json' }));
+
+      const input = document.getElementById('importConfigFile');
+      input.files = transfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    `);
+
+    /**
+     * Reading the file is asynchronous, so every test waits for something only
+     * the system it handed over would show.
+     */
+    const taken = (condition) => app.waitFor(
+      `window.__alerted !== null || (${condition})`,
+      `the imported system to be taken up: ${condition}`,
+    );
+
+    beforeEach(catchDownload);
+
+    it('writes out the system that is on screen', async () => {
+      await app.evaluate(`
+        const root = document.getElementById('configRootFrequency');
+        root.value = '432';
+        root.dispatchEvent(new Event('change', { bubbles: true }));
+        document.getElementById('scaleName').value = 'Solarian';
+        document.getElementById('scaleName').dispatchEvent(new Event('change', { bubbles: true }));
+      `);
+
+      const config = await exported();
+
+      assert.equal(config.primaryRootFrequency, 432);
+      assert.equal(config.scales[0].name, 'Solarian');
+      assert.equal(config.scales[0].notes.length, 7);
+    });
+
+    it('writes out only the fields the app reads back', async () => {
+      const config = await exported();
+
+      assert.deepEqual(Object.keys(config).sort(),
+        ['primaryRootFrequency', 'primaryScaleId', 'scales', 'version']);
+      assert.deepEqual(Object.keys(config.scales[0]).sort(), ['id', 'name', 'notes']);
+      assert.deepEqual(Object.keys(config.scales[0].notes[0]).sort(),
+        ['degree', 'intervalName', 'ratioToRoot', 'rootScaleId']);
+    });
+
+    it('names the file it hands to the browser', async () => {
+      await exported();
+
+      assert.equal(await app.evaluate('return window.__downloadName'), 'emergent-harmonics-system.json');
+    });
+
+    it('takes back a system it wrote out, exactly as it was', async () => {
+      await app.evaluate(`
+        const root = document.getElementById('configRootFrequency');
+        root.value = '432';
+        root.dispatchEvent(new Event('change', { bubbles: true }));
+      `);
+
+      const saved = await exported();
+
+      await app.evaluate(`
+        const root = document.getElementById('configRootFrequency');
+        root.value = '300';
+        root.dispatchEvent(new Event('change', { bubbles: true }));
+        document.querySelectorAll('.config-note-remove')[1].click();
+      `);
+
+      await importFile(JSON.stringify(saved));
+      await taken("document.getElementById('configRootFrequency').value === '432'");
+
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '432');
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
+      assert.deepEqual(await exported(), saved);
+    });
+
+    it('plays the system it just took in', async () => {
+      await importFile(JSON.stringify({
+        primaryRootFrequency: 400,
+        primaryScaleId: 'solo',
+        scales: [{
+          id: 'solo',
+          name: 'Solarian',
+          notes: [
+            { ratioToRoot: 1, intervalName: 'Root', rootScaleId: 'solo' },
+            { ratioToRoot: 1.5, intervalName: 'Perfect 5th', rootScaleId: 'solo' },
+          ],
+        }],
+      }));
+      await taken("document.querySelectorAll('.config-note[data-note-index]').length === 2");
+
+      assert.deepEqual(await app.evaluate(`
+        const notes = document.querySelectorAll('.config-note[data-note-index]').length;
+        document.querySelector('[data-show-view="play"]').click();
+        return [notes,
+                document.getElementById('root0').querySelector('.frequency').textContent,
+                document.getElementById('q').querySelector('.frequency').textContent];
+      `), [2, '400Hz', '400Hz']);
+    });
+
+    it('edits the system it took in, rather than the one it replaced', async () => {
+      await importFile(JSON.stringify({
+        primaryRootFrequency: 400,
+        primaryScaleId: 'solo',
+        scales: [{ id: 'solo', name: 'Solarian', notes: [{ ratioToRoot: 1, rootScaleId: 'solo' }] }],
+      }));
+      await taken("document.getElementById('scaleName').value === 'Solarian'");
+
+      assert.equal(await app.evaluate("return document.getElementById('scaleName').value"), 'Solarian');
+    });
+
+    it('says so and keeps the current system when the file is not usable', async () => {
+      await importFile('this is not json');
+      await app.waitFor('window.__alerted !== null', 'the app to say the file was no good');
+
+      assert.match(await app.evaluate('return window.__alerted'), /not a usable system configuration/);
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
+    });
+
+    it('refuses a system written before scales were called scales', async () => {
+      await importFile(JSON.stringify({
+        version: 1,
+        primaryRootFrequency: 432,
+        primaryDiapasonId: 'diapason-1',
+        diapasons: [{ id: 'diapason-1', name: 'Major', notes: [{ ratioToRoot: 1, triadType: 'diapason-1' }] }],
+      }));
+      await app.waitFor('window.__alerted !== null', 'the app to say the file was no good');
+
+      assert.match(await app.evaluate('return window.__alerted'), /at least one scale/);
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
+    });
+
+    it('forgets the file it was given, so the same one can be chosen twice', async () => {
+      await importFile(JSON.stringify({
+        primaryRootFrequency: 400,
+        primaryScaleId: 'solo',
+        scales: [{ id: 'solo', name: 'Solarian', notes: [{ ratioToRoot: 1, rootScaleId: 'solo' }] }],
+      }));
+      await taken("document.getElementById('scaleName').value === 'Solarian'");
+
+      assert.equal(await app.evaluate("return document.getElementById('importConfigFile').value"), '');
+    });
+
+    it('keeps what it took in through a reload', async () => {
+      await importFile(JSON.stringify({
+        primaryRootFrequency: 432,
+        primaryScaleId: 'solo',
+        scales: [{ id: 'solo', name: 'Solarian', notes: [{ ratioToRoot: 1, rootScaleId: 'solo' }] }],
+      }));
+      await taken("document.getElementById('configRootFrequency').value === '432'");
+
+      await app.reload();
+
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '432');
+      assert.equal(await app.evaluate("return document.getElementById('scaleName').value"), 'Solarian');
+    });
+  });
+
   describe('overall', () => {
     it('runs without logging an error or throwing', async () => {
       await app.evaluate(`
