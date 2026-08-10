@@ -55,6 +55,15 @@ const scaleFromPreset = (presetId, scaleIdByPreset) => ({
   notes: presetToNotes(presetId, scaleIdByPreset),
 });
 
+/**
+ * Records that a scale has been edited away from the preset it was loaded
+ * from. The notes are what a preset is, so changing one leaves a scale that is
+ * no longer that preset, however it is still named.
+ */
+const markEditedFromPreset = (scale) => {
+  if (scale?.fromPreset) scale.editedFromPreset = true;
+};
+
 const createDefaultConfig = () => {
   const scaleIdByPreset = familyScaleIds(DEFAULT_PRESET, newScaleId(), newScaleId);
 
@@ -189,6 +198,8 @@ export const loadPresetIntoScale = (scaleId, presetId) => {
     return newScaleId();
   });
 
+  // Loaded afresh, so it is the preset again whatever was done to it before.
+  delete scale.editedFromPreset;
   Object.assign(scale, scaleFromPreset(presetId, scaleIdByPreset));
   brought.forEach((member) => config.scales.push(scaleFromPreset(member, scaleIdByPreset)));
 
@@ -202,6 +213,24 @@ export const loadPresetIntoScale = (scaleId, presetId) => {
   notify();
 
   return brought.map((member) => scaleIdByPreset.get(member));
+};
+
+/**
+ * The preset a scale is still named after but is no longer: it was loaded from
+ * that preset and a note has changed since. A name of its own settles the
+ * matter, since the name is the only thing the editing makes wrong.
+ *
+ * @param {string} scaleId
+ * @returns {string|undefined} The preset's name, where the scale has outgrown it.
+ */
+export const presetEditedAwayFrom = (scaleId) => {
+  const scale = getScale(scaleId);
+
+  if (!scale?.editedFromPreset) return undefined;
+
+  const label = presetLabel(scale.fromPreset);
+
+  return scale.name === label ? label : undefined;
 };
 
 /** The scales a load of this preset would bring in alongside it. */
@@ -263,6 +292,7 @@ export const addNote = (scaleId) => {
     rootScaleId: scaleId,
   });
   renumberDegrees(scale);
+  markEditedFromPreset(scale);
   notify();
 };
 
@@ -274,6 +304,7 @@ export const removeNote = (scaleId, noteIndex) => {
 
   scale.notes.splice(noteIndex, 1);
   renumberDegrees(scale);
+  markEditedFromPreset(scale);
   notify();
 };
 
@@ -292,6 +323,7 @@ export const updateNote = (scaleId, noteIndex, patch, { silent = false } = {}) =
   }
 
   Object.assign(note, patch);
+  markEditedFromPreset(scale);
 
   // A live slider drag would re-render the control out from under the pointer.
   if (silent) {
@@ -303,6 +335,66 @@ export const updateNote = (scaleId, noteIndex, patch, { silent = false } = {}) =
 };
 
 /**
+ * The scale holding a preset, added as one of its own if it is not on the
+ * screen yet. Only the preset itself comes in: its degrees are pointed back at
+ * it, so choosing one scale never puts several on the screen.
+ */
+const scaleForPreset = (presetId) => {
+  const existing = scaleHolding(presetId);
+
+  if (existing) return existing.id;
+
+  const id = newScaleId();
+
+  config.scales.push(scaleFromPreset(presetId, new Map([[presetId, id]])));
+
+  return id;
+};
+
+/**
+ * Points a note at the scale it builds when it is the root.
+ *
+ * Every note of the primary scale sits on a root key, and pressing that key
+ * plays the scale the note names, so the name has to reach a scale that is on
+ * the screen and can be edited: a built-in preset chosen there comes in as a
+ * scale of its own, which the note is pointed at instead. Notes of any other
+ * scale are on no key, so theirs is left as it was chosen.
+ *
+ * @param {string} scaleId - The scale the note belongs to.
+ * @param {number} noteIndex
+ * @param {string} rootScaleId - Another configured scale, or a built-in preset.
+ */
+export const setNoteRootScale = (scaleId, noteIndex, rootScaleId) => {
+  const scale = getScale(scaleId);
+  const note = scale?.notes[noteIndex];
+  if (!note) return;
+
+  note.rootScaleId = scaleId === config.primaryScaleId && isPreset(rootScaleId)
+    ? scaleForPreset(rootScaleId)
+    : rootScaleId;
+
+  markEditedFromPreset(scale);
+  notify();
+};
+
+/**
+ * The scales nothing can play. Pressing a root key plays the scale its note of
+ * the primary scale names, so a scale no note there names is on the screen
+ * without being anywhere on the keyboard. The primary scale is what the root
+ * keys are made of, so it is always reached.
+ *
+ * @returns {Array} The scales that are left out, in the order they are shown.
+ */
+export const unreachedScales = () => {
+  const reached = new Set([
+    config.primaryScaleId,
+    ...getPrimaryScale().notes.map((note) => note.rootScaleId),
+  ]);
+
+  return config.scales.filter((scale) => !reached.has(scale.id));
+};
+
+/**
  * Every name a note's rootScaleId can point at: the other configured scales,
  * then the built-in presets.
  */
@@ -310,6 +402,21 @@ export const rootScaleOptions = () => ({
   configured: config.scales.map((scale) => ({ value: scale.id, label: scale.name })),
   builtIn: presetOptions(),
 });
+
+/**
+ * What a scale remembers of the preset it was loaded from: which preset it
+ * was, so loading that preset again points at this scale rather than bringing
+ * in a second copy of it, and whether it has been edited away from it since. A
+ * name that is not a preset says nothing, so it is dropped.
+ */
+const presetOrigin = (scale) => {
+  if (!isPreset(scale?.fromPreset)) return {};
+
+  return {
+    fromPreset: scale.fromPreset,
+    ...(scale.editedFromPreset ? { editedFromPreset: true } : {}),
+  };
+};
 
 const validateConfig = (candidate) => {
   if (!candidate || typeof candidate !== 'object') {
@@ -331,10 +438,7 @@ const validateConfig = (candidate) => {
     return {
       id,
       name: typeof scale?.name === 'string' && scale.name ? scale.name : id,
-      // Which preset a scale came from, so loading that preset again points at
-      // this scale rather than bringing in a second copy of it. A name that is
-      // not a preset says nothing, so it is dropped.
-      ...(isPreset(scale?.fromPreset) ? { fromPreset: scale.fromPreset } : {}),
+      ...presetOrigin(scale),
       notes: notes.map((note, noteIndex) => {
         const ratio = Number(note?.ratioToRoot);
 

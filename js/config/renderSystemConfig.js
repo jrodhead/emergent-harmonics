@@ -4,6 +4,8 @@ import {
   ratioToFrequency,
   rootScaleOptions,
   canRemoveNote,
+  unreachedScales,
+  presetEditedAwayFrom,
   MIN_RATIO,
   MAX_RATIO,
 } from './systemConfigState.js';
@@ -39,6 +41,37 @@ export const renderScaleTabs = (selectedScaleId) => {
         </div>
       `).join('')}
       <button type="button" id="addScale" class="config-add config-add-scale">+ Add scale</button>
+    </div>
+  `;
+};
+
+/**
+ * Says which scales are on the screen without being anywhere on the keyboard,
+ * and offers to take each one away. A scale is worth keeping if it is being
+ * worked on, so it is named rather than removed for the user.
+ */
+export const renderUnreachedScales = () => {
+  const unreached = unreachedScales();
+
+  if (unreached.length === 0) return '';
+
+  const leftOut = unreached.length === 1
+    ? 'No root key builds this scale, so nothing plays it.'
+    : 'No root key builds these scales, so nothing plays them.';
+
+  return `
+    <div class="config-scale-warning">
+      <p>${leftOut} Each root key plays the scale its own note of the primary scale names.</p>
+      <ul>
+        ${unreached.map((scale) => `
+          <li>
+            <span class="config-scale-warning-name">${escapeHtml(scale.name)}</span>
+            <button type="button" class="config-scale-warning-remove" data-scale-id="${escapeHtml(scale.id)}">
+              Remove
+            </button>
+          </li>
+        `).join('')}
+      </ul>
     </div>
   `;
 };
@@ -123,6 +156,8 @@ export const renderNotes = (scale) => {
   const overflowsRootKeys = isPrimary && scale.notes.length > MAX_ROOT_NOTES;
   const repeatsOnRootKeys = isPrimary && scale.notes.length < MAX_ROOT_NOTES;
   const overflowsPreviewKeys = scale.notes.length > PREVIEW_KEYS.length;
+  // Named after a preset it has been edited away from, so the name is wrong.
+  const outgrownPreset = presetEditedAwayFrom(scale.id);
 
   // Named by their ends rather than key by key: there are three rows of them.
   const previewRows = PREVIEW_KEY_ROWS
@@ -133,12 +168,19 @@ export const renderNotes = (scale) => {
     <h2>Notes</h2>
     <div class="config-scale-header">
       <label>Scale name
-        <input type="text" id="scaleName" value="${escapeHtml(scale.name)}">
+        <input type="text" id="scaleName" value="${escapeHtml(scale.name)}"
+               ${outgrownPreset ? 'class="edited-away" aria-describedby="scaleNameWarning"' : ''}>
       </label>
       <label>
         <input type="radio" name="primaryScale" id="primaryScale"${isPrimary ? ' checked' : ''}>
         Primary (generates the root notes on keys 0-9)
       </label>
+      ${outgrownPreset
+        ? `<p class="config-scale-name-warning" id="scaleNameWarning">
+             Its notes have been edited since ${escapeHtml(outgrownPreset)} was loaded, so this is no longer
+             the ${escapeHtml(outgrownPreset)} scale. Give it a name of its own, or load the preset again.
+           </p>`
+        : ''}
     </div>
 
     <p class="config-hint">
@@ -171,6 +213,6 @@ export const renderNotes = (scale) => {
 export function renderSystemConfig() {
   const scale = getSelectedScale();
 
-  document.getElementById('configScales').innerHTML = renderScaleTabs(scale.id);
+  document.getElementById('configScales').innerHTML = renderScaleTabs(scale.id) + renderUnreachedScales();
   document.getElementById('configNotes').innerHTML = renderNotes(scale);
 }

@@ -192,6 +192,107 @@ describe('the system configuration screen', { skip }, () => {
     });
   });
 
+  describe('editing a scale away from the preset it was loaded from', () => {
+    /** Retunes a note, as typing in its frequency field and leaving it does. */
+    const retuneANote = () => app.evaluate(`
+      const hz = document.querySelectorAll('.config-note')[1].querySelector('.config-note-hz');
+      hz.value = '500';
+      hz.dispatchEvent(new Event('input', { bubbles: true }));
+      hz.dispatchEvent(new Event('change', { bubbles: true }));
+    `);
+
+    /** Names the scale, as typing in the name field and leaving it does. */
+    const renameTo = (name) => app.evaluate(`
+      const field = document.getElementById('scaleName');
+      field.value = ${JSON.stringify(name)};
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+    `);
+
+    const nameFieldState = () => app.evaluate(`
+      const field = document.getElementById('scaleName');
+      return [field.classList.contains('edited-away'),
+              document.getElementById('scaleNameWarning')?.textContent.replace(/\\s+/g, ' ').trim() ?? ''];
+    `);
+
+    it('leaves the name alone while the preset is untouched', async () => {
+      assert.deepEqual(await nameFieldState(), [false, '']);
+    });
+
+    it('marks the name field and says the scale is no longer the preset', async () => {
+      await retuneANote();
+
+      const [marked, warning] = await nameFieldState();
+
+      assert.equal(marked, true);
+      assert.match(warning, /no longer the Pythagorean scale/);
+    });
+
+    it('shows the marked field in the warning colour rather than the plain one', async () => {
+      await retuneANote();
+
+      assert.equal(await app.evaluate(`
+        return getComputedStyle(document.getElementById('scaleName')).borderTopColor;
+      `), 'rgb(185, 130, 47)');
+    });
+
+    // The page behind the field is black, so a see-through wash would take the
+    // name down with it.
+    it('keeps the name readable, marked or not', async () => {
+      const contrast = () => app.evaluate(`
+        const style = getComputedStyle(document.getElementById('scaleName'));
+        const channels = (colour) => colour.match(/[\\d.]+/g).slice(0, 3).map(Number);
+        // Relative luminance, as the contrast ratio is defined from.
+        const luminance = (colour) => channels(colour)
+          .map(value => value / 255)
+          .map(value => (value <= .03928 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4))
+          .reduce((total, value, index) => total + value * [.2126, .7152, .0722][index], 0);
+
+        const [text, background] = [luminance(style.color), luminance(style.backgroundColor)].sort((a, b) => b - a);
+        const opaque = channels(style.backgroundColor).length === 3 && !style.backgroundColor.includes('rgba');
+
+        return [opaque, (text + .05) / (background + .05)];
+      `);
+
+      const [plainlyOpaque, plainContrast] = await contrast();
+
+      assert.equal(plainlyOpaque, true, 'the field starts on an opaque background');
+      assert.ok(plainContrast >= 4.5, `plain name contrast is ${plainContrast}`);
+
+      await retuneANote();
+
+      const [markedOpaque, markedContrast] = await contrast();
+
+      assert.equal(markedOpaque, true, 'the marked field stays on an opaque background');
+      assert.ok(markedContrast >= 4.5, `marked name contrast is ${markedContrast}`);
+    });
+
+    it('clears the warning once the scale is given a name of its own', async () => {
+      await retuneANote();
+      await renameTo('Mine');
+
+      assert.deepEqual(await nameFieldState(), [false, '']);
+    });
+
+    it('clears the warning once the preset is loaded again', async () => {
+      await retuneANote();
+      await app.evaluate(`
+        document.getElementById('presetSelect').value = 'pythagorean';
+        document.getElementById('loadPreset').click();
+      `);
+
+      assert.deepEqual(await nameFieldState(), [false, '']);
+    });
+
+    it('keeps the warning through a reload, along with the edit that earned it', async () => {
+      await retuneANote();
+      await app.reload();
+
+      const [marked] = await nameFieldState();
+
+      assert.equal(marked, true);
+    });
+  });
+
   describe('scales', () => {
     /** Trims the system down to the scale being edited, and nothing else. */
     const keepOnlyOne = () => app.evaluate(`
@@ -291,6 +392,82 @@ describe('the system configuration screen', { skip }, () => {
         button.click();
         return [button.disabled, button.title, document.querySelectorAll('.config-scale-select').length];
       `), [true, 'A system needs at least one scale', 1]);
+    });
+  });
+
+  describe('the scales the root keys reach', () => {
+    it('brings a preset in as a scale when a root key is pointed at one', async () => {
+      assert.deepEqual(await app.evaluate(`
+        const select = document.querySelectorAll('.config-note-root-scale')[1];
+        select.value = 'blues';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        const pointedAt = document.querySelectorAll('.config-note-root-scale')[1];
+        return [[...document.querySelectorAll('.config-scale-name')].map(name => name.textContent.trim()),
+                pointedAt.selectedOptions[0].textContent.trim(),
+                // The key builds the scale on the screen, not the preset behind it.
+                pointedAt.value !== 'blues'];
+      `), [['Pythagorean', 'Blues'], 'Blues', true]);
+    });
+
+    it('brings in that scale alone, however many the preset names', async () => {
+      assert.deepEqual(await app.evaluate(`
+        const select = document.querySelectorAll('.config-note-root-scale')[1];
+        select.value = 'major';
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+        return [...document.querySelectorAll('.config-scale-name')].map(name => name.textContent.trim());
+      `), ['Pythagorean', 'Major']);
+    });
+
+    it('warns about a scale no root key builds, and names it', async () => {
+      assert.deepEqual(await app.evaluate(`
+        document.getElementById('addScale').click();
+        return [...document.querySelectorAll('.config-scale-warning-name')].map(name => name.textContent.trim());
+      `), ['Scale 2']);
+    });
+
+    it('warns about none of a preset family loaded into the primary scale', async () => {
+      assert.deepEqual(await app.evaluate(`
+        const before = document.querySelectorAll('.config-scale-warning').length;
+        document.getElementById('presetSelect').value = 'major';
+        document.getElementById('loadPreset').click();
+        return [before,
+                document.querySelectorAll('.config-scale-name').length,
+                document.querySelectorAll('.config-scale-warning').length];
+      `), [0, 3, 0]);
+    });
+
+    it('stops warning once a root key is pointed at it', async () => {
+      assert.deepEqual(await app.evaluate(`
+        document.getElementById('addScale').click();
+        const warned = document.querySelectorAll('.config-scale-warning').length;
+        const added = document.querySelector('.config-scale-tab.selected .config-scale-select').dataset.scaleId;
+
+        // Back to the primary scale, whose notes are the root keys.
+        document.querySelectorAll('.config-scale-select')[0].click();
+        const select = document.querySelectorAll('.config-note-root-scale')[1];
+        select.value = added;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        return [warned, document.querySelectorAll('.config-scale-warning').length];
+      `), [1, 0]);
+    });
+
+    it('removes the scale when the warning is taken up', async () => {
+      assert.deepEqual(await app.evaluate(`
+        document.getElementById('addScale').click();
+        document.querySelector('.config-scale-warning-remove').click();
+        return [document.querySelectorAll('.config-scale-select').length,
+                document.querySelectorAll('.config-scale-warning').length];
+      `), [1, 0]);
+    });
+
+    it('removes it by a real mouse click, not just a synthetic one', async () => {
+      await app.evaluate("document.getElementById('addScale').click();");
+      await app.click('.config-scale-warning-remove');
+      await app.waitFor("document.querySelectorAll('.config-scale-select').length === 1");
+
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-scale-warning').length"), 0);
     });
   });
 

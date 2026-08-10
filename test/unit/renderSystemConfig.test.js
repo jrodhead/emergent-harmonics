@@ -7,6 +7,7 @@ import {
   renderNote,
   renderNotes,
   renderRootScaleOptions,
+  renderUnreachedScales,
 } from '../../js/config/renderSystemConfig.js';
 import {
   getConfig,
@@ -106,6 +107,45 @@ describe('renderScaleTabs', () => {
 
     assert.doesNotMatch(html, /<img/);
     assert.match(html, /&quot;&gt;&lt;img/);
+  });
+});
+
+describe('renderUnreachedScales', () => {
+  it('says nothing while every scale is on a root key', () => {
+    assert.equal(renderUnreachedScales(), '');
+  });
+
+  it('names a scale nothing reaches, and says why nothing plays it', () => {
+    renameScale(addScale(), 'Mine');
+
+    const html = renderUnreachedScales();
+
+    assert.match(html, /No root key builds/);
+    assert.match(html, /Mine/);
+  });
+
+  it('offers to remove each one by name', () => {
+    const second = addScale();
+    addScale();
+
+    const html = renderUnreachedScales();
+
+    assert.equal(occurrences(html, 'config-scale-warning-remove'), 2);
+    assert.match(html, new RegExp(`config-scale-warning-remove" data-scale-id="${second}"`));
+  });
+
+  it('speaks of one scale singly and of several together', () => {
+    addScale();
+    assert.match(renderUnreachedScales(), /this scale/);
+
+    addScale();
+    assert.match(renderUnreachedScales(), /these scales/);
+  });
+
+  it('escapes a scale name so it cannot break the markup', () => {
+    renameScale(addScale(), '"><img src=x>');
+
+    assert.doesNotMatch(renderUnreachedScales(), /<img/);
   });
 });
 
@@ -249,6 +289,31 @@ describe('renderNotes', () => {
     while (getPrimaryScale().notes.length <= MAX_ROOT_NOTES) addNote(id);
 
     assert.match(renderNotes(getPrimaryScale()), /Only the first 10 notes get a root key/);
+  });
+
+  it('leaves the name alone while the scale still holds its preset as loaded', () => {
+    const html = renderNotes(getPrimaryScale());
+
+    assert.doesNotMatch(html, /edited-away/);
+    assert.doesNotMatch(html, /no longer/);
+  });
+
+  it('marks the name and says why, once the preset has been edited away from', () => {
+    updateNote(getPrimaryScale().id, 1, { ratioToRoot: 1.05 });
+
+    const html = renderNotes(getPrimaryScale());
+
+    assert.match(html, /id="scaleName"[^>]*class="edited-away"/s);
+    assert.match(html, /this is no longer\s+the Pythagorean scale/);
+  });
+
+  it('ties the warning to the name field, so it is read out with it', () => {
+    updateNote(getPrimaryScale().id, 1, { ratioToRoot: 1.05 });
+
+    const html = renderNotes(getPrimaryScale());
+
+    assert.match(html, /id="scaleName"[^>]*aria-describedby="scaleNameWarning"/s);
+    assert.match(html, /id="scaleNameWarning"/);
   });
 
   it('warns once a scale outruns the preview keys', () => {

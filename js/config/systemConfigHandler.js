@@ -10,6 +10,7 @@ import {
   setPrimaryScale,
   setRootFrequency,
   updateNote,
+  setNoteRootScale,
   loadPresetIntoScale,
   presetsBroughtIn,
   scalesClearedBy,
@@ -156,7 +157,7 @@ const handleConfigChange = (ev) => {
   if (noteIndex < 0) return;
 
   if (target.classList.contains('config-note-root-scale')) {
-    updateNote(getSelectedScaleId(), noteIndex, { rootScaleId: target.value });
+    setNoteRootScale(getSelectedScaleId(), noteIndex, target.value);
     return;
   }
 
@@ -176,7 +177,9 @@ const handleConfigChange = (ev) => {
 
 const handleConfigClick = (ev) => {
   const target = ev.target;
-  const remove = target.closest('.config-scale-remove');
+  // Either way of taking a scale away: the cross on its tab, or the offer made
+  // when nothing on the keyboard reaches it.
+  const remove = target.closest('.config-scale-remove, .config-scale-warning-remove');
 
   if (remove) {
     // Selection moves off the scale first, so the redraw lands on whichever

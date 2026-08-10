@@ -16,8 +16,11 @@ import {
   setPrimaryScale,
   setRootFrequency,
   updateNote,
+  setNoteRootScale,
+  unreachedScales,
   loadPresetIntoScale,
   presetsBroughtIn,
+  presetEditedAwayFrom,
   scalesClearedBy,
   loadStoredConfig,
   saveConfig,
@@ -424,6 +427,85 @@ describe('presetsBroughtIn', () => {
   });
 });
 
+describe('presetEditedAwayFrom', () => {
+  /** The scale the app starts on, which is the Pythagorean preset. */
+  const loaded = () => getPrimaryScale().id;
+
+  it('says nothing about a scale still holding the preset as it was loaded', () => {
+    assert.equal(presetEditedAwayFrom(loaded()), undefined);
+  });
+
+  it('names the preset once a note is retuned', () => {
+    updateNote(loaded(), 1, { ratioToRoot: 1.05 });
+
+    assert.equal(presetEditedAwayFrom(loaded()), 'Pythagorean');
+  });
+
+  it('names it for a note renamed, added, taken away, or pointed elsewhere', () => {
+    const edits = [
+      () => updateNote(loaded(), 1, { intervalName: 'Mine' }),
+      () => addNote(loaded()),
+      () => removeNote(loaded(), 1),
+      () => setNoteRootScale(loaded(), 1, 'blues'),
+    ];
+
+    edits.forEach((edit) => {
+      clearStoredConfig();
+      edit();
+
+      assert.equal(presetEditedAwayFrom(loaded()), 'Pythagorean', `${edit} leaves the preset behind`);
+    });
+  });
+
+  it('names it for a silent edit too, which is what a fader drag makes', () => {
+    updateNote(loaded(), 1, { ratioToRoot: 1.05 }, { silent: true });
+
+    assert.equal(presetEditedAwayFrom(loaded()), 'Pythagorean');
+  });
+
+  it('says nothing about a scale that was never a preset', () => {
+    const byHand = addScale();
+
+    updateNote(byHand, 1, { ratioToRoot: 1.05 });
+
+    assert.equal(presetEditedAwayFrom(byHand), undefined);
+  });
+
+  it('says nothing once the scale is given a name of its own', () => {
+    updateNote(loaded(), 1, { ratioToRoot: 1.05 });
+    renameScale(loaded(), 'Mine');
+
+    assert.equal(presetEditedAwayFrom(loaded()), undefined);
+  });
+
+  it('names it again if the preset name is taken back up', () => {
+    updateNote(loaded(), 1, { ratioToRoot: 1.05 });
+    renameScale(loaded(), 'Mine');
+    renameScale(loaded(), 'Pythagorean');
+
+    assert.equal(presetEditedAwayFrom(loaded()), 'Pythagorean');
+  });
+
+  it('says nothing again once the preset is loaded afresh', () => {
+    updateNote(loaded(), 1, { ratioToRoot: 1.05 });
+    loadPresetIntoScale(loaded(), 'pythagorean');
+
+    assert.equal(presetEditedAwayFrom(loaded()), undefined);
+  });
+
+  it('remembers the editing through a reload', () => {
+    updateNote(loaded(), 1, { ratioToRoot: 1.05 });
+
+    loadStoredConfig();
+
+    assert.equal(presetEditedAwayFrom(loaded()), 'Pythagorean');
+  });
+
+  it('says nothing about a scale that is not there', () => {
+    assert.equal(presetEditedAwayFrom('missing'), undefined);
+  });
+});
+
 describe('scalesClearedBy', () => {
   it('names the scales a load into the primary would not reach', () => {
     const primary = getPrimaryScale().id;
@@ -448,6 +530,131 @@ describe('scalesClearedBy', () => {
 
   it('names nothing for something that is not a preset', () => {
     assert.deepEqual(scalesClearedBy(getPrimaryScale().id, 'nonsense'), []);
+  });
+});
+
+describe('pointing a root key at a preset', () => {
+  const rootScaleOfDegree = (noteIndex) => getPrimaryScale().notes[noteIndex].rootScaleId;
+
+  it('brings the preset in as a scale of its own', () => {
+    setNoteRootScale(getPrimaryScale().id, 1, 'blues');
+
+    assert.equal(getScale(rootScaleOfDegree(1)).name, 'Blues');
+    assert.equal(getScale(rootScaleOfDegree(1)).notes.length, 6);
+  });
+
+  it('points the key at that scale rather than at the preset', () => {
+    setNoteRootScale(getPrimaryScale().id, 1, 'blues');
+
+    assert.notEqual(rootScaleOfDegree(1), 'blues');
+    assert.equal(getScale(rootScaleOfDegree(1)).fromPreset, 'blues');
+  });
+
+  it('brings in that scale alone, its degrees building itself', () => {
+    const before = getConfig().scales.length;
+
+    // The major scale's degrees name two other presets, which stay names here.
+    setNoteRootScale(getPrimaryScale().id, 1, 'major');
+
+    assert.equal(getConfig().scales.length, before + 1);
+    getScale(rootScaleOfDegree(1)).notes.forEach((note) => {
+      assert.equal(note.rootScaleId, rootScaleOfDegree(1));
+    });
+  });
+
+  it('points at a scale already holding that preset, rather than copying it', () => {
+    setNoteRootScale(getPrimaryScale().id, 1, 'blues');
+    const after = getConfig().scales.length;
+
+    setNoteRootScale(getPrimaryScale().id, 2, 'blues');
+
+    assert.equal(getConfig().scales.length, after);
+    assert.equal(rootScaleOfDegree(2), rootScaleOfDegree(1));
+  });
+
+  it('keeps the edits made to the scale it points at again', () => {
+    setNoteRootScale(getPrimaryScale().id, 1, 'blues');
+    renameScale(rootScaleOfDegree(1), 'Mine');
+
+    setNoteRootScale(getPrimaryScale().id, 2, 'blues');
+
+    assert.equal(getScale(rootScaleOfDegree(2)).name, 'Mine');
+  });
+
+  it('takes another configured scale as it is given', () => {
+    const second = addScale();
+
+    setNoteRootScale(getPrimaryScale().id, 1, second);
+
+    assert.equal(rootScaleOfDegree(1), second);
+  });
+
+  it('leaves a preset as a name on a scale that is on no key', () => {
+    const second = addScale();
+    const before = getConfig().scales.length;
+
+    setNoteRootScale(second, 0, 'blues');
+
+    assert.equal(getScale(second).notes[0].rootScaleId, 'blues');
+    assert.equal(getConfig().scales.length, before);
+  });
+
+  it('does nothing when the note or scale is not there', () => {
+    assert.doesNotThrow(() => setNoteRootScale('missing', 0, 'blues'));
+    assert.doesNotThrow(() => setNoteRootScale(getPrimaryScale().id, 99, 'blues'));
+  });
+});
+
+describe('unreachedScales', () => {
+  const namesOf = () => unreachedScales().map((scale) => scale.name);
+
+  it('names nothing while every scale is on a root key', () => {
+    assert.deepEqual(unreachedScales(), []);
+  });
+
+  it('names a scale added by hand, which no root key builds yet', () => {
+    renameScale(addScale(), 'Mine');
+
+    assert.deepEqual(namesOf(), ['Mine']);
+  });
+
+  it('stops naming it once a root key builds it', () => {
+    const second = addScale();
+
+    setNoteRootScale(getPrimaryScale().id, 1, second);
+
+    assert.deepEqual(unreachedScales(), []);
+  });
+
+  it('names one left behind when the only key building it is pointed elsewhere', () => {
+    const primary = getPrimaryScale().id;
+    const second = addScale();
+
+    setNoteRootScale(primary, 1, second);
+    setNoteRootScale(primary, 1, primary);
+
+    assert.deepEqual(unreachedScales().map((scale) => scale.id), [second]);
+  });
+
+  it('never names the primary scale, which the root keys are made of', () => {
+    const primary = getPrimaryScale().id;
+    const second = addScale();
+
+    getPrimaryScale().notes.forEach((note, noteIndex) => setNoteRootScale(primary, noteIndex, second));
+
+    assert.deepEqual(unreachedScales(), []);
+  });
+
+  it('names none of a preset family loaded into the primary, whose degrees name them all', () => {
+    loadPresetIntoScale(getPrimaryScale().id, 'major');
+
+    assert.deepEqual(unreachedScales(), []);
+  });
+
+  it('names a family loaded into a scale that is itself on no key', () => {
+    loadPresetIntoScale(addScale(), 'major');
+
+    assert.deepEqual(namesOf().sort(), ['Diminished', 'Major', 'Natural minor']);
   });
 });
 
