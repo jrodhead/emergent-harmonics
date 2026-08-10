@@ -627,7 +627,7 @@ describe('the system configuration screen', { skip }, () => {
       `), ['root4', '600Hz', '600Hz']);
     });
 
-    it('lights an note key while it is held', async () => {
+    it('lights a note key while it is held', async () => {
       assert.deepEqual(await app.evaluate(`
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', bubbles: true }));
         const lit = document.getElementById('q').classList.contains('active');
