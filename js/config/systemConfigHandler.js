@@ -11,6 +11,7 @@ import {
   setRootFrequency,
   updateNote,
   loadPresetIntoScale,
+  presetsBroughtIn,
   loadStoredConfig,
   subscribe,
   ratioToFrequency,
@@ -32,6 +33,7 @@ import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/generate
 let configNotes;
 let rootFrequencyInput;
 let presetSelect;
+let presetFamilyHint;
 let importFileInput;
 
 /** Redraws the screen, keeping any note that is sounding marked as such. */
@@ -42,6 +44,18 @@ const render = () => {
 
 const syncToolbar = () => {
   rootFrequencyInput.value = formatFrequency(getConfig().primaryRootFrequency);
+};
+
+/**
+ * Says what else a preset would bring in with it. Its degrees build other
+ * scales, and those come in alongside it so they can be edited too.
+ */
+const syncPresetFamilyHint = () => {
+  const brought = presetsBroughtIn(presetSelect.value);
+
+  presetFamilyHint.textContent = brought.length
+    ? `also brings in ${brought.join(' and ')}, which its degrees build`
+    : '';
 };
 
 const noteIndexFor = (element) => {
@@ -222,11 +236,15 @@ export function initSystemConfig() {
   configNotes = document.getElementById('configNotes');
   rootFrequencyInput = document.getElementById('configRootFrequency');
   presetSelect = document.getElementById('presetSelect');
+  presetFamilyHint = document.getElementById('presetFamilyHint');
   importFileInput = document.getElementById('importConfigFile');
 
   presetSelect.innerHTML = presetOptions()
     .map(({ value, label }) => `<option value="${value}">${label}</option>`)
     .join('');
+
+  syncPresetFamilyHint();
+  presetSelect.addEventListener('change', syncPresetFamilyHint);
 
   loadStoredConfig();
   syncToolbar();
@@ -237,6 +255,7 @@ export function initSystemConfig() {
   // playable system, so switching to the keyboard always plays what is shown.
   subscribe(() => {
     render();
+    syncPresetFamilyHint();
     buildSystemFromConfig();
   });
 
@@ -249,6 +268,7 @@ export function initSystemConfig() {
   document.getElementById('loadPreset').addEventListener('click', () => {
     stopAllPreviews();
     loadPresetIntoScale(getSelectedScaleId(), presetSelect.value);
+    syncPresetFamilyHint();
   });
 
   document.getElementById('resetConfig').addEventListener('click', () => {

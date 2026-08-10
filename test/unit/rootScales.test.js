@@ -19,7 +19,7 @@ describe('resolveScaleNotes', () => {
   it('resolves a configured scale by its id', () => {
     const second = addScale();
 
-    assert.equal(resolveScaleNotes(second), getConfig().scales[1].notes);
+    assert.equal(resolveScaleNotes(second), getConfig().scales.at(-1).notes);
   });
 
   it('resolves a built-in preset by its id', () => {
@@ -65,7 +65,7 @@ describe('rootScaleLabel', () => {
   it('names a configured scale by the name it was given', () => {
     const second = addScale();
 
-    assert.equal(rootScaleLabel(second), getConfig().scales[1].name);
+    assert.equal(rootScaleLabel(second), getConfig().scales.at(-1).name);
   });
 
   it('names a built-in preset the way the screen offers it', () => {

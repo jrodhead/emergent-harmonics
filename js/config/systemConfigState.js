@@ -1,5 +1,5 @@
 import { MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY } from '../system/generateSystem.js';
-import { isPreset, presetLabel, presetOptions } from '../presets/registry.js';
+import { isPreset, presetFamily, presetLabel, presetOptions } from '../presets/registry.js';
 import { presetToNotes } from './presetToScale.js';
 import { degreeForIndex } from './degrees.js';
 import { PERIOD_RATIO, foldRatioIntoPeriod } from '../system/period.js';
@@ -33,14 +33,36 @@ const notify = () => {
 
 export const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
 
+/**
+ * Builds a scale for every preset in a family, so a degree that names another
+ * scale names one that is on the screen and can be edited.
+ *
+ * @param {string} presetId - The preset at the head of the family.
+ * @param {string} headScaleId - The scale the head preset is loaded into.
+ * @param {Function} idFor - Where to put each of the others: an existing scale
+ *   already holding that preset, or a fresh id.
+ * @returns {Map} Which scale holds each preset of the family.
+ */
+const familyScaleIds = (presetId, headScaleId, idFor) => new Map(
+  presetFamily(presetId).map((member) => [member, member === presetId ? headScaleId : idFor(member)]),
+);
+
+/** A scale holding a preset, ready to be played and edited. */
+const scaleFromPreset = (presetId, scaleIdByPreset) => ({
+  id: scaleIdByPreset.get(presetId),
+  name: presetLabel(presetId),
+  fromPreset: presetId,
+  notes: presetToNotes(presetId, scaleIdByPreset),
+});
+
 const createDefaultConfig = () => {
-  const id = newScaleId();
+  const scaleIdByPreset = familyScaleIds(DEFAULT_PRESET, newScaleId(), newScaleId);
 
   return {
     version: CONFIG_VERSION,
     primaryRootFrequency: DEFAULT_ROOT_FREQUENCY,
-    primaryScaleId: id,
-    scales: [{ id, name: presetLabel(DEFAULT_PRESET), notes: presetToNotes(DEFAULT_PRESET, id) }],
+    primaryScaleId: scaleIdByPreset.get(DEFAULT_PRESET),
+    scales: [...scaleIdByPreset.keys()].map((member) => scaleFromPreset(member, scaleIdByPreset)),
   };
 };
 
@@ -76,13 +98,17 @@ export const setPrimaryScale = (scaleId) => {
   notify();
 };
 
+/**
+ * Adds a scale to build on, rather than a whole family: its degrees all build
+ * the scale itself until they are pointed somewhere else.
+ */
 export const addScale = () => {
   const id = newScaleId();
 
   config.scales.push({
     id,
     name: `Scale ${config.scales.length + 1}`,
-    notes: presetToNotes(DEFAULT_PRESET, id),
+    notes: presetToNotes(DEFAULT_PRESET, new Map([[DEFAULT_PRESET, id]])),
   });
   notify();
 
@@ -117,14 +143,46 @@ export const renameScale = (scaleId, name) => {
   notify();
 };
 
+/** A scale already holding this preset, which a new load can point at again. */
+const scaleHolding = (presetId, exceptScaleId) => config.scales
+  .find((scale) => scale.fromPreset === presetId && scale.id !== exceptScaleId);
+
+/**
+ * Loads a preset into a scale, bringing in the scales its degrees build. Those
+ * come in alongside it, once each: a family already on the screen is pointed
+ * at rather than copied again, so anything already edited there is kept.
+ *
+ * @param {string} scaleId - The scale being loaded into.
+ * @param {string} presetId
+ * @returns {Array} The scales brought in alongside it, if any.
+ */
 export const loadPresetIntoScale = (scaleId, presetId) => {
   const scale = getScale(scaleId);
-  if (!scale) return;
+  if (!scale || !isPreset(presetId)) return [];
 
-  scale.notes = presetToNotes(presetId, scaleId);
-  scale.name = presetLabel(presetId) ?? scale.name;
+  const brought = [];
+  const scaleIdByPreset = familyScaleIds(presetId, scaleId, (member) => {
+    const existing = scaleHolding(member, scaleId);
+
+    if (existing) return existing.id;
+
+    brought.push(member);
+
+    return newScaleId();
+  });
+
+  Object.assign(scale, scaleFromPreset(presetId, scaleIdByPreset));
+  brought.forEach((member) => config.scales.push(scaleFromPreset(member, scaleIdByPreset)));
+
   notify();
+
+  return brought.map((member) => scaleIdByPreset.get(member));
 };
+
+/** The scales a load of this preset would bring in alongside it. */
+export const presetsBroughtIn = (presetId) => (isPreset(presetId) ? presetFamily(presetId) : [])
+  .filter((member) => member !== presetId && !scaleHolding(member))
+  .map(presetLabel);
 
 /**
  * Whether a note can be taken out of its scale. The first note is the root
@@ -229,6 +287,10 @@ const validateConfig = (candidate) => {
     return {
       id,
       name: typeof scale?.name === 'string' && scale.name ? scale.name : id,
+      // Which preset a scale came from, so loading that preset again points at
+      // this scale rather than bringing in a second copy of it. A name that is
+      // not a preset says nothing, so it is dropped.
+      ...(isPreset(scale?.fromPreset) ? { fromPreset: scale.fromPreset } : {}),
       notes: notes.map((note, noteIndex) => {
         const ratio = Number(note?.ratioToRoot);
 

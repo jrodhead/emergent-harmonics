@@ -17,6 +17,7 @@ import {
   setRootFrequency,
   updateNote,
   loadPresetIntoScale,
+  presetsBroughtIn,
   loadStoredConfig,
   saveConfig,
   subscribe,
@@ -38,13 +39,28 @@ beforeEach(() => {
 });
 
 describe('the default configuration', () => {
-  it('is a single primary scale of the major scale', () => {
+  it('is the major scale, primary, at 27Hz', () => {
     const config = getConfig();
 
-    assert.equal(config.scales.length, 1);
     assert.equal(config.primaryScaleId, config.scales[0].id);
     assert.equal(config.primaryRootFrequency, 27);
-    assert.equal(config.scales[0].notes.length, 7);
+    assert.equal(getPrimaryScale().name, 'Major');
+    assert.equal(getPrimaryScale().notes.length, 7);
+  });
+
+  it('brings in the scales the major scale\u2019s degrees build', () => {
+    assert.deepEqual(getConfig().scales.map((scale) => scale.name),
+      ['Major', 'Natural minor', 'Diminished']);
+  });
+
+  it('points every degree at one of those scales, not at a preset', () => {
+    const ids = getConfig().scales.map((scale) => scale.id);
+
+    getConfig().scales.forEach((scale) => {
+      scale.notes.forEach((note) => {
+        assert.ok(ids.includes(note.rootScaleId), `${note.degree} of ${scale.name} builds ${note.rootScaleId}`);
+      });
+    });
   });
 });
 
@@ -192,9 +208,10 @@ describe('notes', () => {
 
 describe('scales', () => {
   it('can be added, renamed, and made primary', () => {
+    const before = getConfig().scales.length;
     const second = addScale();
 
-    assert.equal(getConfig().scales.length, 2);
+    assert.equal(getConfig().scales.length, before + 1);
 
     renameScale(second, 'Solarian');
     assert.equal(getScale(second).name, 'Solarian');
@@ -204,23 +221,24 @@ describe('scales', () => {
   });
 
   it('can be removed', () => {
+    const before = getConfig().scales.length;
     const second = addScale();
 
     removeScale(second);
 
-    assert.equal(getConfig().scales.length, 1);
+    assert.equal(getConfig().scales.length, before);
     assert.equal(getScale(second), undefined);
   });
 
   it('promote another scale to primary when the primary is removed', () => {
-    const second = addScale();
     const first = getConfig().scales[0].id;
+    const next = getConfig().scales[1].id;
 
     setPrimaryScale(first);
     removeScale(first);
 
-    assert.equal(getConfig().scales.length, 1);
-    assert.equal(getPrimaryScale().id, second);
+    assert.equal(getScale(first), undefined);
+    assert.equal(getPrimaryScale().id, next);
   });
 
   it('repoint notes that referenced a removed scale', () => {
@@ -236,7 +254,7 @@ describe('scales', () => {
   });
 
   it('cannot be removed when it is the last one', () => {
-    removeScale(getPrimaryScale().id);
+    for (let attempt = 0; attempt < 10; attempt++) removeScale(getConfig().scales[0].id);
 
     assert.equal(getConfig().scales.length, 1);
   });
@@ -260,12 +278,112 @@ describe('scales', () => {
   });
 });
 
+describe('loading a preset', () => {
+  const namesOf = () => getConfig().scales.map((scale) => scale.name);
+
+  it('brings in the scales the preset builds, alongside the one loaded into', () => {
+    const scaleId = addScale();
+
+    loadPresetIntoScale(scaleId, 'majorPentatonic');
+
+    assert.equal(getScale(scaleId).name, 'Major pentatonic');
+    assert.ok(namesOf().includes('Minor pentatonic'), `${namesOf()} should hold the minor pentatonic`);
+  });
+
+  it('points the degrees at those scales rather than at the presets', () => {
+    const scaleId = addScale();
+
+    loadPresetIntoScale(scaleId, 'majorPentatonic');
+
+    const ids = getConfig().scales.map((scale) => scale.id);
+
+    getScale(scaleId).notes.forEach((note) => {
+      assert.ok(ids.includes(note.rootScaleId), `${note.degree} builds ${note.rootScaleId}`);
+    });
+  });
+
+  it('brings in nothing extra for a preset whose degrees only build itself', () => {
+    const scaleId = addScale();
+    const before = namesOf().length;
+
+    loadPresetIntoScale(scaleId, 'blues');
+
+    assert.equal(namesOf().length, before);
+    getScale(scaleId).notes.forEach((note) => assert.equal(note.rootScaleId, scaleId));
+  });
+
+  it('points at a family already on the screen instead of copying it again', () => {
+    const first = addScale();
+    loadPresetIntoScale(first, 'majorPentatonic');
+    const after = getConfig().scales.length;
+
+    const second = addScale();
+    loadPresetIntoScale(second, 'majorPentatonic');
+
+    // The second load adds the scale it was loaded into, and nothing else.
+    assert.equal(getConfig().scales.length, after + 1);
+  });
+
+  it('keeps the edits made to a family member it points at again', () => {
+    const first = addScale();
+    loadPresetIntoScale(first, 'majorPentatonic');
+
+    const minorPentatonic = getConfig().scales.find((scale) => scale.fromPreset === 'minorPentatonic');
+    renameScale(minorPentatonic.id, 'Mine');
+    updateNote(minorPentatonic.id, 0, { ratioToRoot: 1.05 });
+
+    loadPresetIntoScale(addScale(), 'majorPentatonic');
+
+    assert.equal(getScale(minorPentatonic.id).name, 'Mine');
+    assert.equal(getScale(minorPentatonic.id).notes[0].ratioToRoot, 1.05);
+  });
+
+  it('replaces the notes of the scale it was loaded into, edits and all', () => {
+    const scaleId = addScale();
+    updateNote(scaleId, 0, { ratioToRoot: 1.05 });
+
+    loadPresetIntoScale(scaleId, 'blues');
+
+    assert.equal(getScale(scaleId).notes[0].ratioToRoot, 1);
+  });
+
+  it('says nothing about a preset that is not one', () => {
+    const scaleId = addScale();
+    const before = getConfig().scales.length;
+
+    assert.deepEqual(loadPresetIntoScale(scaleId, 'nonsense'), []);
+    assert.equal(getConfig().scales.length, before);
+  });
+});
+
+describe('presetsBroughtIn', () => {
+  it('names what a preset would bring in with it', () => {
+    // Nothing has been loaded yet beyond the major family the app starts on.
+    assert.deepEqual(presetsBroughtIn('majorPentatonic'), ['Minor pentatonic']);
+  });
+
+  it('names nothing for a preset whose degrees only build itself', () => {
+    assert.deepEqual(presetsBroughtIn('blues'), []);
+  });
+
+  it('names nothing already on the screen', () => {
+    // The app starts on the major family, so its members are all here.
+    assert.deepEqual(presetsBroughtIn('major'), []);
+  });
+
+  it('names nothing for something that is not a preset', () => {
+    assert.deepEqual(presetsBroughtIn('scale-1'), []);
+    assert.deepEqual(presetsBroughtIn(undefined), []);
+  });
+});
+
 describe('rootScaleOptions', () => {
   it('offers the configured scales and the built-in presets separately', () => {
     const second = addScale();
     const { configured, builtIn } = rootScaleOptions();
 
-    assert.deepEqual(configured.map((option) => option.value), [getConfig().scales[0].id, second]);
+    assert.deepEqual(configured.map((option) => option.value), getConfig().scales.map((scale) => scale.id));
+    assert.ok(configured.some((option) => option.value === second));
     assert.ok(builtIn.every((option) => isPreset(option.value)));
   });
 });

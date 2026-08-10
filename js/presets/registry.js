@@ -49,6 +49,28 @@ export const isPreset = (presetId) => presets.has(presetId);
  *   the presets that are computed rather than written out.
  * @returns {Array} Notes, each with at least a ratioToRoot.
  */
+/**
+ * Every preset a preset reaches: itself, the presets its degrees build, and
+ * whatever those in turn build. Major's degrees build the natural minor and
+ * the diminished scale, and theirs build each other again, so the three come
+ * as a set. The walk keeps track of where it has been, since a family
+ * references itself in circles.
+ *
+ * @param {string} presetId
+ * @returns {Array} Preset ids, the one asked for first.
+ */
+export function presetFamily(presetId) {
+  const family = [presetId];
+
+  for (let position = 0; position < family.length; position++) {
+    presetNotes(family[position]).forEach(({ rootScaleId }) => {
+      if (isPreset(rootScaleId) && !family.includes(rootScaleId)) family.push(rootScaleId);
+    });
+  }
+
+  return family;
+}
+
 export function presetNotes(presetId, noteCount) {
   const preset = presets.get(presetId);
 

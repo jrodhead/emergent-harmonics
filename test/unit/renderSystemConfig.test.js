@@ -12,6 +12,7 @@ import {
   getConfig,
   getPrimaryScale,
   addScale,
+  removeScale,
   renameScale,
   addNote,
   clearStoredConfig,
@@ -50,7 +51,7 @@ describe('renderScaleTabs', () => {
 
     const html = renderScaleTabs(getPrimaryScale().id);
 
-    assert.equal(occurrences(html, 'config-scale-select'), 2);
+    assert.equal(occurrences(html, 'config-scale-select'), getConfig().scales.length);
     assert.match(html, /7 notes/);
   });
 
@@ -65,10 +66,15 @@ describe('renderScaleTabs', () => {
   it('gives every tab a delete button', () => {
     addScale();
 
-    assert.equal(occurrences(renderScaleTabs(getPrimaryScale().id), 'config-scale-remove'), 2);
+    assert.equal(
+      occurrences(renderScaleTabs(getPrimaryScale().id), 'config-scale-remove'),
+      getConfig().scales.length,
+    );
   });
 
   it('disables delete on the last scale and says why', () => {
+    while (getConfig().scales.length > 1) removeScale(getConfig().scales.at(-1).id);
+
     const html = renderScaleTabs(getPrimaryScale().id);
 
     assert.match(html, /A system needs at least one scale/);

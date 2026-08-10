@@ -207,6 +207,11 @@ body[data-view="config"] #systemConfig,
   border-radius: .5rem;
 }
 
+.config-inline-hint {
+  font-size: .75rem;
+  font-style: italic;
+}
+
 .config-toolbar .form-group {
   display: flex;
   align-items: baseline;

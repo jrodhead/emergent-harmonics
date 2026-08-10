@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 
 import {
   presetIds,
+  presetFamily,
   presetOptions,
   presetLabel,
   presetNotes,
@@ -62,5 +63,42 @@ describe('presetOptions', () => {
 
   it('has no name for an id that is not a preset', () => {
     assert.equal(presetLabel('scale-1'), undefined);
+  });
+});
+
+describe('presetFamily', () => {
+  it('is just the preset itself when its degrees build nothing else', () => {
+    assert.deepEqual(presetFamily('blues'), ['blues']);
+    assert.deepEqual(presetFamily('pythagorean'), ['pythagorean']);
+  });
+
+  it('gathers the scales a preset builds, and the ones those build', () => {
+    assert.deepEqual(presetFamily('major'), ['major', 'naturalMinor', 'diminished']);
+    assert.deepEqual(presetFamily('majorPentatonic'), ['majorPentatonic', 'minorPentatonic']);
+  });
+
+  it('starts with the preset it was asked about', () => {
+    presetIds.forEach((id) => assert.equal(presetFamily(id)[0], id));
+  });
+
+  it('holds each member once, though a family names itself in circles', () => {
+    presetIds.forEach((id) => {
+      const family = presetFamily(id);
+
+      assert.equal(new Set(family).size, family.length, `${id} repeats a member`);
+    });
+  });
+
+  it('is closed: nothing a member builds falls outside the family', () => {
+    presetIds.forEach((id) => {
+      const family = presetFamily(id);
+
+      family.forEach((member) => {
+        presetNotes(member).forEach(({ rootScaleId }) => {
+          assert.ok(!isPreset(rootScaleId) || family.includes(rootScaleId),
+            `${id}: ${member} builds ${rootScaleId}, which is outside the family`);
+        });
+      });
+    });
   });
 });

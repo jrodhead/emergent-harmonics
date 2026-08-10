@@ -30,10 +30,16 @@ describe('the system configuration screen', { skip }, () => {
       `), [true, true]);
     });
 
-    it('starts from one major-scale scale at 27Hz', async () => {
+    it('starts on the major scale at 27Hz', async () => {
       assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
-      assert.equal(await app.evaluate("return document.querySelectorAll('.config-scale-select').length"), 1);
+      assert.equal(await app.evaluate("return document.getElementById('scaleName').value"), 'Major');
       assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
+    });
+
+    it('brings in the scales the major scale builds, so all of it can be edited', async () => {
+      assert.deepEqual(await app.evaluate(`
+        return [...document.querySelectorAll('.config-scale-name')].map(name => name.textContent.trim());
+      `), ['Major', 'Natural minor', 'Diminished']);
     });
 
     it('offers every preset as a preset', async () => {
@@ -188,36 +194,50 @@ describe('the system configuration screen', { skip }, () => {
   });
 
   describe('scales', () => {
+    /** Trims the system down to the scale being edited, and nothing else. */
+    const keepOnlyOne = () => app.evaluate(`
+      while (document.querySelectorAll('.config-scale-tab').length > 1) {
+        const spare = [...document.querySelectorAll('.config-scale-tab')]
+          .find(tab => !tab.classList.contains('selected'));
+        spare.querySelector('.config-scale-remove').click();
+      }
+    `);
+
     it('can be added and become the one being edited', async () => {
       assert.deepEqual(await app.evaluate(`
+        const before = document.querySelectorAll('.config-scale-select').length;
         document.getElementById('addScale').click();
         const tabs = document.querySelectorAll('.config-scale-select');
-        return [tabs.length,
+        return [tabs.length - before,
                 document.querySelector('.config-scale-tab.selected .config-scale-select').dataset.scaleId
-                  === tabs[1].dataset.scaleId];
-      `), [2, true]);
+                  === tabs[tabs.length - 1].dataset.scaleId];
+      `), [1, true]);
     });
 
     it('are legible against their own background', async () => {
       await app.evaluate("document.getElementById('addScale').click();");
 
-      assert.deepEqual(await app.evaluate(`
-        return [...document.querySelectorAll('.config-scale-tab')].map(tab => {
+      assert.ok(await app.evaluate(`
+        return [...document.querySelectorAll('.config-scale-tab')].every(tab => {
           const name = tab.querySelector('.config-scale-name');
           return getComputedStyle(name).color !== getComputedStyle(tab).backgroundColor
             && name.textContent.trim().length > 0;
         });
-      `), [true, true]);
+      `));
     });
 
     it('become selectable as another note\'s root scale', async () => {
       assert.equal(await app.evaluate(`
+        const before = document.querySelector('.config-note-root-scale')
+          .querySelectorAll('optgroup')[0].children.length;
         document.getElementById('addScale').click();
-        return document.querySelector('.config-note-root-scale').querySelectorAll('optgroup')[0].children.length;
-      `), 2);
+        return document.querySelector('.config-note-root-scale')
+          .querySelectorAll('optgroup')[0].children.length - before;
+      `), 1);
     });
 
     it('are deleted by the cross on their own tab', async () => {
+      await keepOnlyOne();
       await app.evaluate("document.getElementById('addScale').click();");
 
       assert.equal(await app.evaluate(`
@@ -227,6 +247,7 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('are deleted by a real mouse click, not just a synthetic one', async () => {
+      await keepOnlyOne();
       await app.evaluate("document.getElementById('addScale').click();");
       await app.click('.config-scale-tab.selected .config-scale-remove');
       await app.waitFor("document.querySelectorAll('.config-scale-select').length === 1");
@@ -235,6 +256,8 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('can be deleted while another one is being edited', async () => {
+      await keepOnlyOne();
+
       assert.deepEqual(await app.evaluate(`
         document.getElementById('addScale').click();
         const selected = document.querySelector('.config-scale-tab.selected .config-scale-select').dataset.scaleId;
@@ -248,6 +271,8 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('promote the survivor to primary when the primary is deleted', async () => {
+      await keepOnlyOne();
+
       assert.deepEqual(await app.evaluate(`
         document.getElementById('addScale').click();
         const first = document.querySelectorAll('.config-scale-select')[0].dataset.scaleId;
@@ -260,6 +285,8 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('cannot delete the last one, and say why', async () => {
+      await keepOnlyOne();
+
       assert.deepEqual(await app.evaluate(`
         const button = document.querySelector('.config-scale-remove');
         button.click();
@@ -647,11 +674,12 @@ describe('the system configuration screen', { skip }, () => {
 
   describe('saved state', () => {
     it('survives a reload', async () => {
-      await app.evaluate(`
+      const before = await app.evaluate(`
         const root = document.getElementById('configRootFrequency');
         root.value = '400';
         root.dispatchEvent(new Event('change', { bubbles: true }));
         document.getElementById('addScale').click();
+        return document.querySelectorAll('.config-scale-select').length;
       `);
 
       await app.reload();
@@ -659,7 +687,7 @@ describe('the system configuration screen', { skip }, () => {
       assert.deepEqual(await app.evaluate(`
         return [document.getElementById('configRootFrequency').value,
                 document.querySelectorAll('.config-scale-select').length];
-      `), ['400', 2]);
+      `), ['400', before]);
     });
 
     it('is cleared by the reset button', async () => {
@@ -745,7 +773,7 @@ describe('the system configuration screen', { skip }, () => {
 
       assert.deepEqual(Object.keys(config).sort(),
         ['primaryRootFrequency', 'primaryScaleId', 'scales', 'version']);
-      assert.deepEqual(Object.keys(config.scales[0]).sort(), ['id', 'name', 'notes']);
+      assert.deepEqual(Object.keys(config.scales[0]).sort(), ['fromPreset', 'id', 'name', 'notes']);
       assert.deepEqual(Object.keys(config.scales[0].notes[0]).sort(),
         ['degree', 'intervalName', 'ratioToRoot', 'rootScaleId']);
     });

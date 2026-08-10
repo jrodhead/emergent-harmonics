@@ -71,15 +71,81 @@ describe('the systems the app generates', { skip }, () => {
     });
   });
 
-  /**
-   * Points the first note at the scale being edited, rather than at the preset
-   * it was loaded from, so the note keys follow what is on the screen.
-   */
-  const buildFromThisScale = () => app.evaluate(`
-    const select = document.querySelector('.config-note[data-note-index="0"] .config-note-root-scale');
-    select.value = select.querySelector('optgroup option').value;
-    select.dispatchEvent(new Event('change', { bubbles: true }));
-  `);
+  describe('the scales a preset builds', () => {
+    it('says what a preset will bring in before it is loaded', async () => {
+      assert.deepEqual(await app.evaluate(`
+        const select = document.getElementById('presetSelect');
+        const hintFor = (value) => {
+          select.value = value;
+          select.dispatchEvent(new Event('change', { bubbles: true }));
+          return document.getElementById('presetFamilyHint').textContent.trim();
+        };
+        return [hintFor('majorPentatonic'), hintFor('blues'), hintFor('major')];
+      `), [
+        'also brings in Minor pentatonic, which its degrees build',
+        '',
+        // The major family is already here, being what the app starts on.
+        '',
+      ]);
+    });
+
+    it('modulates into the scale a degree builds, on the root key for that degree', async () => {
+      // Degree II of the major scale builds the natural minor, so the same
+      // key plays a different interval above the root it was built from.
+      assert.deepEqual(await app.evaluate(`
+        document.querySelector('[data-show-view="play"]').click();
+        const secondNoteOf = (rootKey) => {
+          document.body.dispatchEvent(new KeyboardEvent('keydown', { key: rootKey, bubbles: true }));
+          document.body.dispatchEvent(new KeyboardEvent('keyup', { key: rootKey, bubbles: true }));
+          return document.getElementById('w').querySelector('.interval-name').textContent;
+        };
+        return [secondNoteOf('0'), secondNoteOf('1')];
+      `), ['Major 2nd', 'Minor 2nd']);
+    });
+
+    it('plays the edits made to the scale a degree builds', async () => {
+      const secondNoteUnderRoot1 = () => app.evaluate(`
+        document.querySelector('[data-show-view="play"]').click();
+        document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }));
+        document.body.dispatchEvent(new KeyboardEvent('keyup', { key: '1', bubbles: true }));
+        const played = document.getElementById('w').querySelector('.ratio').textContent;
+        document.querySelector('[data-show-view="config"]').click();
+        return played;
+      `);
+
+      const before = await secondNoteUnderRoot1();
+
+      // Retune the second note of the natural minor scale, which is the scale
+      // the second degree builds.
+      await app.evaluate(`
+        [...document.querySelectorAll('.config-scale-name')]
+          .find(name => name.textContent.trim() === 'Natural minor').click();
+        const ratio = document.querySelectorAll('.config-note-ratio')[1];
+        ratio.value = '1.2';
+        ratio.dispatchEvent(new Event('input', { bubbles: true }));
+        ratio.dispatchEvent(new Event('change', { bubbles: true }));
+      `);
+
+      assert.equal(before, 'ratio: 1.0667');
+      assert.equal(await secondNoteUnderRoot1(), 'ratio: 1.2');
+    });
+
+    it('leaves the built-in preset alone, so it can be loaded again fresh', async () => {
+      await app.evaluate(`
+        const ratio = document.querySelectorAll('.config-note-ratio')[1];
+        ratio.value = '1.2';
+        ratio.dispatchEvent(new Event('input', { bubbles: true }));
+        ratio.dispatchEvent(new Event('change', { bubbles: true }));
+      `);
+
+      assert.equal(await app.evaluate(`
+        document.getElementById('addScale').click();
+        document.getElementById('presetSelect').value = 'major';
+        document.getElementById('loadPreset').click();
+        return document.querySelectorAll('.config-note-ratio')[1].value;
+      `), '1.125');
+    });
+  });
 
   describe('a scale with fewer notes than there are keys', () => {
     const trimToRoot = () => app.evaluate(`
@@ -90,13 +156,15 @@ describe('the systems the app generates', { skip }, () => {
       document.querySelector('[data-show-view="play"]').click();
     `);
 
-    it('still fills every key, climbing a register at a time', async () => {
+    it('climbs a register per key, until the system runs out of registers', async () => {
       await trimToRoot();
 
+      // One note per register, so each row starts a register higher than the
+      // one below it and reaches one register less far before the top.
       assert.deepEqual(await app.evaluate(`
         return [document.querySelectorAll('.root-key').length,
                 document.querySelectorAll('.note').length];
-      `), [MAX_ROOT_NOTES, KEY_COUNT]);
+      `), [MAX_ROOT_NOTES, 27]);
     });
 
     it('repeats the one note it has up the periods, on the root keys', async () => {
@@ -108,19 +176,7 @@ describe('the systems the app generates', { skip }, () => {
       `), ['I', 'I +1', 'I +2']);
     });
 
-    it('plays the scale the root points at, which a preset points at itself', async () => {
-      // The presets name each other, so a note loaded from one keeps building
-      // that preset's notes rather than whatever the scale is edited down to.
-      await trimToRoot();
-
-      assert.deepEqual(await app.evaluate(`
-        return ['q', 'w', 'e'].map(key =>
-          document.getElementById(key).querySelector('.degree').textContent);
-      `), ['I', 'II', 'III']);
-    });
-
-    it('repeats up the periods on the note keys too, once the root points at the scale itself', async () => {
-      await buildFromThisScale();
+    it('plays what is on the screen, rather than the preset it was loaded from', async () => {
       await trimToRoot();
 
       assert.deepEqual(await app.evaluate(`
@@ -132,8 +188,6 @@ describe('the systems the app generates', { skip }, () => {
 
   describe('a scale with more notes than there are keys', () => {
     it('reaches as many notes as the keyboard has keys, and no further', async () => {
-      await buildFromThisScale();
-
       const system = await app.evaluate(`
         for (let added = 0; added < 30; added++) document.getElementById('addNote').click();
         const configured = document.querySelectorAll('.config-note[data-note-index]').length;
@@ -151,8 +205,6 @@ describe('the systems the app generates', { skip }, () => {
     });
 
     it('lays the scale across the rows in order, spilling onto the row below', async () => {
-      await buildFromThisScale();
-
       // Fourteen notes: ten fill the top row, the remaining four open the home
       // row, and the rest of that row climbs into the register above.
       assert.deepEqual(await app.evaluate(`
