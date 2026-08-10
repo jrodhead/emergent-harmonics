@@ -13,6 +13,7 @@ import {
   getPrimaryScale,
   addScale,
   removeScale,
+  removeNote,
   renameScale,
   addNote,
   clearStoredConfig,
@@ -27,6 +28,15 @@ beforeEach(() => {
 });
 
 const occurrences = (haystack, needle) => haystack.split(needle).length - 1;
+
+/** Trims the primary scale down, for the wording that depends on its length. */
+const shortenPrimaryTo = (noteCount) => {
+  const { id } = getPrimaryScale();
+
+  while (getPrimaryScale().notes.length > noteCount) {
+    removeNote(id, getPrimaryScale().notes.length - 1);
+  }
+};
 
 describe('escapeHtml', () => {
   it('escapes the characters that would break out of markup', () => {
@@ -52,7 +62,7 @@ describe('renderScaleTabs', () => {
     const html = renderScaleTabs(getPrimaryScale().id);
 
     assert.equal(occurrences(html, 'config-scale-select'), getConfig().scales.length);
-    assert.match(html, /7 notes/);
+    assert.match(html, /12 notes/);
   });
 
   it('marks the selected tab and the primary one', () => {
@@ -188,7 +198,7 @@ describe('renderNotes', () => {
   it('draws a card per note plus the add button', () => {
     const html = renderNotes(getPrimaryScale());
 
-    assert.equal(occurrences(html, 'data-note-index='), 7);
+    assert.equal(occurrences(html, 'data-note-index='), 12);
     assert.match(html, /id="addNote"/);
   });
 
@@ -207,10 +217,14 @@ describe('renderNotes', () => {
   });
 
   it('explains that a short primary scale repeats up the root keys', () => {
+    shortenPrimaryTo(7);
+
     assert.match(renderNotes(getPrimaryScale()), /Keys 7-9 repeat these notes a period higher/);
   });
 
   it('says nothing about repeats once the notes fill the root keys', () => {
+    shortenPrimaryTo(7);
+
     const { id } = getPrimaryScale();
 
     while (getPrimaryScale().notes.length < MAX_ROOT_NOTES) addNote(id);
@@ -226,6 +240,8 @@ describe('renderNotes', () => {
   });
 
   it('warns once a primary scale outruns the root keys', () => {
+    shortenPrimaryTo(MAX_ROOT_NOTES);
+
     const { id } = getPrimaryScale();
 
     assert.doesNotMatch(renderNotes(getPrimaryScale()), /notes get a root key/);

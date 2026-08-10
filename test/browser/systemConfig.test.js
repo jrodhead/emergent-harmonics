@@ -30,16 +30,16 @@ describe('the system configuration screen', { skip }, () => {
       `), [true, true]);
     });
 
-    it('starts on the major scale at 27Hz', async () => {
-      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
-      assert.equal(await app.evaluate("return document.getElementById('scaleName').value"), 'Major');
-      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
+    it('starts on the Pythagorean scale at 432Hz', async () => {
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '432');
+      assert.equal(await app.evaluate("return document.getElementById('scaleName').value"), 'Pythagorean');
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 12);
     });
 
-    it('brings in the scales the major scale builds, so all of it can be edited', async () => {
+    it('brings in nothing else, the Pythagorean degrees all building itself', async () => {
       assert.deepEqual(await app.evaluate(`
         return [...document.querySelectorAll('.config-scale-name')].map(name => name.textContent.trim());
-      `), ['Major', 'Natural minor', 'Diminished']);
+      `), ['Pythagorean']);
     });
 
     it('offers every preset as a preset', async () => {
@@ -50,17 +50,14 @@ describe('the system configuration screen', { skip }, () => {
       assert.deepEqual(await app.evaluate(`
         const hz = document.querySelector('.config-note-hz');
         return [hz.value, hz.min, hz.max];
-      `), ['27', '27', '54']);
+      `), ['432', '432', '864']);
     });
 
-    it('keeps the per-degree root scales of the major scale', async () => {
+    it('points every degree of the Pythagorean scale back at itself', async () => {
       assert.deepEqual(await app.evaluate(`
         return [...document.querySelectorAll('.config-note-root-scale')]
           .map(select => select.selectedOptions[0].textContent.trim());
-      `), [
-        'Major', 'Natural minor', 'Natural minor', 'Major',
-        'Major', 'Natural minor', 'Diminished',
-      ]);
+      `), Array(12).fill('Pythagorean'));
     });
 
     it('never shows a root scale the note is not actually set to', async () => {
@@ -130,12 +127,12 @@ describe('the system configuration screen', { skip }, () => {
       assert.equal(await app.evaluate(`
         document.getElementById('addNote').click();
         return document.querySelectorAll('.config-note[data-note-index]').length;
-      `), 8);
+      `), 13);
 
       assert.equal(await app.evaluate(`
         document.querySelectorAll('.config-note-remove')[1].click();
         return document.querySelectorAll('.config-note[data-note-index]').length;
-      `), 7);
+      `), 12);
     });
 
     it('cannot remove the root, whose button says why', async () => {
@@ -144,12 +141,12 @@ describe('the system configuration screen', { skip }, () => {
         root.click();
         return [document.querySelectorAll('.config-note[data-note-index]').length,
                 root.disabled, root.title];
-      `), [7, true, 'The root of the scale cannot be removed']);
+      `), [12, true, 'The root of the scale cannot be removed']);
     });
 
     it('stops at the root alone once every other note is removed', async () => {
       assert.deepEqual(await app.evaluate(`
-        for (let attempt = 0; attempt < 10; attempt++) {
+        for (let attempt = 0; attempt < 20; attempt++) {
           const button = document.querySelectorAll('.config-note-remove')[1];
           if (button && !button.disabled) button.click();
         }
@@ -161,8 +158,10 @@ describe('the system configuration screen', { skip }, () => {
     it('closes the gap in the degrees when a note in the middle is removed', async () => {
       // Trim to five degrees, then drop III: IV and V become the new III and IV.
       assert.deepEqual(await app.evaluate(`
-        document.querySelectorAll('.config-note-remove')[6].click();
-        document.querySelectorAll('.config-note-remove')[5].click();
+        while (document.querySelectorAll('.config-note[data-note-index]').length > 5) {
+          const buttons = document.querySelectorAll('.config-note-remove');
+          buttons[buttons.length - 1].click();
+        }
         document.querySelectorAll('.config-note-remove')[2].click();
         return [...document.querySelectorAll('.config-note-degree')].map(degree => degree.textContent.trim());
       `), ['I', 'II', 'III', 'IV']);
@@ -173,14 +172,14 @@ describe('the system configuration screen', { skip }, () => {
         document.querySelectorAll('.config-note-remove')[2].click();
         document.querySelector('[data-show-view="play"]').click();
         return [...document.querySelectorAll('.root-key .degree')].map(degree => degree.textContent.trim());
-      `), ['I', 'II', 'III', 'IV', 'V', 'VI', 'I +1', 'II +1', 'III +1', 'IV +1']);
+      `), ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X']);
     });
 
     it('shifts the preview keys up with the notes that remain', async () => {
       assert.deepEqual(await app.evaluate(`
         document.querySelectorAll('.config-note-remove')[2].click();
         return [...document.querySelectorAll('.config-note-key')].map(key => key.textContent.trim());
-      `), ['q', 'w', 'e', 'r', 't', 'y']);
+      `), ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a']);
     });
 
     it('loads a preset into the scale being edited', async () => {
@@ -385,7 +384,7 @@ describe('the system configuration screen', { skip }, () => {
     it('shows the key that plays each note', async () => {
       assert.deepEqual(
         await app.evaluate("return [...document.querySelectorAll('.config-note-key')].map(key => key.textContent.trim())"),
-        ['q', 'w', 'e', 'r', 't', 'y', 'u'],
+        ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', 'a', 's'],
       );
     });
 
@@ -421,16 +420,16 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('gives every note a key while the keyboard has one to spare', async () => {
-      // Seven notes to start with, and thirty keys to put them on.
+      // Twelve notes to start with, and thirty keys to put them on.
       assert.equal(await app.evaluate(`
-        for (let added = 0; added < 23; added++) document.getElementById('addNote').click();
+        for (let added = 0; added < 18; added++) document.getElementById('addNote').click();
         return document.querySelectorAll('.config-note-key.none').length;
       `), 0);
     });
 
     it('marks notes past the last key as having none', async () => {
       assert.equal(await app.evaluate(`
-        for (let added = 0; added < 25; added++) document.getElementById('addNote').click();
+        for (let added = 0; added < 20; added++) document.getElementById('addNote').click();
         return document.querySelectorAll('.config-note-key.none').length;
       `), 2);
     });
@@ -578,7 +577,17 @@ describe('the system configuration screen', { skip }, () => {
       );
     });
 
+    /** Puts the major scale on screen, for what its shape or its degrees show. */
+    const loadMajor = () => app.evaluate(`
+      document.querySelector('[data-show-view="config"]').click();
+      document.getElementById('presetSelect').value = 'major';
+      document.getElementById('loadPreset').click();
+      document.querySelector('[data-show-view="play"]').click();
+    `);
+
     it('fills the leftover root keys a period above their counterparts', async () => {
+      await loadMajor();
+
       // Seven notes, so keys 7-9 repeat the first three a period up.
       assert.deepEqual(await app.evaluate(`
         return [7, 8, 9].map(key => {
@@ -590,6 +599,8 @@ describe('the system configuration screen', { skip }, () => {
     });
 
     it('names the scale each root key would build, rather than its id', async () => {
+      await loadMajor();
+
       assert.deepEqual(await app.evaluate(`
         return [...document.querySelectorAll('.root-key .root-scale')]
           .slice(0, 3).map(scale => scale.textContent.trim());
@@ -651,7 +662,7 @@ describe('the system configuration screen', { skip }, () => {
         return [document.querySelector('.root-key.active').id,
                 document.getElementById('root4').querySelector('.frequency').textContent,
                 document.getElementById('q').querySelector('.frequency').textContent];
-      `), ['root4', '600Hz', '600Hz']);
+      `), ['root4', '500Hz', '500Hz']);
     });
 
     it('lights a note key while it is held', async () => {
@@ -700,7 +711,7 @@ describe('the system configuration screen', { skip }, () => {
 
       await app.reload();
 
-      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '432');
     });
   });
 
@@ -755,7 +766,7 @@ describe('the system configuration screen', { skip }, () => {
     it('writes out the system that is on screen', async () => {
       await app.evaluate(`
         const root = document.getElementById('configRootFrequency');
-        root.value = '432';
+        root.value = '400';
         root.dispatchEvent(new Event('change', { bubbles: true }));
         document.getElementById('scaleName').value = 'Solarian';
         document.getElementById('scaleName').dispatchEvent(new Event('change', { bubbles: true }));
@@ -763,9 +774,9 @@ describe('the system configuration screen', { skip }, () => {
 
       const config = await exported();
 
-      assert.equal(config.primaryRootFrequency, 432);
+      assert.equal(config.primaryRootFrequency, 400);
       assert.equal(config.scales[0].name, 'Solarian');
-      assert.equal(config.scales[0].notes.length, 7);
+      assert.equal(config.scales[0].notes.length, 12);
     });
 
     it('writes out only the fields the app reads back', async () => {
@@ -787,7 +798,7 @@ describe('the system configuration screen', { skip }, () => {
     it('takes back a system it wrote out, exactly as it was', async () => {
       await app.evaluate(`
         const root = document.getElementById('configRootFrequency');
-        root.value = '432';
+        root.value = '500';
         root.dispatchEvent(new Event('change', { bubbles: true }));
       `);
 
@@ -801,10 +812,10 @@ describe('the system configuration screen', { skip }, () => {
       `);
 
       await importFile(JSON.stringify(saved));
-      await taken("document.getElementById('configRootFrequency').value === '432'");
+      await taken("document.getElementById('configRootFrequency').value === '500'");
 
-      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '432');
-      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '500');
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 12);
       assert.deepEqual(await exported(), saved);
     });
 
@@ -848,21 +859,21 @@ describe('the system configuration screen', { skip }, () => {
       await app.waitFor('window.__alerted !== null', 'the app to say the file was no good');
 
       assert.match(await app.evaluate('return window.__alerted'), /not a usable system configuration/);
-      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 7);
-      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
+      assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 12);
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '432');
     });
 
     it('refuses a system written before scales were called scales', async () => {
       await importFile(JSON.stringify({
         version: 1,
-        primaryRootFrequency: 432,
+        primaryRootFrequency: 500,
         primaryDiapasonId: 'diapason-1',
         diapasons: [{ id: 'diapason-1', name: 'Major', notes: [{ ratioToRoot: 1, triadType: 'diapason-1' }] }],
       }));
       await app.waitFor('window.__alerted !== null', 'the app to say the file was no good');
 
       assert.match(await app.evaluate('return window.__alerted'), /at least one scale/);
-      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '27');
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').value"), '432');
     });
 
     it('forgets the file it was given, so the same one can be chosen twice', async () => {

@@ -39,18 +39,17 @@ beforeEach(() => {
 });
 
 describe('the default configuration', () => {
-  it('is the major scale, primary, at 27Hz', () => {
+  it('is the Pythagorean scale, primary, at 432Hz', () => {
     const config = getConfig();
 
     assert.equal(config.primaryScaleId, config.scales[0].id);
-    assert.equal(config.primaryRootFrequency, 27);
-    assert.equal(getPrimaryScale().name, 'Major');
-    assert.equal(getPrimaryScale().notes.length, 7);
+    assert.equal(config.primaryRootFrequency, 432);
+    assert.equal(getPrimaryScale().name, 'Pythagorean');
+    assert.equal(getPrimaryScale().notes.length, 12);
   });
 
-  it('brings in the scales the major scale\u2019s degrees build', () => {
-    assert.deepEqual(getConfig().scales.map((scale) => scale.name),
-      ['Major', 'Natural minor', 'Diminished']);
+  it('is the one scale, since no Pythagorean degree builds another', () => {
+    assert.deepEqual(getConfig().scales.map((scale) => scale.name), ['Pythagorean']);
   });
 
   it('points every degree at one of those scales, not at a preset', () => {
@@ -118,22 +117,23 @@ describe('notes', () => {
   it('keep the root, which is what the rest of the scale is measured from', () => {
     const { id } = getPrimaryScale();
     const root = getScale(id).notes[0];
+    const before = getScale(id).notes.length;
 
     removeNote(id, 0);
 
-    assert.equal(getScale(id).notes.length, 7);
+    assert.equal(getScale(id).notes.length, before);
     assert.equal(getScale(id).notes[0], root);
   });
 
   it('renumber the degrees left behind, closing the gap', () => {
     const { id } = getPrimaryScale();
 
-    // Seven degrees configured; drop III.
+    // Twelve degrees configured; drop III.
     removeNote(id, 2);
 
     assert.deepEqual(
       getScale(id).notes.map((note) => note.degree),
-      ['I', 'II', 'III', 'IV', 'V', 'VI'],
+      ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI'],
     );
   });
 
@@ -157,16 +157,17 @@ describe('notes', () => {
 
     assert.deepEqual(
       getScale(id).notes.map((note) => note.degree),
-      ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'],
+      ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'XI', 'XII'],
     );
   });
 
   it('ignore a note index that is past the end', () => {
     const { id } = getPrimaryScale();
+    const before = getScale(id).notes.length;
 
     removeNote(id, 99);
 
-    assert.equal(getScale(id).notes.length, 7);
+    assert.equal(getScale(id).notes.length, before);
   });
 
   it('clamp their ratio into the period when edited', () => {
@@ -232,7 +233,7 @@ describe('scales', () => {
 
   it('promote another scale to primary when the primary is removed', () => {
     const first = getConfig().scales[0].id;
-    const next = getConfig().scales[1].id;
+    const next = addScale();
 
     setPrimaryScale(first);
     removeScale(first);
@@ -358,7 +359,7 @@ describe('loading a preset', () => {
 
 describe('presetsBroughtIn', () => {
   it('names what a preset would bring in with it', () => {
-    // Nothing has been loaded yet beyond the major family the app starts on.
+    // Nothing has been loaded yet beyond the Pythagorean scale the app starts on.
     assert.deepEqual(presetsBroughtIn('majorPentatonic'), ['Minor pentatonic']);
   });
 
@@ -367,7 +368,9 @@ describe('presetsBroughtIn', () => {
   });
 
   it('names nothing already on the screen', () => {
-    // The app starts on the major family, so its members are all here.
+    loadPresetIntoScale(addScale(), 'major');
+
+    // The major family is all on the screen now, so a second load brings in nothing.
     assert.deepEqual(presetsBroughtIn('major'), []);
   });
 
@@ -528,8 +531,10 @@ describe('persistence', () => {
     setRootFrequency(300);
     assert.equal(storedConfig().primaryRootFrequency, 300);
 
+    const before = getPrimaryScale().notes.length;
+
     addNote(getPrimaryScale().id);
-    assert.equal(storedConfig().scales[0].notes.length, 8);
+    assert.equal(storedConfig().scales[0].notes.length, before + 1);
   });
 
   it('saves a silent edit too, so a drag is not lost on reload', () => {
@@ -566,14 +571,14 @@ describe('persistence', () => {
   });
 
   it('keeps the default when nothing has been stored', () => {
-    assert.equal(loadStoredConfig().primaryRootFrequency, 27);
+    assert.equal(loadStoredConfig().primaryRootFrequency, 432);
   });
 
   it('overwrites what was stored when the configuration is reset', () => {
-    setRootFrequency(432);
+    setRootFrequency(300);
     resetConfig();
 
-    assert.equal(storedConfig().primaryRootFrequency, 27);
+    assert.equal(storedConfig().primaryRootFrequency, 432);
   });
 
   it('starts fresh when what was stored cannot be used', (t) => {

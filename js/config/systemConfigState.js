@@ -8,8 +8,8 @@ import { readStoredValue, writeStoredValue, clearStoredValue } from '../storage.
 
 export const STORAGE_KEY = 'emergentHarmonics.systemConfig';
 const CONFIG_VERSION = 2;
-const DEFAULT_PRESET = 'major';
-const DEFAULT_ROOT_FREQUENCY = 27;
+const DEFAULT_PRESET = 'pythagorean';
+const DEFAULT_ROOT_FREQUENCY = 432;
 
 // A note's ratio to its root always sits inside one period: 1 is the root,
 // and the period ratio is the same note again, an octave above it.

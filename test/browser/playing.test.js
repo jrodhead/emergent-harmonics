@@ -94,7 +94,7 @@ describe('playing the keyboard', { skip }, () => {
         ${dispatchKey('keydown', 'q')}
         return [window.__sounds[0].frequency + 'Hz',
                 document.getElementById('q').querySelector('.frequency').textContent];
-      `), ['27Hz', '27Hz']);
+      `), ['432Hz', '432Hz']);
     });
 
     it('plays the wave shape the controls are set to', async () => {

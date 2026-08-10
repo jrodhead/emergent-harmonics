@@ -29,6 +29,12 @@ const play = (presetId) => app.evaluate(`
   };
 `);
 
+/** Loads a preset into the scale being edited, staying on the configuration. */
+const load = (presetId) => app.evaluate(`
+  document.getElementById('presetSelect').value = '${presetId}';
+  document.getElementById('loadPreset').click();
+`);
+
 const setRootFrequency = (frequency) => app.evaluate(`
   const root = document.getElementById('configRootFrequency');
   root.value = '${frequency}';
@@ -83,13 +89,15 @@ describe('the systems the app generates', { skip }, () => {
         return [hintFor('majorPentatonic'), hintFor('blues'), hintFor('major')];
       `), [
         'also brings in Minor pentatonic, which its degrees build',
+        // The Pythagorean scale the app starts on builds nothing but itself.
         '',
-        // The major family is already here, being what the app starts on.
-        '',
+        'also brings in Natural minor and Diminished, which its degrees build',
       ]);
     });
 
     it('modulates into the scale a degree builds, on the root key for that degree', async () => {
+      await load('major');
+
       // Degree II of the major scale builds the natural minor, so the same
       // key plays a different interval above the root it was built from.
       assert.deepEqual(await app.evaluate(`
@@ -104,6 +112,8 @@ describe('the systems the app generates', { skip }, () => {
     });
 
     it('plays the edits made to the scale a degree builds', async () => {
+      await load('major');
+
       const secondNoteUnderRoot1 = () => app.evaluate(`
         document.querySelector('[data-show-view="play"]').click();
         document.body.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true }));
@@ -164,7 +174,7 @@ describe('the systems the app generates', { skip }, () => {
       assert.deepEqual(await app.evaluate(`
         return [document.querySelectorAll('.root-key').length,
                 document.querySelectorAll('.note').length];
-      `), [MAX_ROOT_NOTES, 27]);
+      `), [6, 15]);
     });
 
     it('repeats the one note it has up the periods, on the root keys', async () => {
@@ -197,7 +207,7 @@ describe('the systems the app generates', { skip }, () => {
                 document.querySelectorAll('.note').length];
       `);
 
-      assert.equal(system[0], 37, 'the scale holds more notes than the keyboard can show');
+      assert.equal(system[0], 42, 'the scale holds more notes than the keyboard can show');
       assert.deepEqual(system.slice(1), [MAX_ROOT_NOTES, KEY_COUNT]);
       assert.equal(await app.evaluate(`
         return document.getElementById('/').querySelector('.degree').textContent;
@@ -208,7 +218,7 @@ describe('the systems the app generates', { skip }, () => {
       // Fourteen notes: ten fill the top row, the remaining four open the home
       // row, and the rest of that row climbs into the register above.
       assert.deepEqual(await app.evaluate(`
-        for (let added = 0; added < 7; added++) document.getElementById('addNote').click();
+        for (let added = 0; added < 2; added++) document.getElementById('addNote').click();
         document.querySelector('[data-show-view="play"]').click();
         return ['q', 'p', 'a', 'f', 'g'].map(key =>
           document.getElementById(key).querySelector('.degree').textContent);
@@ -246,6 +256,8 @@ describe('the systems the app generates', { skip }, () => {
 
   describe('a root note at the bottom of the audible range', () => {
     it('climbs from the root instead of trying to reach below it', async () => {
+      // A scale of seven puts one register on each row, so the climb shows.
+      await load('major');
       await setRootFrequency(20);
 
       const frequencies = await app.evaluate(`
