@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { playSound, stopSound, stopAllSounds, setSoundFrequency } from '../../js/audio/audioHandler.js';
+import { playSound, stopSound, stopAllSounds, setSoundFrequency, isSounding } from '../../js/audio/audioHandler.js';
 
 /**
  * A Web Audio stub that records what the app asks of it. Installed once,
@@ -111,6 +111,24 @@ describe('setSoundFrequency', () => {
     assert.ok(oscillators[0].frequency.targets[0].timeConstant > 0);
   });
 
+  it('glides for as long as it is asked to', () => {
+    playSound(440, 'q', '0.5', 'sine');
+
+    setSoundFrequency('q', 550, 0.05);
+
+    assert.equal(oscillators[0].frequency.targets[0].timeConstant, 0.05);
+  });
+
+  it('arrives at once when the glide is off, without re-striking the note', () => {
+    playSound(440, 'q', '0.5', 'sine');
+
+    setSoundFrequency('q', 550, 0);
+
+    assert.deepEqual(oscillators[0].frequency.targets, []);
+    assert.equal(oscillators[0].frequency.value, 550);
+    assert.equal(oscillators[0].stopped, false);
+  });
+
   it('retunes only the key it was given, leaving the others alone', () => {
     playSound(440, 'q', '0.5', 'sine');
     playSound(660, 'w', '0.5', 'sine');
@@ -141,6 +159,18 @@ describe('setSoundFrequency', () => {
     setSoundFrequency('q', Number.NaN);
 
     assert.equal(oscillators[0].frequency.value, 440);
+  });
+});
+
+describe('isSounding', () => {
+  it('tells a key with a voice from one without, so a held note can be moved', () => {
+    assert.equal(isSounding('q'), false);
+
+    playSound(440, 'q', '0.5', 'sine');
+    assert.equal(isSounding('q'), true);
+
+    stopSound('q');
+    assert.equal(isSounding('q'), false);
   });
 });
 

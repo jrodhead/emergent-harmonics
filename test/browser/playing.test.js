@@ -2,6 +2,7 @@ import { describe, it, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { launchApp, findChrome } from '../helpers/browser.js';
+import { recordAudio } from '../helpers/recordAudio.js';
 
 const skip = findChrome() ? false : 'no Chrome-like browser installed to test with';
 
@@ -10,58 +11,6 @@ let app;
 const dispatchKey = (type, key) => `
   document.body.dispatchEvent(new KeyboardEvent('${type}', { key: '${key}', bubbles: true }));
 `;
-
-/**
- * Records what the app actually asks of the audio hardware: the shape,
- * frequency and volume each note starts with, and every stop. Installed before
- * any note sounds, since the oscillator is built on first play.
- */
-const recordAudio = () => app.evaluate(`
-  window.__sounds = [];
-  window.__stops = 0;
-
-  const createOscillator = AudioContext.prototype.createOscillator;
-  AudioContext.prototype.createOscillator = function () {
-    const oscillator = createOscillator.call(this);
-    const sound = {};
-    window.__sounds.push(sound);
-
-    const setFrequency = oscillator.frequency.setValueAtTime.bind(oscillator.frequency);
-    oscillator.frequency.setValueAtTime = (value, ...rest) => {
-      sound.frequency = Math.round(value);
-      return setFrequency(value, ...rest);
-    };
-
-    const start = oscillator.start.bind(oscillator);
-    oscillator.start = (...rest) => {
-      sound.shape = oscillator.type;
-      return start(...rest);
-    };
-
-    const stop = oscillator.stop.bind(oscillator);
-    oscillator.stop = (...rest) => {
-      window.__stops++;
-      return stop(...rest);
-    };
-
-    return oscillator;
-  };
-
-  // The gain node is built straight after the oscillator it belongs to.
-  const createGain = AudioContext.prototype.createGain;
-  AudioContext.prototype.createGain = function () {
-    const gain = createGain.call(this);
-    const sound = window.__sounds[window.__sounds.length - 1];
-    const setVolume = gain.gain.setValueAtTime.bind(gain.gain);
-
-    gain.gain.setValueAtTime = (value, ...rest) => {
-      if (sound) sound.volume = Number(value);
-      return setVolume(value, ...rest);
-    };
-
-    return gain;
-  };
-`);
 
 describe('playing the keyboard', { skip }, () => {
   before(async () => {
@@ -88,7 +37,7 @@ describe('playing the keyboard', { skip }, () => {
     `;
 
     it('starts a note at the frequency its key shows', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.deepEqual(await app.evaluate(`
         ${dispatchKey('keydown', 'q')}
@@ -98,7 +47,7 @@ describe('playing the keyboard', { skip }, () => {
     });
 
     it('plays the wave shape the controls are set to', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.equal(await app.evaluate(`
         ${setControl('waveShape', 'square')}
@@ -108,7 +57,7 @@ describe('playing the keyboard', { skip }, () => {
     });
 
     it('plays at the volume the controls are set to', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.equal(await app.evaluate(`
         ${setControl('oscillatorVolume', '0.25')}
@@ -118,7 +67,7 @@ describe('playing the keyboard', { skip }, () => {
     });
 
     it('reads the controls afresh for every note, so a change takes hold mid-play', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.deepEqual(await app.evaluate(`
         ${setControl('waveShape', 'sine')}
@@ -132,7 +81,7 @@ describe('playing the keyboard', { skip }, () => {
 
   describe('silencing everything with Escape', () => {
     it('stops every note that is sounding', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.deepEqual(await app.evaluate(`
         ['q', 'w', 'e'].forEach(key =>
@@ -164,7 +113,7 @@ describe('playing the keyboard', { skip }, () => {
     });
 
     it('silences notes even while a form field has focus, being the panic key', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.equal(await app.evaluate(`
         ${dispatchKey('keydown', 'q')}
@@ -177,7 +126,7 @@ describe('playing the keyboard', { skip }, () => {
     });
 
     it('silences a note being auditioned on the configuration screen', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.deepEqual(await app.evaluate(`
         document.querySelector('[data-show-view="config"]').click();
@@ -190,7 +139,7 @@ describe('playing the keyboard', { skip }, () => {
     });
 
     it('does nothing worth noticing when nothing is sounding', async () => {
-      await recordAudio();
+      await recordAudio(app);
 
       assert.equal(await app.evaluate(`
         ${dispatchKey('keydown', 'Escape')}

@@ -1,8 +1,9 @@
-import { playSound, stopSound } from '../audio/audioHandler.js';
+import { playSound, stopSound, setSoundFrequency, isSounding } from '../audio/audioHandler.js';
 import { noteKeyMap } from './mapNoteKeys.js';
 import { heldRootKeys, heldNoteKeys } from './heldKeysState.js';
 import { currentPlayMode } from './playModeHandler.js';
 import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
+import { glideTimeConstant } from '../config/playSettings.js';
 
 const playNoteForKey = (key) => {
   const keyData = noteKeyMap.find((item) => item.key === key);
@@ -18,6 +19,21 @@ const playNoteForKey = (key) => {
 const stopNoteForKey = (key) => {
   stopSound(key);
   document.getElementById(key)?.classList.remove('active');
+};
+
+/**
+ * Moves a note that is already sounding to the pitch its key now carries,
+ * instead of stopping it and striking it again. This is what turns a root
+ * change from a cut into a gesture: the chord slides into the new tuning.
+ */
+const glideNoteToKey = (key) => {
+  const keyData = noteKeyMap.find((item) => item.key === key);
+
+  // The key has no note in the new system, so there is nothing to glide to.
+  if (!keyData) return stopNoteForKey(key);
+
+  setSoundFrequency(key, keyData.frequency, glideTimeConstant());
+  document.getElementById(key)?.classList.add('active');
 };
 
 /**
@@ -63,14 +79,19 @@ document.body.addEventListener('keydown', noteKeyHandler);
 document.body.addEventListener('keyup', noteKeyHandler);
 
 // The key map just redrew (new root, new register), so any already-held note
-// needs to be re-sounded against the fresh elements and frequencies rather
-// than left showing a stale (or now-missing) active state.
+// needs to be moved onto the fresh elements and frequencies rather than left
+// showing a stale (or now-missing) active state.
 document.body.addEventListener('noteKeyMapChanged', () => {
   heldNoteKeys.forEach((key) => {
-    stopNoteForKey(key);
-    if (currentPlayMode !== 'hold' || heldRootKeys.size > 0) {
-      playNoteForKey(key);
-    }
+    const shouldSound = currentPlayMode !== 'hold' || heldRootKeys.size > 0;
+
+    if (!shouldSound) return stopNoteForKey(key);
+
+    // Held but silent — hold mode, the root pressed back down — has no voice
+    // to move, so it is struck against the new map instead.
+    if (isSounding(key)) return glideNoteToKey(key);
+
+    playNoteForKey(key);
   });
 });
 

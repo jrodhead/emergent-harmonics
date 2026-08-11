@@ -52,6 +52,16 @@ const syncToolbar = () => {
 };
 
 /**
+ * Puts the audible range on the root field. Set here rather than in the markup
+ * so the bounds the field offers are the same ones a typed frequency is
+ * actually clamped to, from the one place that defines them.
+ */
+const boundRootFrequencyInput = () => {
+  rootFrequencyInput.min = MIN_AUDIBLE_FREQUENCY;
+  rootFrequencyInput.max = MAX_AUDIBLE_FREQUENCY;
+};
+
+/**
  * Says what else a load would do to the screen. Its degrees build other
  * scales, and those come in alongside it so they can be edited too; a load
  * into the primary scale also clears whatever its degrees no longer reach.
@@ -249,6 +259,8 @@ export function initSystemConfig() {
   presetSelect = document.getElementById('presetSelect');
   presetFamilyHint = document.getElementById('presetFamilyHint');
   importFileInput = document.getElementById('importConfigFile');
+
+  boundRootFrequencyInput();
 
   presetSelect.innerHTML = presetOptions()
     .map(({ value, label }) => `<option value="${value}">${label}</option>`)

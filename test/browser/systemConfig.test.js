@@ -36,6 +36,21 @@ describe('the system configuration screen', { skip }, () => {
       assert.equal(await app.evaluate("return document.querySelectorAll('.config-note[data-note-index]').length"), 12);
     });
 
+    // Compared against the constants rather than against 20 and 20000, so that
+    // moving the audible range moves the field with it: literals here would go
+    // on passing against a field left behind at whatever the markup once said.
+    it('bounds the root by the audible range the system is generated within', async () => {
+      const [onTheField, fromTheSystem] = await app.evaluate(`
+        return import('/js/system/generateSystem.js').then(({ MIN_AUDIBLE_FREQUENCY, MAX_AUDIBLE_FREQUENCY }) => {
+          const root = document.getElementById('configRootFrequency');
+          return [[root.min, root.max], [String(MIN_AUDIBLE_FREQUENCY), String(MAX_AUDIBLE_FREQUENCY)]];
+        });
+      `);
+
+      assert.deepEqual(onTheField, fromTheSystem);
+      assert.equal(await app.evaluate("return document.getElementById('configRootFrequency').checkValidity()"), true);
+    });
+
     it('brings in nothing else, the Pythagorean degrees all building itself', async () => {
       assert.deepEqual(await app.evaluate(`
         return [...document.querySelectorAll('.config-scale-name')].map(name => name.textContent.trim());
