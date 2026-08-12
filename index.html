@@ -67,6 +67,16 @@
         <output for="oscillatorVolume" id="volumeOutput">0.5</output>
       </div>
       <div class="form-group">
+        <label for="attackTime">Attack:</label>
+        <input type="range" id="attackTime" min="0" max="2000" step="10" value="10">
+        <output for="attackTime" id="attackOutput">10 ms</output>
+      </div>
+      <div class="form-group">
+        <label for="releaseTime">Release:</label>
+        <input type="range" id="releaseTime" min="0" max="2000" step="10" value="120">
+        <output for="releaseTime" id="releaseOutput">120 ms</output>
+      </div>
+      <div class="form-group">
         <label for="glideTime">Glide:</label>
         <input type="range" id="glideTime" min="0" max="500" step="10" value="80">
         <output for="glideTime" id="glideOutput">80 ms</output>

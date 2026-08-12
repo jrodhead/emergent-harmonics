@@ -32,6 +32,9 @@ footer form {
   justify-content: flex-start;
   gap: 1rem;
   padding-right: 1rem;
+  /* Five controls do not fit a narrow window in one line, and a footer that
+     pushed the page sideways would take the note tracks with it. */
+  flex-wrap: wrap;
 }
 
 legend {

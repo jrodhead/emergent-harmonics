@@ -206,9 +206,19 @@ Each key shows its degree and period shift, its ratio, its interval name, and it
 each root key also shows which scale it builds.
 
 The **Oscillator Configuration** footer sets the waveform (sine, square, sawtooth, triangle)
-and the volume, and applies to both the keyboard and the configuration previews. **Glide** sets
-how long a held note takes to reach its new pitch, from 0 to 500 ms; at 0 the note arrives at
-once, still without being re-struck. It is remembered between visits.
+and the volume, and applies to both the keyboard and the configuration previews.
+
+Three controls shape how a note moves, and all three are remembered between visits:
+
+- **Attack** — how long a note takes to swell to full volume when it is struck, 0 to 2000 ms.
+- **Release** — how long it goes on sounding after its key is let go, 0 to 2000 ms. The key
+  itself is free the instant you release it, so you can strike it again over its own decay.
+- **Glide** — how long a held note takes to reach its new pitch, 0 to 500 ms; at 0 the note
+  arrives at once, still without being re-struck.
+
+At 0 the attack and release switch the note on and off outright, which clicks — that click is
+what they exist to remove. `Escape` still silences everything on the spot, including notes part
+way through a long release.
 
 ---
 
@@ -235,8 +245,9 @@ js/config/
   rootScales.js             Resolving a note's rootScaleId to notes and to a label
   degrees.js                Roman numerals by position
   selectedScale.js          Which scale is being edited (screen state, not system state)
-  playSettings.js           How the keyboard plays rather than what: the glide, persisted
-  playSettingsHandler.js    Event wiring for the glide control
+  playSettings.js           How the keyboard plays rather than what: the attack, release
+                            and glide, persisted
+  playSettingsHandler.js    Event wiring for those three controls
   viewToggle.js             config ↔ play, clearing held keys on the way
 
 js/keys/
@@ -250,7 +261,8 @@ js/keys/
   playModeHandler.js        The * toggle
   keyEventGuard.js          Ignoring keys typed into fields, or pressed in the config view
 
-js/audio/audioHandler.js    Web Audio: play, retune, stop, stop everything
+js/audio/audioHandler.js    Web Audio: play, retune, release, stop everything. Holds the
+                            voices still fading after their key was let go
 js/format.js                Shared display formatting (frequencies, ratios, degrees, cents)
 js/storage.js               localStorage that degrades to memory when it is unavailable
 ```

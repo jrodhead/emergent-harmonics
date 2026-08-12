@@ -3,7 +3,7 @@ import { noteKeyMap } from './mapNoteKeys.js';
 import { heldRootKeys, heldNoteKeys } from './heldKeysState.js';
 import { currentPlayMode } from './playModeHandler.js';
 import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
-import { glideTimeConstant } from '../config/playSettings.js';
+import { attackTime, glideTimeConstant, releaseTime } from '../config/playSettings.js';
 
 const playNoteForKey = (key) => {
   const keyData = noteKeyMap.find((item) => item.key === key);
@@ -12,12 +12,14 @@ const playNoteForKey = (key) => {
   const currentVolume = document.getElementById('oscillatorVolume').value;
   const waveShape = document.getElementById('waveShape').value;
 
-  playSound(keyData.frequency, key, currentVolume, waveShape);
+  playSound(keyData.frequency, key, currentVolume, waveShape, attackTime());
   document.getElementById(key)?.classList.add('active');
 };
 
+// The key stops being lit at once while its voice fades out, because the light
+// is showing what is held, not what is still sounding.
 const stopNoteForKey = (key) => {
-  stopSound(key);
+  stopSound(key, releaseTime());
   document.getElementById(key)?.classList.remove('active');
 };
 

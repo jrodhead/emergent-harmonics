@@ -6,9 +6,18 @@ import {
   STORAGE_KEY,
   DEFAULT_GLIDE_MS,
   MAX_GLIDE_MS,
+  DEFAULT_ATTACK_MS,
+  DEFAULT_RELEASE_MS,
+  MAX_ENVELOPE_MS,
   getGlideMs,
   setGlideMs,
   glideTimeConstant,
+  getAttackMs,
+  setAttackMs,
+  attackTime,
+  getReleaseMs,
+  setReleaseMs,
+  releaseTime,
   loadStoredPlaySettings,
 } from '../../js/config/playSettings.js';
 
@@ -63,6 +72,59 @@ describe('glide time', () => {
   });
 });
 
+describe('the envelope', () => {
+  it('starts with edges the ear does not hear as clicks', () => {
+    assert.equal(getAttackMs(), DEFAULT_ATTACK_MS);
+    assert.equal(getReleaseMs(), DEFAULT_RELEASE_MS);
+    assert.ok(DEFAULT_ATTACK_MS > 0);
+    assert.ok(DEFAULT_RELEASE_MS > 0);
+  });
+
+  it('takes a new attack and release', () => {
+    setAttackMs(400);
+    setReleaseMs(900);
+
+    assert.equal(getAttackMs(), 400);
+    assert.equal(getReleaseMs(), 900);
+  });
+
+  it('allows no envelope at all, for a player who wants the note to switch', () => {
+    setAttackMs(0);
+    setReleaseMs(0);
+
+    assert.equal(attackTime(), 0);
+    assert.equal(releaseTime(), 0);
+  });
+
+  it('holds both inside their range', () => {
+    setAttackMs(-50);
+    setReleaseMs(-50);
+    assert.equal(getAttackMs(), 0);
+    assert.equal(getReleaseMs(), 0);
+
+    setAttackMs(MAX_ENVELOPE_MS + 1000);
+    setReleaseMs(MAX_ENVELOPE_MS + 1000);
+    assert.equal(getAttackMs(), MAX_ENVELOPE_MS);
+    assert.equal(getReleaseMs(), MAX_ENVELOPE_MS);
+  });
+
+  it('ignores a value that is not a number', () => {
+    setAttackMs(Number.NaN);
+    setReleaseMs(undefined);
+
+    assert.equal(getAttackMs(), DEFAULT_ATTACK_MS);
+    assert.equal(getReleaseMs(), DEFAULT_RELEASE_MS);
+  });
+
+  it('reports both in the seconds the audio layer schedules in', () => {
+    setAttackMs(250);
+    setReleaseMs(1500);
+
+    assert.equal(attackTime(), 0.25);
+    assert.equal(releaseTime(), 1.5);
+  });
+});
+
 describe('persistence', () => {
   it('saves the glide as soon as it changes', () => {
     setGlideMs(250);
@@ -110,5 +172,41 @@ describe('persistence', () => {
     loadStoredPlaySettings();
 
     assert.equal(getGlideMs(), DEFAULT_GLIDE_MS);
+  });
+
+  it('saves the envelope as soon as it changes', () => {
+    setAttackMs(300);
+    setReleaseMs(700);
+
+    assert.equal(storedSettings().attackMs, 300);
+    assert.equal(storedSettings().releaseMs, 700);
+  });
+
+  it('restores the envelope that was stored', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ attackMs: 40, releaseMs: 600 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getAttackMs(), 40);
+    assert.equal(getReleaseMs(), 600);
+  });
+
+  it('holds a hand-edited envelope inside its range', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ attackMs: 99999, releaseMs: -1 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getAttackMs(), MAX_ENVELOPE_MS);
+    assert.equal(getReleaseMs(), 0);
+  });
+
+  it('restores settings written before the envelope existed', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ glideMs: 200 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getGlideMs(), 200);
+    assert.equal(getAttackMs(), DEFAULT_ATTACK_MS);
+    assert.equal(getReleaseMs(), DEFAULT_RELEASE_MS);
   });
 });

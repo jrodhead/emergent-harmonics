@@ -87,22 +87,9 @@ hard to hear as expressive while notes still click on and off.
 
 ## Group 2 — The expressive layer
 
-The "it feels like an instrument" group. Mostly absent today.
-
-### Envelopes
-
-As someone playing, I want notes to start and stop smoothly, so that the instrument does not
-click on every keypress.
-
-**Acceptance Criteria:**
-1. Notes ramp up on press and down on release rather than switching instantly.
-2. Attack and release are adjustable alongside the existing oscillator controls.
-3. A released note's voice is cleaned up only once it has finished sounding.
-4. Panic stop (`Escape`) still silences everything immediately.
-
-**Notes:** `playSound` jumps gain from 0 to volume and `stopSound` calls `oscillator.stop()`
-outright, so every note clicks at both ends. Probably the single largest change to how the app
-*feels* per line of code.
+The "it feels like an instrument" group. *Envelopes* is built — see
+[done-user-stories/oscillator_envelopes.md](done-user-stories/oscillator_envelopes.md); the rest
+of the group is still open.
 
 ### Sustain pedal
 
@@ -191,12 +178,14 @@ get lost.
 
 ## Suggested order
 
-**Envelopes → sustain pedal → drone key.**
+**Sustain pedal → drone key.**
 
-Gliding root changes is built. Envelopes come next because the glide only sounds beautiful once
-the notes at either end of it are not clicking; the sustain pedal because the glide only matters
-musically once a chord can be held through the change, and because it is what brings the glide
-to hold mode. Together they finish turning the root key from a mode switch into a gesture.
+Gliding root changes is built, and so are the envelopes at either end of the glide. The sustain
+pedal comes next because the glide only matters musically once a chord can be held through the
+change, and because it is what brings the glide to hold mode: together they finish turning the
+root key from a mode switch into a gesture. The release now covers the gap between two root
+keys for as long as it lasts, but a decay is not a sustain — the pedal is still the thing that
+holds a chord there deliberately.
 
 *Live interval readout* is the best standalone pick — it depends on nothing else and it is what
 makes the app's whole premise audible rather than theoretical.

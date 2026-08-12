@@ -3,6 +3,7 @@ import { isTypingTarget } from '../keys/keyEventGuard.js';
 import { KEY_ROWS } from '../keys/buildNoteKeyMap.js';
 import { getSelectedScale } from './selectedScale.js';
 import { ratioToFrequency } from './systemConfigState.js';
+import { attackTime, releaseTime } from './playSettings.js';
 
 /**
  * The playing keys audition the notes of the scale being edited, in order,
@@ -33,13 +34,14 @@ const startPreview = (noteIndex) => {
     previewSoundKey(noteIndex),
     document.getElementById('oscillatorVolume').value,
     document.getElementById('waveShape').value,
+    attackTime(),
   );
   noteRow(noteIndex)?.classList.add('active');
 };
 
 const stopPreview = (noteIndex) => {
   soundingNotes.delete(noteIndex);
-  stopSound(previewSoundKey(noteIndex));
+  stopSound(previewSoundKey(noteIndex), releaseTime());
   noteRow(noteIndex)?.classList.remove('active');
 };
 
