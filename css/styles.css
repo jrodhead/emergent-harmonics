@@ -146,7 +146,8 @@ button#play {
   color: rgb(255, 255, 255)
 }
 
-#playModeTable {
+#playModeTable,
+#sustainPedalTable {
   color: #fff;
   padding: .5rem;
 }

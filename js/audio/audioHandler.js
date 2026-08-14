@@ -6,6 +6,11 @@ const activeOscillators = {}; // Object to store active oscillators by key
 // sounding, so they are held on to until their release has finished.
 const releasingVoices = new Set();
 
+// Voices whose key was let go while the sustain pedal was down. Unlike a
+// releasing voice they are not going anywhere: they sound on at full volume,
+// detached from the key that struck them, until the pedal is lifted.
+const sustainedVoices = new Set();
+
 // Long enough that a fader drag does not click on every step, short enough
 // that the note still arrives where the pointer is.
 const DRAG_GLIDE_TIME_CONSTANT = 0.01;
@@ -13,9 +18,47 @@ const DRAG_GLIDE_TIME_CONSTANT = 0.01;
 /** Whether a key currently has a voice, so callers can tell held from sounding. */
 export const isSounding = (key) => Boolean(activeOscillators[key]);
 
+/** How many voices the pedal is holding on to, for the tests and the display. */
+export const sustainedVoiceCount = () => sustainedVoices.size;
+
 const teardown = ({ oscillator, gainNode }) => {
   oscillator.disconnect();
   gainNode.disconnect();
+};
+
+/**
+ * Fades a voice out and ends it, whether it was let go by its key or by the
+ * pedal. The voice must already have been detached from wherever it was held,
+ * since this is the last thing to happen to it.
+ *
+ * @param {object} voice - The oscillator and gain node to release.
+ * @param {number} releaseTime - How long the fade takes, in seconds. Zero stops
+ *   it dead, and clicks.
+ */
+const releaseVoice = (voice, releaseTime) => {
+  const { oscillator, gainNode } = voice;
+
+  if (!(releaseTime > 0)) {
+    oscillator.stop();
+    teardown(voice);
+    return;
+  }
+
+  const endsAt = audioContext.currentTime + releaseTime;
+
+  // Freezing the gain where it has actually got to is what makes a staccato
+  // note work: a key let go mid-attack releases from there rather than jumping
+  // up to full volume first.
+  gainNode.gain.cancelScheduledValues(audioContext.currentTime);
+  gainNode.gain.setValueAtTime(gainNode.gain.value, audioContext.currentTime);
+  gainNode.gain.linearRampToValueAtTime(0, endsAt);
+  oscillator.stop(endsAt);
+
+  releasingVoices.add(voice);
+  oscillator.onended = () => {
+    releasingVoices.delete(voice);
+    teardown(voice);
+  };
 };
 
 /**
@@ -118,29 +161,36 @@ export function stopSound(key, releaseTime = 0) {
 
   delete activeOscillators[key]; // Remove the oscillator from the active list
 
-  const { oscillator, gainNode } = voice;
+  releaseVoice(voice, releaseTime);
+}
 
-  if (!(releaseTime > 0)) {
-    oscillator.stop();
-    teardown(voice);
-    return;
-  }
+/**
+ * Hands a key's voice to the sustain pedal. Nothing is scheduled: the voice
+ * carries on exactly as it was, but it no longer belongs to a key, so the key
+ * is free to be struck again and a root change can no longer reach it — the
+ * same bargain a released voice makes, without the fade.
+ *
+ * Does nothing if that key is not sounding, which is what makes it safe to
+ * pedal a key that hold mode never let sound in the first place.
+ *
+ * @param {string} key - The key the sound was started under.
+ */
+export function sustainVoice(key) {
+  const voice = activeOscillators[key];
+  if (!voice) return;
 
-  const endsAt = audioContext.currentTime + releaseTime;
+  delete activeOscillators[key];
+  sustainedVoices.add(voice);
+}
 
-  // Freezing the gain where it has actually got to is what makes a staccato
-  // note work: a key let go mid-attack releases from there rather than jumping
-  // up to full volume first.
-  gainNode.gain.cancelScheduledValues(audioContext.currentTime);
-  gainNode.gain.setValueAtTime(gainNode.gain.value, audioContext.currentTime);
-  gainNode.gain.linearRampToValueAtTime(0, endsAt);
-  oscillator.stop(endsAt);
-
-  releasingVoices.add(voice);
-  oscillator.onended = () => {
-    releasingVoices.delete(voice);
-    teardown(voice);
-  };
+/**
+ * Lifts the pedal: everything it was holding begins its release together.
+ *
+ * @param {number} [releaseTime] - How long they take to fade, in seconds.
+ */
+export function releaseSustainedVoices(releaseTime = 0) {
+  sustainedVoices.forEach((voice) => releaseVoice(voice, releaseTime));
+  sustainedVoices.clear();
 }
 
 /**
@@ -148,7 +198,7 @@ export function stopSound(key, releaseTime = 0) {
  * stop, so nothing is left ringing: everything ends at this instant.
  */
 export function stopAllSounds() {
-  const voices = [...Object.values(activeOscillators), ...releasingVoices];
+  const voices = [...Object.values(activeOscillators), ...releasingVoices, ...sustainedVoices];
 
   voices.forEach((voice) => {
     const { oscillator, gainNode } = voice;
@@ -164,5 +214,6 @@ export function stopAllSounds() {
     delete activeOscillators[key];
   });
   releasingVoices.clear();
+  sustainedVoices.clear();
   console.log('Stopped all sounds');
 }

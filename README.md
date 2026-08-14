@@ -24,7 +24,7 @@ HTTP rather than `file://`, because the app loads ES modules.
 
 ```sh
 npm test            # everything
-npm run test:unit   # pure logic, no browser (233 tests, fast)
+npm run test:unit   # pure logic, no browser (279 tests, fast)
 npm run test:browser # drives real Chrome over the DevTools protocol
 ```
 
@@ -187,6 +187,7 @@ audio).
 | `↑` / `↓` | Move the note keys up or down a register. |
 | `Escape` | Panic — stop every sound. |
 | `*` | Switch play mode. |
+| `Space` | Sustain pedal — hold it down and released notes go on sounding. |
 
 Chords work: hold as many note keys as you like. Changing root or register while notes are held
 **glides** them into their new frequencies rather than stopping and re-striking them, so a
@@ -199,8 +200,25 @@ with no note in the new system stops instead, having nowhere to glide to.
 - **latch** — note keys sound on their own, for as long as you hold them.
 - **hold** — a note only sounds while a root key is *also* held, and releasing the last root
   silences everything still down. Like lifting the fretting hand off a still-ringing string.
-  To glide between roots in this mode, press the new root *before* releasing the old one:
-  releasing the last root first silences the chord, leaving nothing to glide.
+  To glide between roots in this mode, either press the new root *before* releasing the old one,
+  or hold the sustain pedal — otherwise releasing the last root silences the chord and leaves
+  nothing to glide.
+
+**The sustain pedal** (`Space`, shown beside the play mode) holds notes on after their keys are
+let go, and what it does depends on whether the key is still down when the root changes:
+
+- **Key already up.** The voice is handed to the pedal. It goes on sounding at full volume until
+  you lift, but it no longer belongs to a key, so a root change leaves it where it was — a pedal
+  point under the modulation. Striking the key again starts a second voice over the top, as a
+  piano does, and both release together when you lift.
+- **Key still down.** Nothing is handed over; the pedal only suspends hold mode's silencing. This
+  is what carries a chord across the gap between letting go of one root key and pressing the
+  next, and because the notes never leave their keys they still **glide** into the new root.
+
+So the key decides whether a note follows a modulation, and the pedal decides whether it survives
+one. Lifting the pedal fades everything it was holding, and hands the still-held keys back to
+hold mode's rule. `Escape` silences pedalled notes like any other, and switching views lifts the
+pedal for you.
 
 Each key shows its degree and period shift, its ratio, its interval name, and its frequency;
 each root key also shows which scale it builds.
@@ -253,16 +271,19 @@ js/config/
 js/keys/
   buildNoteKeyMap.js        Registers → keys. Pure, so it can be tested on its own
   mapNoteKeys.js            Applies a key map and redraws
-  noteKeyHandler.js         Note keys, including the latch/hold rules and gliding held
-                            notes through a root or register change
+  noteKeyHandler.js         Note keys, including the latch/hold and pedal rules, and gliding
+                            held notes through a root or register change
   rootKeyHandler.js         Root keys 0-9
   arrowKeyHandler.js        Register changes
   escapeKeyHandler.js       Panic stop
   playModeHandler.js        The * toggle
+  sustainPedalHandler.js    The Space pedal: the key, the indicator, and the pedalUp event
+  sustainPedalState.js      Whether it is down, read by the note keys
   keyEventGuard.js          Ignoring keys typed into fields, or pressed in the config view
 
 js/audio/audioHandler.js    Web Audio: play, retune, release, stop everything. Holds the
-                            voices still fading after their key was let go
+                            voices still fading after their key was let go, and the ones the
+                            sustain pedal is keeping alive
 js/format.js                Shared display formatting (frequencies, ratios, degrees, cents)
 js/storage.js               localStorage that degrades to memory when it is unavailable
 ```

@@ -87,25 +87,12 @@ hard to hear as expressive while notes still click on and off.
 
 ## Group 2 — The expressive layer
 
-The "it feels like an instrument" group. *Envelopes* is built — see
-[done-user-stories/oscillator_envelopes.md](done-user-stories/oscillator_envelopes.md); the rest
-of the group is still open.
-
-### Sustain pedal
-
-As someone playing chords, I want notes to continue after I release their keys until I lift a
-pedal, so that I can hold a sonority through a root change.
-
-**Acceptance Criteria:**
-1. A held key acts as a sustain pedal.
-2. Notes released while it is down keep sounding until it is lifted.
-3. It interacts correctly with the latch and hold play modes, view switching, and panic stop.
-4. A pedalled note survives the release of the last root in hold mode.
-
-**Notes:** criterion 4 is what makes gliding work in hold mode. Changing root there means
-releasing one root key and pressing the next, and the release silences the chord before the new
-root arrives, so there is nothing left to glide unless the two root keys overlap. A pedal that
-holds notes through that gap fixes it with no change to the glide itself.
+The "it feels like an instrument" group. Two of it are built: *Envelopes* (see
+[done-user-stories/oscillator_envelopes.md](done-user-stories/oscillator_envelopes.md)) and the
+*Sustain pedal* (see
+[done-user-stories/playing_sustain-pedal.md](done-user-stories/playing_sustain-pedal.md), which
+is on `Space` and holds a chord across a root change in hold mode as well as after a key
+release).
 
 ### Drone key
 
@@ -120,6 +107,38 @@ the intervals I play have an audible reference.
 
 **Notes:** small, and arguably the highest musical value on this page. In just intonation an
 interval only means something against a reference.
+
+**Planned** in [planning/refined-stories/playing_drone-key.md](planning/refined-stories/playing_drone-key.md),
+which settles criterion 3 as a mode toggle — anchored to the system fundamental, or following the
+current root — and adds two criteria the idea above did not have: the drone's pitch and its level
+are configurable, because a reference is only a reference while it sits under what it refers to.
+
+### Stereo drone pair
+
+As someone listening for beats, I want the drone to be two voices straddling its pitch, panned
+apart, so that I can set a beat rate deliberately and hear it in isolation.
+
+**Acceptance Criteria:**
+1. The drone can sound as two voices, symmetric about the drone pitch, with the pair collapsing
+   to a single centred voice by default.
+2. The distance between them is configurable both as a ratio and as an offset in hertz.
+3. Each voice's position in the stereo field is configurable, including hard left and right.
+4. The frequencies sounding, the difference between them, and the beat that difference produces
+   are shown.
+
+**Notes:** two features wearing one coat. Panned hard apart on headphones it is a binaural beat,
+manufactured in the listener rather than in the air; panned together or heard on speakers it is
+real acoustic beating, which is this app's own subject — the beat rate between two notes is what
+makes a tuning ring or roll.
+
+The two units are not alternatives, they are two regimes, and the wave shape decides which one is
+audible: a hertz offset beats on any wave, while an interval offset produces no beating at all on
+a sine and beats between coinciding harmonics on a sawtooth, at a multiple of the offset. Which
+means criterion 4 is most of the work, and a drone wave shape of its own is probably criterion 5.
+
+Depends on the *Drone key*, and wants *Live interval readout* first — criterion 4 is that story's
+arithmetic, pointed at two voices instead of ten keys. Design notes are in the drone key plan,
+under *Room left*.
 
 ### Accent and dynamics
 
@@ -178,17 +197,26 @@ get lost.
 
 ## Suggested order
 
-**Sustain pedal → drone key.**
+**1. Drone key** — planned, and the next thing to build.
 
-Gliding root changes is built, and so are the envelopes at either end of the glide. The sustain
-pedal comes next because the glide only matters musically once a chord can be held through the
-change, and because it is what brings the glide to hold mode: together they finish turning the
-root key from a mode switch into a gesture. The release now covers the gap between two root
-keys for as long as it lasts, but a decay is not a sustain — the pedal is still the thing that
-holds a chord there deliberately.
+Gliding root changes is built, the envelopes at either end of the glide are built, and the
+sustain pedal now holds a chord through the change — together they have turned the root key
+from a mode switch into a gesture. The drone is what the pedal makes obvious next: the pedal
+holds *what you played* across a modulation, while the drone holds the *reference* the
+modulation is heard against, and it is the smaller of the two.
 
-*Live interval readout* is the best standalone pick — it depends on nothing else and it is what
-makes the app's whole premise audible rather than theoretical.
+**2. Live interval readout** — the best standalone pick, and no longer only standalone.
 
-*Chained roots* is the most exciting and should wait. It changes what the system means, and it
-will read as broken rather than expressive until the expressive layer exists.
+It depends on nothing, it is what makes the app's whole premise audible rather than theoretical,
+and it is now also a dependency: the *Stereo drone pair* needs the same arithmetic to show the
+beat it is setting. Building it second means that story inherits a readout instead of inventing
+one.
+
+**3. Stereo drone pair** — after both of the above.
+
+A held, isolated beat with a number attached to it, over a drone that is already the system's
+reference. It is the first thing here that is about *listening* rather than playing, which is why
+it wants the readout in place first.
+
+*Chained roots* is still the most exciting and should still wait. It changes what the system
+means, and it will read as broken rather than expressive until the expressive layer exists.

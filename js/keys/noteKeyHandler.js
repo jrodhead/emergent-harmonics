@@ -1,7 +1,15 @@
-import { playSound, stopSound, setSoundFrequency, isSounding } from '../audio/audioHandler.js';
+import {
+  playSound,
+  stopSound,
+  setSoundFrequency,
+  isSounding,
+  sustainVoice,
+  releaseSustainedVoices,
+} from '../audio/audioHandler.js';
 import { noteKeyMap } from './mapNoteKeys.js';
 import { heldRootKeys, heldNoteKeys } from './heldKeysState.js';
 import { currentPlayMode } from './playModeHandler.js';
+import { pedalDown } from './sustainPedalState.js';
 import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
 import { attackTime, glideTimeConstant, releaseTime } from '../config/playSettings.js';
 
@@ -20,6 +28,14 @@ const playNoteForKey = (key) => {
 // is showing what is held, not what is still sounding.
 const stopNoteForKey = (key) => {
   stopSound(key, releaseTime());
+  document.getElementById(key)?.classList.remove('active');
+};
+
+// The pedal is down, so the key is let go of but the note is not: the voice
+// goes on sounding without it, and the light goes out on the same principle as
+// above — the key is no longer held, whatever is still ringing.
+const pedalNoteForKey = (key) => {
+  sustainVoice(key);
   document.getElementById(key)?.classList.remove('active');
 };
 
@@ -55,6 +71,9 @@ const handleNoteKey = (ev, key) => {
     playNoteForKey(key);
   } else if (ev === 'keyup') {
     heldNoteKeys.delete(key);
+
+    if (pedalDown) return pedalNoteForKey(key);
+
     stopNoteForKey(key);
   } else {
     // Log an error if unable to handle the key event
@@ -85,13 +104,16 @@ document.body.addEventListener('keyup', noteKeyHandler);
 // showing a stale (or now-missing) active state.
 document.body.addEventListener('noteKeyMapChanged', () => {
   heldNoteKeys.forEach((key) => {
-    const shouldSound = currentPlayMode !== 'hold' || heldRootKeys.size > 0;
+    const sounding = isSounding(key);
+    // The pedal keeps a sounding note alive across a rootless gap, but never
+    // starts one hold mode would not have started.
+    const shouldSound = currentPlayMode !== 'hold' || heldRootKeys.size > 0 || (pedalDown && sounding);
 
     if (!shouldSound) return stopNoteForKey(key);
 
     // Held but silent — hold mode, the root pressed back down — has no voice
     // to move, so it is struck against the new map instead.
-    if (isSounding(key)) return glideNoteToKey(key);
+    if (sounding) return glideNoteToKey(key);
 
     playNoteForKey(key);
   });
@@ -100,5 +122,20 @@ document.body.addEventListener('noteKeyMapChanged', () => {
 // In hold mode, releasing the last held root silences whatever note keys
 // are still down, like lifting the fretting hand off a still-picked string.
 document.body.addEventListener('rootReleased', () => {
+  // Unless the pedal is down, which is what holds a chord across the gap
+  // between letting go of one root key and pressing the next. The notes never
+  // leave their keys, so the next root still glides them.
+  if (pedalDown) return;
+
   heldNoteKeys.forEach(stopNoteForKey);
+});
+
+document.body.addEventListener('pedalUp', () => {
+  releaseSustainedVoices(releaseTime());
+
+  // Hold mode's rule was suspended while the pedal was down, not repealed: with
+  // no root held there is nothing for the still-held keys to sound against.
+  if (currentPlayMode === 'hold' && heldRootKeys.size === 0) {
+    heldNoteKeys.forEach(stopNoteForKey);
+  }
 });

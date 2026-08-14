@@ -1,5 +1,6 @@
 import { stopAllSounds } from '../audio/audioHandler.js';
 import { heldRootKeys, heldNoteKeys } from '../keys/heldKeysState.js';
+import { liftPedal } from '../keys/sustainPedalHandler.js';
 
 const VIEWS = ['config', 'play'];
 
@@ -14,6 +15,9 @@ export function showView(view) {
 
   document.body.dataset.view = view;
 
+  // The pedal goes up first so that whatever it was holding is handed back
+  // before everything is stopped, rather than being left in its own set.
+  liftPedal();
   stopAllSounds();
   heldRootKeys.clear();
   heldNoteKeys.clear();

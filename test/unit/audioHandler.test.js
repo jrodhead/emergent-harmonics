@@ -1,7 +1,16 @@
 import { describe, it, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { playSound, stopSound, stopAllSounds, setSoundFrequency, isSounding } from '../../js/audio/audioHandler.js';
+import {
+  playSound,
+  stopSound,
+  stopAllSounds,
+  setSoundFrequency,
+  isSounding,
+  sustainVoice,
+  releaseSustainedVoices,
+  sustainedVoiceCount,
+} from '../../js/audio/audioHandler.js';
 
 /**
  * A Web Audio stub that records what the app asks of it. Installed once,
@@ -292,6 +301,92 @@ describe('stopSound', () => {
   });
 });
 
+describe('the sustain pedal', () => {
+  it('frees the key while the voice sounds on, untouched', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    sustainVoice('q');
+
+    assert.equal(isSounding('q'), false);
+    assert.equal(sustainedVoiceCount(), 1);
+    assert.equal(oscillators[0].stopped, false);
+    assert.deepEqual(gains[0].gain.ramps, []);
+  });
+
+  it('lets the key be struck again over what it left ringing', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    playSound(660, 'q', 0.5, 'sine', 0);
+
+    assert.equal(oscillators.length, 2);
+    assert.equal(oscillators[0].stopped, false);
+    assert.equal(isSounding('q'), true);
+  });
+
+  it('stacks a voice for every strike, as a piano does', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    assert.equal(sustainedVoiceCount(), 2);
+  });
+
+  it('leaves a sustained voice in the tuning it was let go in', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    setSoundFrequency('q', 550);
+
+    assert.equal(oscillators[0].frequency.value, 440);
+  });
+
+  it('fades everything it was holding when the pedal is lifted', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+    sustainVoice('q');
+    sustainVoice('w');
+
+    releaseSustainedVoices(0.3);
+
+    assert.equal(sustainedVoiceCount(), 0);
+    assert.deepEqual(gains[0].gain.ramps, [{ value: 0, endTime: 0.3, from: 0.5 }]);
+    assert.equal(oscillators[0].stoppedAt, 0.3);
+    assert.equal(oscillators[1].stoppedAt, 0.3);
+  });
+
+  it('tears a lifted voice down only once it has finished sounding', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    releaseSustainedVoices(0.3);
+    assert.equal(oscillators[0].disconnected, false);
+
+    oscillators[0].end();
+    assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('stops dead on a lift when there is no release', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    releaseSustainedVoices(0);
+
+    assert.equal(oscillators[0].stoppedAt, null);
+    assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('does nothing for a key that is not sounding, so hold mode can pedal silence', () => {
+    assert.doesNotThrow(() => sustainVoice('nothing-here'));
+    assert.equal(sustainedVoiceCount(), 0);
+  });
+
+  it('has nothing to do when the pedal was holding nothing', () => {
+    assert.doesNotThrow(() => releaseSustainedVoices(0.3));
+  });
+});
+
 describe('stopAllSounds', () => {
   it('stops every sounding key', (t) => {
     t.mock.method(console, 'log', () => {});
@@ -315,6 +410,19 @@ describe('stopAllSounds', () => {
     assert.equal(gains[0].gain.value, 0);
     assert.equal(oscillators[0].stoppedAt, null);
     assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('silences a voice the pedal is holding, being the panic stop', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    stopAllSounds();
+
+    assert.equal(gains[0].gain.value, 0);
+    assert.equal(oscillators[0].stopped, true);
+    assert.equal(oscillators[0].disconnected, true);
+    assert.equal(sustainedVoiceCount(), 0);
   });
 
   it('leaves nothing behind to tear down twice', (t) => {
