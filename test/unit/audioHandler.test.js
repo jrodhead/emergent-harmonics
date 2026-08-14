@@ -6,6 +6,7 @@ import {
   stopSound,
   stopAllSounds,
   setSoundFrequency,
+  setSoundVolume,
   isSounding,
   sustainVoice,
   releaseSustainedVoices,
@@ -271,6 +272,91 @@ describe('setSoundFrequency', () => {
     setSoundFrequency('q', Number.NaN);
 
     assert.equal(oscillators[0].frequency.value, 440);
+  });
+});
+
+describe('setSoundVolume', () => {
+  it('moves a sounding voice toward the new level over the time constant', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', 0.2, 0.05);
+
+    assert.deepEqual(gains[0].gain.targets, [{ value: 0.2, timeConstant: 0.05 }]);
+    assert.equal(oscillators[0].stopped, false);
+  });
+
+  it('freezes the gain where it has got to before moving it', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', 0.2);
+
+    assert.equal(gains[0].gain.cancelledAt, 0);
+    assert.ok(gains[0].gain.targets[0].timeConstant > 0);
+  });
+
+  it('takes over from an attack still running, rather than being overtaken by it', () => {
+    playSound(440, 'q', 0.5, 'sine', 2);
+    // Part-way up the attack, which is where a fader moved early leaves it.
+    gains[0].gain.value = 0.1;
+
+    setSoundVolume('q', 0.8);
+
+    // The attack's ramp is cancelled, so it cannot drag the voice back to 0.5.
+    assert.equal(gains[0].gain.cancelledAt, 0);
+    assert.equal(gains[0].gain.ramps.length, 1);
+    assert.equal(gains[0].gain.targets[0].value, 0.8);
+  });
+
+  it('arrives at once when there is no smoothing asked for', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', 0.2, 0);
+
+    assert.deepEqual(gains[0].gain.targets, []);
+    assert.equal(gains[0].gain.value, 0.2);
+  });
+
+  it('releases from the level it was moved to, not the one it was struck at', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundVolume('q', 0.2, 0);
+
+    stopSound('q', 0.3);
+
+    assert.deepEqual(gains[0].gain.ramps, [{ value: 0, endTime: 0.3, from: 0.2 }]);
+    assert.equal(oscillators[0].stoppedAt, 0.3);
+  });
+
+  it('levels only the key it was given, leaving the others alone', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+
+    setSoundVolume('w', 0.2, 0);
+
+    assert.equal(gains[0].gain.value, 0.5);
+    assert.equal(gains[1].gain.value, 0.2);
+  });
+
+  it('does nothing for a key that is not sounding', () => {
+    assert.doesNotThrow(() => setSoundVolume('nothing-here', 0.2));
+  });
+
+  it('does nothing once the sound has stopped, so a release is not cancelled', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    stopSound('q', 0.3);
+
+    setSoundVolume('q', 0.2);
+
+    assert.deepEqual(gains[0].gain.targets, []);
+  });
+
+  it('refuses a volume that is not a number', (t) => {
+    t.mock.method(console, 'error', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', Number.NaN);
+
+    assert.equal(gains[0].gain.value, 0.5);
+    assert.deepEqual(gains[0].gain.targets, []);
   });
 });
 

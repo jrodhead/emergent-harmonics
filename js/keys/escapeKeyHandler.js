@@ -1,4 +1,5 @@
 import { stopAllSounds } from '../audio/audioHandler.js';
+import { stopDrone } from './droneHandler.js';
 
 /**
  * Event listeners for the 'Escape' key to stop all sounds.
@@ -10,6 +11,10 @@ document.body.addEventListener('keydown', (ev) => {
     // Ignore repeated keydown events
     if (ev.repeat) return;
 
+    // The drone goes off rather than merely silent, unlike the pedal, which is
+    // left down because its key still is. A toggle has no such key: leaving the
+    // flag on would make the next ` press a silent no-op.
+    stopDrone();
     // Stop all sounds and add a CSS class to indicate stop
     stopAllSounds();
     document.body.classList.add('stop');

@@ -145,6 +145,41 @@ export function setSoundFrequency(key, frequency, timeConstant = DRAG_GLIDE_TIME
 }
 
 /**
+ * Changes how loud a voice already sounding is, so a level can be moved while
+ * it is being listened to. Does nothing if that key is not sounding.
+ *
+ * @param {string} key - The key the sound was started under.
+ * @param {number} volume - The volume to move to.
+ * @param {number} [timeConstant] - How slowly to get there, in seconds. Zero
+ *   arrives immediately, which on a gain is a click.
+ */
+export function setSoundVolume(key, volume, timeConstant = DRAG_GLIDE_TIME_CONSTANT) {
+  const activeOscillator = activeOscillators[key];
+  if (!activeOscillator) return;
+
+  if (!isFinite(volume)) {
+    console.error('Invalid volume value:', volume);
+    return;
+  }
+
+  const { gain } = activeOscillator.gainNode;
+
+  // Freezing the gain where it has actually got to is what lets the fader take
+  // over, for the same reason a release does it: a level moved during the
+  // attack would otherwise be fought by the attack's ramp, which is still in
+  // the timeline and would drag the voice back to the volume it was struck at.
+  gain.cancelScheduledValues(audioContext.currentTime);
+  gain.setValueAtTime(gain.value, audioContext.currentTime);
+
+  if (!(timeConstant > 0)) {
+    gain.setValueAtTime(Number(volume), audioContext.currentTime);
+    return;
+  }
+
+  gain.setTargetAtTime(Number(volume), audioContext.currentTime, timeConstant);
+}
+
+/**
  * Stops the sound associated with a given key.
  *
  * The key is freed at once either way, so it can be struck again while the

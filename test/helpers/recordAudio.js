@@ -1,8 +1,9 @@
 /**
  * Records what the app actually asks of the audio hardware: the shape,
  * frequency and volume each note starts with, the envelope it is faded in and
- * out with, every glide it is moved by, and every stop. Installed before any
- * note sounds, since the oscillator is built on first play.
+ * out with, every glide it is moved by, every level it is moved to while it
+ * sounds, and every stop. Installed before any note sounds, since the
+ * oscillator is built on first play.
  *
  * A sound's `frequency` is wherever its voice has been moved to, whether it
  * arrived there by gliding or at once, so it always reads as the pitch that
@@ -19,6 +20,7 @@ export const recordAudio = (app) => app.evaluate(`
   window.__sounds = [];
   window.__stops = 0;
   window.__glides = [];
+  window.__levels = [];
 
   // The gain node is built straight after the oscillator it belongs to, so the
   // sound being recorded is always the last one pushed.
@@ -84,6 +86,15 @@ export const recordAudio = (app) => app.evaluate(`
         sound.release = endTime - context.currentTime;
       }
       return rampVolume(value, endTime, ...rest);
+    };
+
+    // A level moved while the voice is sounding, which has the same shape as a
+    // release — a gain heading somewhere after the oscillator started — and so
+    // needs a record of its own to be told apart from one.
+    const glideVolume = gain.gain.setTargetAtTime.bind(gain.gain);
+    gain.gain.setTargetAtTime = (value, startTime, timeConstant) => {
+      window.__levels.push({ volume: Number(value), timeConstant });
+      return glideVolume(value, startTime, timeConstant);
     };
 
     return gain;

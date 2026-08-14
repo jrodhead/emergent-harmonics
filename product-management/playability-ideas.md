@@ -87,31 +87,15 @@ hard to hear as expressive while notes still click on and off.
 
 ## Group 2 — The expressive layer
 
-The "it feels like an instrument" group. Two of it are built: *Envelopes* (see
-[done-user-stories/oscillator_envelopes.md](done-user-stories/oscillator_envelopes.md)) and the
+The "it feels like an instrument" group. Three of it are built: *Envelopes* (see
+[done-user-stories/oscillator_envelopes.md](done-user-stories/oscillator_envelopes.md)), the
 *Sustain pedal* (see
 [done-user-stories/playing_sustain-pedal.md](done-user-stories/playing_sustain-pedal.md), which
 is on `Space` and holds a chord across a root change in hold mode as well as after a key
-release).
-
-### Drone key
-
-As someone playing in just intonation, I want to hold the fundamental indefinitely, so that
-the intervals I play have an audible reference.
-
-**Acceptance Criteria:**
-1. A key sustains the current fundamental until it is turned off.
-2. The drone survives note and register changes.
-3. Its behaviour on a root change is defined — either following the new root or staying put, by
-   choice.
-
-**Notes:** small, and arguably the highest musical value on this page. In just intonation an
-interval only means something against a reference.
-
-**Planned** in [planning/refined-stories/playing_drone-key.md](planning/refined-stories/playing_drone-key.md),
-which settles criterion 3 as a mode toggle — anchored to the system fundamental, or following the
-current root — and adds two criteria the idea above did not have: the drone's pitch and its level
-are configurable, because a reference is only a reference while it sits under what it refers to.
+release), and the *Drone key* (see
+[done-user-stories/playing_drone-key.md](done-user-stories/playing_drone-key.md) — `` ` `` to
+latch it on, `~` to switch between anchored and following, with its pitch and level configurable
+and persisted).
 
 ### Stereo drone pair
 
@@ -136,9 +120,9 @@ audible: a hertz offset beats on any wave, while an interval offset produces no 
 a sine and beats between coinciding harmonics on a sawtooth, at a multiple of the offset. Which
 means criterion 4 is most of the work, and a drone wave shape of its own is probably criterion 5.
 
-Depends on the *Drone key*, and wants *Live interval readout* first — criterion 4 is that story's
-arithmetic, pointed at two voices instead of ten keys. Design notes are in the drone key plan,
-under *Room left*.
+The *Drone key* it depends on is built, and it wants *Live interval readout* first — criterion 4
+is that story's arithmetic, pointed at two voices instead of ten keys. Design notes are in the
+drone key story, under *Room left*, including why the drone already owns a *list* of voices.
 
 ### Accent and dynamics
 
@@ -197,22 +181,14 @@ get lost.
 
 ## Suggested order
 
-**1. Drone key** — planned, and the next thing to build.
-
-Gliding root changes is built, the envelopes at either end of the glide are built, and the
-sustain pedal now holds a chord through the change — together they have turned the root key
-from a mode switch into a gesture. The drone is what the pedal makes obvious next: the pedal
-holds *what you played* across a modulation, while the drone holds the *reference* the
-modulation is heard against, and it is the smaller of the two.
-
-**2. Live interval readout** — the best standalone pick, and no longer only standalone.
+**1. Live interval readout** — the best standalone pick, and no longer only standalone.
 
 It depends on nothing, it is what makes the app's whole premise audible rather than theoretical,
 and it is now also a dependency: the *Stereo drone pair* needs the same arithmetic to show the
-beat it is setting. Building it second means that story inherits a readout instead of inventing
+beat it is setting. Building it first means that story inherits a readout instead of inventing
 one.
 
-**3. Stereo drone pair** — after both of the above.
+**2. Stereo drone pair** — after the readout, and now that the drone it extends is built.
 
 A held, isolated beat with a number attached to it, over a drone that is already the system's
 reference. It is the first thing here that is about *listening* rather than playing, which is why

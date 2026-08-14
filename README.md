@@ -24,7 +24,7 @@ HTTP rather than `file://`, because the app loads ES modules.
 
 ```sh
 npm test            # everything
-npm run test:unit   # pure logic, no browser (279 tests, fast)
+npm run test:unit   # pure logic, no browser (313 tests, fast)
 npm run test:browser # drives real Chrome over the DevTools protocol
 ```
 
@@ -188,6 +188,8 @@ audio).
 | `Escape` | Panic — stop every sound. |
 | `*` | Switch play mode. |
 | `Space` | Sustain pedal — hold it down and released notes go on sounding. |
+| `` ` `` | Drone on or off. It latches: press once to start, once to stop. |
+| `~` | Switch the drone between anchored and following. |
 
 Chords work: hold as many note keys as you like. Changing root or register while notes are held
 **glides** them into their new frequencies rather than stopping and re-striking them, so a
@@ -220,19 +222,48 @@ one. Lifting the pedal fades everything it was holding, and hands the still-held
 hold mode's rule. `Escape` silences pedalled notes like any other, and switching views lifts the
 pedal for you.
 
+**The drone** (`` ` ``, shown beside the pedal) holds a single reference pitch under whatever you
+play, indefinitely. It belongs to the system rather than to a key, so nothing on the keyboard
+disturbs it: notes, chords, register changes, hold mode and the pedal all leave it exactly where
+it is. Only `Escape` and a view change stop it, and both turn it *off* rather than merely silent,
+so the next `` ` `` starts it again.
+
+`~` switches how it treats a root change, and the current mode is shown next to it:
+
+- **anchored** (the default) — a fixed reference. It sounds the system's *fundamental*, the
+  frequency every ratio is measured from, whatever root key you are on. Modulate freely and the
+  drone stays put, which is what lets you hear where each new root sits.
+- **following** — a unison on every root. The drone glides onto the new root as you change it, so
+  each chord is heard against its own tonic rather than against the fundamental.
+
+Switching modes while it sounds glides it across rather than re-striking it. Note that anchored
+means the fundamental, not wherever you happened to be when you switched the drone on: turn it on
+while root `4` is selected and it still sounds the fundamental. Switch to following and back if
+you want the drone on the root you are standing on.
+
 Each key shows its degree and period shift, its ratio, its interval name, and its frequency;
 each root key also shows which scale it builds.
 
 The **Oscillator Configuration** footer sets the waveform (sine, square, sawtooth, triangle)
 and the volume, and applies to both the keyboard and the configuration previews.
 
-Three controls shape how a note moves, and all three are remembered between visits:
+Five controls shape how the keyboard plays, and all five are remembered between visits:
 
 - **Attack** — how long a note takes to swell to full volume when it is struck, 0 to 2000 ms.
 - **Release** — how long it goes on sounding after its key is let go, 0 to 2000 ms. The key
   itself is free the instant you release it, so you can strike it again over its own decay.
 - **Glide** — how long a held note takes to reach its new pitch, 0 to 500 ms; at 0 the note
   arrives at once, still without being re-struck.
+- **Drone pitch** — where the drone sits relative to the pitch it is a reference for, from three
+  periods below to one above. A period below is the default, which puts it under your hands
+  rather than in among them.
+- **Drone level** — how loud the drone is, in its own right rather than as a fraction of the
+  oscillator volume. It starts below the level the note keys use, because a reference that
+  competes with the notes is not being used as a reference.
+
+Both drone controls differ from everything else in that footer in one way: they are heard *as you
+move them*. Every other control here is read when a note is struck, but the drone is already
+sounding when you reach for the fader, so it glides and re-levels under the pointer.
 
 At 0 the attack and release switch the note on and off outright, which clicks — that click is
 what they exist to remove. `Escape` still silences everything on the spot, including notes part
@@ -251,6 +282,7 @@ js/main.js                  Wires up the configuration screen, the play settings
 js/system/
   period.js                 PERIOD_RATIO, and folding ratios into one period
   generateSystem.js         Root notes across keys 0-9; registers across the audible range
+  droneFrequency.js         An anchor shifted by periods, pulled back into hearing. Pure
   buildSystem.js            Regenerates the playable system from the configuration
   state.js                  The generated system: root notes, registers, current indices
 
@@ -263,9 +295,10 @@ js/config/
   rootScales.js             Resolving a note's rootScaleId to notes and to a label
   degrees.js                Roman numerals by position
   selectedScale.js          Which scale is being edited (screen state, not system state)
-  playSettings.js           How the keyboard plays rather than what: the attack, release
-                            and glide, persisted
-  playSettingsHandler.js    Event wiring for those three controls
+  playSettings.js           How the keyboard plays rather than what: the attack, release,
+                            glide and the drone's pitch and level, persisted
+  playSettingsHandler.js    Event wiring for those five controls, and the playSettingChanged
+                            event the drone follows
   viewToggle.js             config ↔ play, clearing held keys on the way
 
 js/keys/
@@ -279,10 +312,12 @@ js/keys/
   playModeHandler.js        The * toggle
   sustainPedalHandler.js    The Space pedal: the key, the indicator, and the pedalUp event
   sustainPedalState.js      Whether it is down, read by the note keys
+  droneHandler.js           The ` drone and its ~ mode: a voice that belongs to the system
+                            rather than to a key
   keyEventGuard.js          Ignoring keys typed into fields, or pressed in the config view
 
-js/audio/audioHandler.js    Web Audio: play, retune, release, stop everything. Holds the
-                            voices still fading after their key was let go, and the ones the
+js/audio/audioHandler.js    Web Audio: play, retune, re-level, release, stop everything. Holds
+                            the voices still fading after their key was let go, and the ones the
                             sustain pedal is keeping alive
 js/format.js                Shared display formatting (frequencies, ratios, degrees, cents)
 js/storage.js               localStorage that degrades to memory when it is unavailable

@@ -147,7 +147,8 @@ button#play {
 }
 
 #playModeTable,
-#sustainPedalTable {
+#sustainPedalTable,
+#droneTable {
   color: #fff;
   padding: .5rem;
 }

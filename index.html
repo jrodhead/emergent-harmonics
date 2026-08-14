@@ -47,6 +47,7 @@
       <div id="escapeKeyTable"></div>
       <div id="playModeTable">Play mode: <span id="playMode">latch</span> (press * to switch)</div>
       <div id="sustainPedalTable">Sustain: <span id="sustainPedal">up</span> (hold Space)</div>
+      <div id="droneTable">Drone: <span id="drone">off</span>, <span id="droneMode">anchored</span> (` to toggle, ~ to switch)</div>
     </div>
   </main>
 
@@ -82,6 +83,16 @@
         <input type="range" id="glideTime" min="0" max="500" step="10" value="80">
         <output for="glideTime" id="glideOutput">80 ms</output>
       </div>
+      <div class="form-group">
+        <label for="dronePeriod">Drone pitch:</label>
+        <input type="range" id="dronePeriod" min="-3" max="1" step="1" value="-1">
+        <output for="dronePeriod" id="dronePeriodOutput">1 period below</output>
+      </div>
+      <div class="form-group">
+        <label for="droneVolume">Drone level:</label>
+        <input type="range" id="droneVolume" min="0" max="1" step="0.01" value="0.3">
+        <output for="droneVolume" id="droneVolumeOutput">0.3</output>
+      </div>
     </form>
   </footer>
 
@@ -92,6 +103,7 @@
   <script type="module" src="js/keys/escapeKeyHandler.js"></script>
   <script type="module" src="js/keys/playModeHandler.js"></script>
   <script type="module" src="js/keys/sustainPedalHandler.js"></script>
+  <script type="module" src="js/keys/droneHandler.js"></script>
 
 </body>
 </html>

@@ -19,6 +19,15 @@ import {
   setReleaseMs,
   releaseTime,
   loadStoredPlaySettings,
+  DEFAULT_DRONE_PERIOD_SHIFT,
+  MIN_DRONE_PERIOD_SHIFT,
+  MAX_DRONE_PERIOD_SHIFT,
+  DEFAULT_DRONE_VOLUME,
+  MAX_DRONE_VOLUME,
+  getDronePeriodShift,
+  setDronePeriodShift,
+  getDroneVolume,
+  setDroneVolume,
 } from '../../js/config/playSettings.js';
 
 const storedSettings = () => JSON.parse(readStoredValue(STORAGE_KEY));
@@ -125,6 +134,68 @@ describe('the envelope', () => {
   });
 });
 
+describe('the drone', () => {
+  it('starts under the hands rather than in among them', () => {
+    assert.equal(getDronePeriodShift(), DEFAULT_DRONE_PERIOD_SHIFT);
+    assert.ok(DEFAULT_DRONE_PERIOD_SHIFT < 0);
+  });
+
+  it('takes a new register, above the root as well as below it', () => {
+    setDronePeriodShift(-2);
+    assert.equal(getDronePeriodShift(), -2);
+
+    setDronePeriodShift(1);
+    assert.equal(getDronePeriodShift(), 1);
+  });
+
+  it('holds the register inside its range, in both directions', () => {
+    setDronePeriodShift(MIN_DRONE_PERIOD_SHIFT - 5);
+    assert.equal(getDronePeriodShift(), MIN_DRONE_PERIOD_SHIFT);
+
+    setDronePeriodShift(MAX_DRONE_PERIOD_SHIFT + 5);
+    assert.equal(getDronePeriodShift(), MAX_DRONE_PERIOD_SHIFT);
+  });
+
+  it('rounds the register, being the one whole-numbered control here', () => {
+    setDronePeriodShift(-1.4);
+
+    assert.equal(getDronePeriodShift(), -1);
+  });
+
+  it('ignores a register that is not a number', () => {
+    setDronePeriodShift(Number.NaN);
+    assert.equal(getDronePeriodShift(), DEFAULT_DRONE_PERIOD_SHIFT);
+
+    setDronePeriodShift(undefined);
+    assert.equal(getDronePeriodShift(), DEFAULT_DRONE_PERIOD_SHIFT);
+  });
+
+  it('starts below the level the note keys default to', () => {
+    assert.equal(getDroneVolume(), DEFAULT_DRONE_VOLUME);
+    assert.ok(DEFAULT_DRONE_VOLUME > 0 && DEFAULT_DRONE_VOLUME < 0.5);
+  });
+
+  it('takes a new level, and is not rounded off to nothing', () => {
+    setDroneVolume(0.42);
+
+    assert.equal(getDroneVolume(), 0.42);
+  });
+
+  it('holds the level inside its range', () => {
+    setDroneVolume(-1);
+    assert.equal(getDroneVolume(), 0);
+
+    setDroneVolume(MAX_DRONE_VOLUME + 1);
+    assert.equal(getDroneVolume(), MAX_DRONE_VOLUME);
+  });
+
+  it('ignores a level that is not a number', () => {
+    setDroneVolume(Number.NaN);
+
+    assert.equal(getDroneVolume(), DEFAULT_DRONE_VOLUME);
+  });
+});
+
 describe('persistence', () => {
   it('saves the glide as soon as it changes', () => {
     setGlideMs(250);
@@ -208,5 +279,53 @@ describe('persistence', () => {
     assert.equal(getGlideMs(), 200);
     assert.equal(getAttackMs(), DEFAULT_ATTACK_MS);
     assert.equal(getReleaseMs(), DEFAULT_RELEASE_MS);
+  });
+
+  it('saves the drone settings as soon as they change', () => {
+    setDronePeriodShift(-3);
+    setDroneVolume(0.6);
+
+    assert.equal(storedSettings().dronePeriodShift, -3);
+    assert.equal(storedSettings().droneVolume, 0.6);
+  });
+
+  it('restores the drone settings that were stored', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ dronePeriodShift: 1, droneVolume: 0.15 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getDronePeriodShift(), 1);
+    assert.equal(getDroneVolume(), 0.15);
+  });
+
+  it('holds hand-edited drone settings inside their ranges', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ dronePeriodShift: -99, droneVolume: 99 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getDronePeriodShift(), MIN_DRONE_PERIOD_SHIFT);
+    assert.equal(getDroneVolume(), MAX_DRONE_VOLUME);
+  });
+
+  it('restores settings written before the drone existed', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ glideMs: 200, attackMs: 40, releaseMs: 600 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getGlideMs(), 200);
+    assert.equal(getAttackMs(), 40);
+    assert.equal(getReleaseMs(), 600);
+    assert.equal(getDronePeriodShift(), DEFAULT_DRONE_PERIOD_SHIFT);
+    assert.equal(getDroneVolume(), DEFAULT_DRONE_VOLUME);
+  });
+
+  it('restores the other four when only the drone level was stored', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ droneVolume: 0.8 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getDroneVolume(), 0.8);
+    assert.equal(getGlideMs(), DEFAULT_GLIDE_MS);
+    assert.equal(getDronePeriodShift(), DEFAULT_DRONE_PERIOD_SHIFT);
   });
 });
