@@ -148,9 +148,115 @@ button#play {
 
 #playModeTable,
 #sustainPedalTable,
-#droneTable {
+#droneTable,
+#intervalReadout,
+#consonanceMeter {
   color: #fff;
   padding: .5rem;
+}
+
+/* Spans both keyboard columns: a chord is read across, not beside the roots. */
+#intervalReadout,
+#consonanceMeter {
+  grid-column: 1 / -1;
+}
+
+#intervalReadout h2,
+#consonanceMeter h2 {
+  font-size: 1rem;
+  margin: .5rem 0;
+}
+
+.consonance-prompt {
+  opacity: .6;
+}
+
+.consonance-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.consonance-bar {
+  width: 16rem;
+  max-width: 100%;
+  height: .75rem;
+  border: 1px solid #666;
+  border-radius: .375rem;
+  overflow: hidden;
+}
+
+/* Green where it locks, red where it grinds, straight through the middle. */
+.consonance-fill {
+  height: 100%;
+  background: linear-gradient(to right,
+    rgb(194, 19, 19), rgb(194, 130, 19) 45%, rgb(32, 155, 49));
+  /* The gradient belongs to the whole bar, so a short fill shows only its red
+     end rather than being a small complete gradient of its own. */
+  background-size: 16rem 100%;
+  transition: width .12s linear;
+}
+
+.consonance-value {
+  font-weight: bold;
+  min-width: 3rem;
+}
+
+.consonance-band {
+  min-width: 5rem;
+}
+
+.consonance-measure {
+  opacity: .7;
+}
+
+.interval-prompt {
+  opacity: .6;
+}
+
+.interval-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem;
+  align-items: baseline;
+  padding: .25rem 0;
+  /* A beat rate slides while a chord glides, and a proportional digit would
+     make the whole row jump on every frame. */
+  font-variant-numeric: tabular-nums;
+}
+
+.interval-keys {
+  font-weight: bold;
+  min-width: 6rem;
+}
+
+.interval-ratio {
+  font-weight: bold;
+  min-width: 5rem;
+}
+
+.interval-decimal,
+.interval-partials,
+.interval-roughness {
+  opacity: .7;
+}
+
+.interval-beat {
+  min-width: 5rem;
+}
+
+/* The number is real; the sound is not. Shown rather than hidden, so switching
+   to a sawtooth can be watched making it audible. */
+.interval-beat.inaudible {
+  opacity: .45;
+  text-decoration: line-through;
+}
+
+.interval-more {
+  opacity: .6;
+  padding-top: .25rem;
 }
 
 /* System configuration screen */

@@ -15,11 +15,62 @@ const sustainedVoices = new Set();
 // that the note still arrives where the pointer is.
 const DRAG_GLIDE_TIME_CONSTANT = 0.01;
 
+// Anything that wants to know what is currently sounding. A subscription rather
+// than a CustomEvent on document.body, which is what every key module here
+// uses, because this is the one module in js/ with no DOM in it at all and its
+// unit tests run without one.
+const soundingListeners = new Set();
+
+const notifySounding = () => soundingListeners.forEach((listener) => listener());
+
 /** Whether a key currently has a voice, so callers can tell held from sounding. */
 export const isSounding = (key) => Boolean(activeOscillators[key]);
 
 /** How many voices the pedal is holding on to, for the tests and the display. */
 export const sustainedVoiceCount = () => sustainedVoices.size;
+
+/**
+ * Every voice that is sounding and still means something: what is being held,
+ * and what the pedal is holding on to.
+ *
+ * Voices in their release are left out. They are audible, but they belong to
+ * the tuning they were released in and the player has let go of them, so a
+ * readout that kept them would go on describing a chord that is over.
+ *
+ * The frequency is the one the voice was last *asked* for rather than whatever
+ * its oscillator reads mid-glide: it is deterministic, and it is exactly right
+ * for a sustained voice, which by the pedal's own rule never moves again.
+ *
+ * @returns {Array} { key, frequency, sustained }, in no particular order.
+ */
+export function soundingVoices() {
+  return [
+    ...Object.values(activeOscillators).map(({ key, frequency }) => ({
+      key,
+      frequency,
+      sustained: false,
+    })),
+    ...[...sustainedVoices].map(({ key, frequency }) => ({
+      key,
+      frequency,
+      sustained: true,
+    })),
+  ];
+}
+
+/**
+ * Registers a listener for changes to that set. Called for every strike, stop,
+ * glide, hand-over and lift — but deliberately not when a voice only changes
+ * level, since how loud a voice is does not change what interval it is in.
+ *
+ * @param {Function} listener - Called with nothing; ask for the set yourself.
+ * @returns {Function} Unsubscribes.
+ */
+export function subscribeToSounding(listener) {
+  soundingListeners.add(listener);
+
+  return () => soundingListeners.delete(listener);
+}
 
 const teardown = ({ oscillator, gainNode }) => {
   oscillator.disconnect();
@@ -107,10 +158,18 @@ export function playSound(frequency, key, volume, waveShape, attackTime = 0) {
   gainNode.connect(audioContext.destination);
   oscillator.start();
 
+  // The key and the frequency are carried on the voice itself, not just used to
+  // file it: the key so a voice keeps its name after the pedal detaches it from
+  // here, and the frequency so anything asking what is sounding can be told
+  // without reading the oscillator mid-glide.
   activeOscillators[key] = {
     oscillator,
-    gainNode
+    gainNode,
+    key,
+    frequency,
   }; // Store the active oscillator and gain node by key
+
+  notifySounding();
 }
 
 /**
@@ -133,15 +192,18 @@ export function setSoundFrequency(key, frequency, timeConstant = DRAG_GLIDE_TIME
 
   const { frequency: oscillatorFrequency } = activeOscillator.oscillator;
 
+  activeOscillator.frequency = frequency;
+
   if (!(timeConstant > 0)) {
     // Scheduling a value ends any glide still running, so the note lands here.
     oscillatorFrequency.setValueAtTime(frequency, audioContext.currentTime);
-    return;
+  } else {
+    // Glides to the new frequency rather than jumping. Jumping clicks on every
+    // step of a drag, which drowns out the interval the drag is trying to find.
+    oscillatorFrequency.setTargetAtTime(frequency, audioContext.currentTime, timeConstant);
   }
 
-  // Glides to the new frequency rather than jumping. Jumping clicks on every
-  // step of a drag, which drowns out the interval the drag is trying to find.
-  oscillatorFrequency.setTargetAtTime(frequency, audioContext.currentTime, timeConstant);
+  notifySounding();
 }
 
 /**
@@ -197,6 +259,7 @@ export function stopSound(key, releaseTime = 0) {
   delete activeOscillators[key]; // Remove the oscillator from the active list
 
   releaseVoice(voice, releaseTime);
+  notifySounding();
 }
 
 /**
@@ -216,6 +279,7 @@ export function sustainVoice(key) {
 
   delete activeOscillators[key];
   sustainedVoices.add(voice);
+  notifySounding();
 }
 
 /**
@@ -226,6 +290,7 @@ export function sustainVoice(key) {
 export function releaseSustainedVoices(releaseTime = 0) {
   sustainedVoices.forEach((voice) => releaseVoice(voice, releaseTime));
   sustainedVoices.clear();
+  notifySounding();
 }
 
 /**
@@ -250,5 +315,6 @@ export function stopAllSounds() {
   });
   releasingVoices.clear();
   sustainedVoices.clear();
+  notifySounding();
   console.log('Stopped all sounds');
 }

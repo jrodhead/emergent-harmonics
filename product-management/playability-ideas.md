@@ -141,30 +141,20 @@ gets most of the way there.
 ## Group 3 — The feedback layer
 
 The app knows the exact ratios of everything sounding, and currently says almost none of what
-that buys.
+that buys. Two of it are built. The *Live interval readout* (see
+[done-user-stories/playing_live-interval-readout.md](done-user-stories/playing_live-interval-readout.md))
+pairs every sounding voice — note keys, pedalled notes and the drone alike — and shows the ratio,
+the deviation in cents, and the beat rate between their coinciding partials. The *Consonance
+meter* (see [done-user-stories/playing_consonance-meter.md](done-user-stories/playing_consonance-meter.md))
+puts one Plomp–Levelt roughness reading over the whole sonority, with the measure named on screen.
 
-### Live interval readout
+The two answer different questions and neither replaces the other: the readout catches a fifth a
+few cents off, which is a slow beat and barely a roughness; the meter catches a chord that grinds,
+including when it grinds only because of the register it is being played in.
 
-As someone holding two or more notes, I want to see the interval between them, so that I can
-hear and verify what just intonation is doing.
-
-**Acceptance Criteria:**
-1. While two or more notes sound, the interval between them is shown as a ratio.
-2. Where it is near a simple ratio, the deviation is shown in cents.
-3. The beat rate between them is shown in Hz.
-
-**Notes:** pure arithmetic over `heldNoteKeys` and `noteKeyMap` — no audio analysis needed. The
-beat rate is the number a player can actually hear and check, which makes it the most
-convincing thing on this list.
-
-### Consonance meter
-
-As someone building a chord, I want to see how locked the current sonority is, so that I can
-find the tunings that ring.
-
-**Acceptance Criteria:**
-1. A live indication of the consonance of everything currently sounding.
-2. The measure it uses is stated, since there is no single correct one.
+Between them they left three things the rest of this group inherits: `js/system/interval.js` and
+`js/system/consonance.js`, both pure, and `soundingVoices()` in the audio layer, which is the set
+of voices to point either at.
 
 ### Lattice position
 
@@ -177,22 +167,31 @@ get lost.
 
 **Notes:** becomes close to necessary if *Chained roots* is ever built.
 
+### Keys only play when lower case
+
+I unknowingly had Caps Lock on and couldn't get any of the keys to work except non-alpha keys. They started working after I disabled it.
+
 ---
 
 ## Suggested order
 
-**1. Live interval readout** — the best standalone pick, and no longer only standalone.
-
-It depends on nothing, it is what makes the app's whole premise audible rather than theoretical,
-and it is now also a dependency: the *Stereo drone pair* needs the same arithmetic to show the
-beat it is setting. Building it first means that story inherits a readout instead of inventing
-one.
-
-**2. Stereo drone pair** — after the readout, and now that the drone it extends is built.
+**1. Stereo drone pair** — now that both the drone it extends and the readout it needs are built.
 
 A held, isolated beat with a number attached to it, over a drone that is already the system's
-reference. It is the first thing here that is about *listening* rather than playing, which is why
-it wants the readout in place first.
+reference. Its criterion 4 is `describeInterval` pointed at two drone voices instead of the
+keyboard, so it should write no arithmetic of its own.
+
+**2. Accent and dynamics** — the last of the *Why* this page was written about.
+
+Three of the four things named in it as thin — one waveform, keys clicking on and off, no
+sustain — have been dealt with. "One volume" is what is left, and `setSoundVolume` was built by
+the drone story specifically for it, so what remains is a modifier key and a level choice.
 
 *Chained roots* is still the most exciting and should still wait. It changes what the system
-means, and it will read as broken rather than expressive until the expressive layer exists.
+means, and it will read as broken rather than expressive until the expressive layer exists. Its
+criterion 3 — the distance from the original fundamental, in cents — is now `centsBetween`.
+
+**A note on cost, which this page does not otherwise track.** *Pivot highlighting* has quietly
+become small too: its "same sounding frequency, within a stated tolerance" is `centsBetween` plus
+a constant. Worth re-reading the Group 1 estimates before picking from them, since several were
+written when nothing underneath them existed.

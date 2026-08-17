@@ -37,3 +37,49 @@ export const describeRatio = (ratio) => {
 
   return `${Math.round(1200 * Math.log2(ratio))} cents`;
 };
+
+/**
+ * How far an interval sits from the ratio it is being called: −2 cents, +17
+ * cents, or `just` when it lands on it. Signed with the same Unicode minus
+ * `formatDegree` uses.
+ */
+export const formatCents = (cents) => {
+  if (!Number.isFinite(cents)) return '—';
+
+  const rounded = Math.round(cents);
+
+  if (rounded === 0) return 'just';
+
+  const size = Math.abs(rounded);
+
+  return `${rounded > 0 ? '+' : '−'}${size} cent${size === 1 ? '' : 's'}`;
+};
+
+/**
+ * A beat rate. Two decimals below ten hertz and one above, because 0.75 Hz and
+ * 12 Hz want different precision and a single fixed one is wrong at one end.
+ */
+export const formatBeat = (hz) => {
+  if (!Number.isFinite(hz)) return '—';
+
+  const decimals = Math.abs(hz) < 10 ? 2 : 1;
+
+  return `${Number(hz.toFixed(decimals))} Hz`;
+};
+
+const ORDINAL_SUFFIXES = ['th', 'st', 'nd', 'rd'];
+
+/** Which harmonic, said as an ordinal: the 3rd partial against the 2nd. */
+export const formatPartial = (partial) => {
+  if (!Number.isFinite(partial)) return '—';
+
+  const whole = Math.trunc(Math.abs(partial));
+  const lastTwo = whole % 100;
+
+  // 11th, 12th and 13th break the pattern the last digit otherwise sets.
+  const suffix = lastTwo >= 11 && lastTwo <= 13
+    ? 'th'
+    : ORDINAL_SUFFIXES[whole % 10] ?? 'th';
+
+  return `${whole}${suffix}`;
+};

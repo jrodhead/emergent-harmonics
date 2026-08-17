@@ -1,7 +1,15 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { formatFrequency, formatRatio, describeRatio, formatDegree } from '../../js/format.js';
+import {
+  formatFrequency,
+  formatRatio,
+  describeRatio,
+  formatDegree,
+  formatCents,
+  formatBeat,
+  formatPartial,
+} from '../../js/format.js';
 
 describe('formatFrequency', () => {
   it('shows at most two decimals', () => {
@@ -60,5 +68,75 @@ describe('formatDegree', () => {
   it('treats a shift that is not a number as no shift at all', () => {
     assert.equal(formatDegree('V', Number.NaN), 'V');
     assert.equal(formatDegree('V', undefined), 'V');
+  });
+});
+
+describe('formatCents', () => {
+  it('says an interval that lands on its ratio is just', () => {
+    assert.equal(formatCents(0), 'just');
+    // Rounds to the whole cent nobody can hear past.
+    assert.equal(formatCents(0.4), 'just');
+  });
+
+  it('signs a deviation in either direction, with the same minus as a degree', () => {
+    assert.equal(formatCents(17.488), '+17 cents');
+    assert.equal(formatCents(-1.955), '−2 cents');
+  });
+
+  it('counts a single cent as one', () => {
+    assert.equal(formatCents(1.2), '+1 cent');
+    assert.equal(formatCents(-1.2), '−1 cent');
+  });
+
+  it('marks a value that is not a deviation', () => {
+    assert.equal(formatCents(Number.NaN), '—');
+    assert.equal(formatCents(null), '—');
+  });
+});
+
+describe('formatBeat', () => {
+  it('keeps two decimals on a slow beat, where they are the whole reading', () => {
+    assert.equal(formatBeat(1.4897), '1.49 Hz');
+    assert.equal(formatBeat(0.256), '0.26 Hz');
+  });
+
+  it('drops to one decimal once the beat is fast enough not to count', () => {
+    assert.equal(formatBeat(12.34), '12.3 Hz');
+  });
+
+  it('drops trailing zeroes, like every other number here', () => {
+    assert.equal(formatBeat(0), '0 Hz');
+    assert.equal(formatBeat(2.5), '2.5 Hz');
+  });
+
+  it('marks a beat that could not be worked out', () => {
+    assert.equal(formatBeat(null), '—');
+    assert.equal(formatBeat(Number.NaN), '—');
+  });
+});
+
+describe('formatPartial', () => {
+  it('names the low harmonics that actually beat', () => {
+    assert.equal(formatPartial(1), '1st');
+    assert.equal(formatPartial(2), '2nd');
+    assert.equal(formatPartial(3), '3rd');
+    assert.equal(formatPartial(4), '4th');
+  });
+
+  it('handles the teens, which break the last-digit pattern', () => {
+    assert.equal(formatPartial(11), '11th');
+    assert.equal(formatPartial(12), '12th');
+    assert.equal(formatPartial(13), '13th');
+    assert.equal(formatPartial(15), '15th');
+    assert.equal(formatPartial(16), '16th');
+  });
+
+  it('picks the pattern back up above the teens', () => {
+    assert.equal(formatPartial(21), '21st');
+    assert.equal(formatPartial(22), '22nd');
+  });
+
+  it('marks a value that is not a harmonic', () => {
+    assert.equal(formatPartial(Number.NaN), '—');
   });
 });

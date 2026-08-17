@@ -11,6 +11,8 @@ import {
   sustainVoice,
   releaseSustainedVoices,
   sustainedVoiceCount,
+  soundingVoices,
+  subscribeToSounding,
 } from '../../js/audio/audioHandler.js';
 
 /**
@@ -521,5 +523,158 @@ describe('stopAllSounds', () => {
     oscillators[0].end();
 
     assert.equal(oscillators[0].disconnected, false);
+  });
+});
+
+describe('soundingVoices', () => {
+  it('lists a struck voice under its key, at the frequency it was struck at', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    assert.deepEqual(soundingVoices(), [{ key: 'q', frequency: 440, sustained: false }]);
+  });
+
+  it('reports a glided voice at the frequency it was moved to', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundFrequency('q', 550);
+
+    assert.deepEqual(soundingVoices(), [{ key: 'q', frequency: 550, sustained: false }]);
+  });
+
+  it('reports a voice that arrived at once the same way', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundFrequency('q', 550, 0);
+
+    assert.equal(soundingVoices()[0].frequency, 550);
+  });
+
+  it('drops a released voice at once, while it is still fading', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    stopSound('q', 2);
+
+    assert.deepEqual(soundingVoices(), []);
+  });
+
+  it('keeps a pedalled voice, with its key and the tuning it was let go in', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    sustainVoice('q');
+
+    assert.deepEqual(soundingVoices(), [{ key: 'q', frequency: 440, sustained: true }]);
+  });
+
+  it('lists a re-struck key beside the voice the pedal is still holding', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+    playSound(660, 'q', 0.5, 'sine', 0);
+
+    assert.deepEqual(soundingVoices(), [
+      { key: 'q', frequency: 660, sustained: false },
+      { key: 'q', frequency: 440, sustained: true },
+    ]);
+  });
+
+  it('empties when the pedal is lifted', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    releaseSustainedVoices(0.3);
+
+    assert.deepEqual(soundingVoices(), []);
+  });
+
+  it('empties on the panic stop', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+    sustainVoice('w');
+
+    stopAllSounds();
+
+    assert.deepEqual(soundingVoices(), []);
+  });
+});
+
+describe('subscribeToSounding', () => {
+  /** Counts notifications for one test, and unsubscribes itself afterwards. */
+  const countNotifications = (t) => {
+    let count = 0;
+    const unsubscribe = subscribeToSounding(() => { count += 1; });
+
+    t.after(unsubscribe);
+
+    return () => count;
+  };
+
+  it('fires when a voice starts', (t) => {
+    const notifications = countNotifications(t);
+
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    assert.equal(notifications(), 1);
+  });
+
+  it('fires when a voice is retuned, gliding or not', (t) => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    setSoundFrequency('q', 550);
+    setSoundFrequency('q', 660, 0);
+
+    assert.equal(notifications(), 2);
+  });
+
+  it('fires when a voice stops, is pedalled, or is lifted', (t) => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    stopSound('q', 0.3);
+    sustainVoice('w');
+    releaseSustainedVoices(0.3);
+
+    assert.equal(notifications(), 3);
+  });
+
+  it('fires on the panic stop', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    stopAllSounds();
+
+    assert.equal(notifications(), 1);
+  });
+
+  it('does not fire for a level change, which cannot move an interval', (t) => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    setSoundVolume('q', 0.2);
+
+    assert.equal(notifications(), 0);
+  });
+
+  it('does not fire when the call was a no-op', (t) => {
+    const notifications = countNotifications(t);
+
+    stopSound('nothing-here');
+    sustainVoice('nothing-here');
+    setSoundFrequency('nothing-here', 550);
+
+    assert.equal(notifications(), 0);
+  });
+
+  it('stops firing once unsubscribed', () => {
+    let count = 0;
+    const unsubscribe = subscribeToSounding(() => { count += 1; });
+
+    playSound(440, 'q', 0.5, 'sine', 0);
+    unsubscribe();
+    playSound(660, 'w', 0.5, 'sine', 0);
+
+    assert.equal(count, 1);
   });
 });

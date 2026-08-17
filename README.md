@@ -241,6 +241,54 @@ means the fundamental, not wherever you happened to be when you switched the dro
 while root `4` is selected and it still sounds the fundamental. Switch to following and back if
 you want the drone on the root you are standing on.
 
+**The interval readout** sits under the keyboard and fills in whenever two or more voices are
+sounding — note keys, pedalled notes and the drone alike. Each row is one pair: the ratio between
+them, how far the interval sits from that ratio in cents, and the rate at which the two beat.
+Voices are sorted by pitch and paired with their neighbour, plus a row for the outer interval once
+a chord is more than a pair. A note that is held but silent, as in hold mode with no root down,
+is not in it; a note you have let go of under the pedal is, marked `(pedal)`.
+
+The beat rate is the one number here you can check with your ears, and it is worth knowing when
+you can. Two tones do not beat at the difference between them unless they are nearly in unison —
+they beat where their harmonics coincide, which for an interval of `n/d` is the lower tone's
+`n`th harmonic against the upper's `d`th. The row says which two those are. That has three
+consequences:
+
+- **A sine cannot beat at all except near a unison**, having nothing above its fundamental to
+  coincide with. On the default sine the readout strikes the beat through and says why; switch to
+  a sawtooth or a square and it comes to life. This is worth doing once deliberately — it is the
+  clearest demonstration of what the number means.
+- **Beats between high partials are arithmetic rather than sound.** Past the eighth the partials
+  are too quiet to hear beating, so those are struck through too.
+- **Two notes close together are rough whatever their ratio.** When the fundamentals themselves
+  are under 20 Hz apart the row says so separately, because that beating is real even when the
+  partial arithmetic says zero.
+
+Load the equal temperament preset, hold a fifth on a sawtooth, and the readout reads `3/2`,
+`−2 cents`, and a beat of about one and a half hertz — which you can count. Hold the same fifth
+in a just preset and it reads `just`, `0 Hz`, and the sound stops moving. That is the whole
+premise of the app in two chords.
+
+**The consonance meter** below it answers a different question over the same voices: not what any
+two of them are, but how rough the whole sonority is. It reads Plomp–Levelt roughness — the
+standard psychoacoustic model, in Sethares' parameterisation — summed over the first eight
+partials of whatever wave shape is selected, averaged per pair of voices, and scaled against a
+semitone dyad at 220 Hz. All of that is printed beside the bar, because consonance has no single
+correct measure and a bare percentage with no stated basis is a number pretending to be a fact.
+
+The two displays are complementary rather than redundant, and it is worth knowing which answers
+what:
+
+- **The readout catches detuning.** A fifth two cents narrow beats at 1.5 Hz and is barely rough
+  at all — a slow undulation is not a roughness — so the meter hardly moves for it.
+- **The meter catches everything the readout cannot see at once**: whether a chord as a whole
+  grinds, and whether it grinds *because of where you are playing it*. Take the same chord three
+  registers down and watch the number fall, with every ratio on screen unchanged.
+
+Because it is measured over partials, a single low sawtooth reads as rough on its own — correctly,
+its own harmonics being crowded into one critical band — which is why the meter shows a reading
+for one note where the interval readout shows nothing.
+
 Each key shows its degree and period shift, its ratio, its interval name, and its frequency;
 each root key also shows which scale it builds.
 
@@ -283,6 +331,10 @@ js/system/
   period.js                 PERIOD_RATIO, and folding ratios into one period
   generateSystem.js         Root notes across keys 0-9; registers across the audible range
   droneFrequency.js         An anchor shifted by periods, pulled back into hearing. Pure
+  interval.js               What two frequencies are to each other: the ratio, the cents, and
+                            the beat between their coinciding partials. Pure
+  consonance.js             How rough a set of voices is: Plomp–Levelt roughness over their
+                            partials. Pure
   buildSystem.js            Regenerates the playable system from the configuration
   state.js                  The generated system: root notes, registers, current indices
 
@@ -314,12 +366,18 @@ js/keys/
   sustainPedalState.js      Whether it is down, read by the note keys
   droneHandler.js           The ` drone and its ~ mode: a voice that belongs to the system
                             rather than to a key
+  intervalReadout.js        The interval readout: pairs the sounding voices and draws them.
+                            Listens to the audio layer and to nothing else
+  renderIntervalReadout.js  Its markup
+  consonanceMeter.js        The consonance meter: one reading over everything sounding
+  renderConsonanceMeter.js  Its markup, including the stated measure
   keyEventGuard.js          Ignoring keys typed into fields, or pressed in the config view
 
-js/audio/audioHandler.js    Web Audio: play, retune, re-level, release, stop everything. Holds
-                            the voices still fading after their key was let go, and the ones the
-                            sustain pedal is keeping alive
-js/format.js                Shared display formatting (frequencies, ratios, degrees, cents)
+js/audio/audioHandler.js    Web Audio: play, retune, re-level, release, stop everything, and
+                            what is sounding. Holds the voices still fading after their key was
+                            let go, and the ones the sustain pedal is keeping alive
+js/format.js                Shared display formatting (frequencies, ratios, degrees, cents,
+                            beat rates, partials)
 js/storage.js               localStorage that degrades to memory when it is unavailable
 ```
 
