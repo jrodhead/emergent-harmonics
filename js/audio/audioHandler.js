@@ -72,9 +72,13 @@ export function subscribeToSounding(listener) {
   return () => soundingListeners.delete(listener);
 }
 
-const teardown = ({ oscillator, gainNode }) => {
+const teardown = ({ oscillator, gainNode, panner }) => {
   oscillator.disconnect();
   gainNode.disconnect();
+
+  // A voice only has one while it is being panned, and every one it has ever
+  // had must be let go of here or each panned strike leaks a node.
+  panner?.disconnect();
 };
 
 /**
@@ -167,6 +171,11 @@ export function playSound(frequency, key, volume, waveShape, attackTime = 0) {
     gainNode,
     key,
     frequency,
+
+    // Built only when the voice is given a position, since a gain connected
+    // straight to the destination is not the same level as one through a
+    // centred panner. See setSoundPan.
+    panner: null,
   }; // Store the active oscillator and gain node by key
 
   notifySounding();
@@ -239,6 +248,75 @@ export function setSoundVolume(key, volume, timeConstant = DRAG_GLIDE_TIME_CONST
   }
 
   gain.setTargetAtTime(Number(volume), audioContext.currentTime, timeConstant);
+}
+
+/**
+ * Moves a voice that is already sounding across the stereo field, building it a
+ * panner the first time it is given a position and taking that panner away
+ * again when it is given none. Does nothing if that key is not sounding.
+ *
+ * The node arrives and leaves with the *reason* a voice is panned rather than
+ * with the position it is at. A gain connected straight to the destination puts
+ * its whole level into both channels; the same gain through a centred panner
+ * puts 1/√2 into each, which is 3 dB down. Inserting the node when a voice
+ * reaches the centre and removing it when it leaves would make crossing the
+ * middle of a pan control a step in both channels rather than a smooth
+ * crossing, so the caller decides, and pays for the 3 dB in the voice's level.
+ *
+ * @param {string} key - The key the sound was started under.
+ * @param {number|null} pan - −1 hard left to +1 hard right, or null to give the
+ *   panner back, which is what a voice leaving a stereo pair wants.
+ * @param {number} [timeConstant] - How slowly to travel, in seconds. Zero
+ *   arrives immediately, which on a position is a jump rather than a click.
+ */
+export function setSoundPan(key, pan, timeConstant = DRAG_GLIDE_TIME_CONSTANT) {
+  const activeOscillator = activeOscillators[key];
+  if (!activeOscillator) return;
+
+  const { gainNode, panner } = activeOscillator;
+
+  if (pan === null) {
+    if (!panner) return;
+
+    gainNode.disconnect();
+    panner.disconnect();
+    gainNode.connect(audioContext.destination);
+    activeOscillator.panner = null;
+    return;
+  }
+
+  if (!isFinite(pan)) {
+    console.error('Invalid pan value:', pan);
+    return;
+  }
+
+  // Outside this the node clamps anyway; doing it here means the value a test
+  // reads back is the value that is sounding.
+  const position = Math.max(-1, Math.min(1, Number(pan)));
+
+  if (!panner) {
+    const newPanner = audioContext.createStereoPanner();
+
+    // Re-routing a running voice is legal and changes nothing about the signal,
+    // only where it goes. The voice is born where it belongs, so this one is
+    // scheduled rather than travelled to.
+    gainNode.disconnect();
+    gainNode.connect(newPanner);
+    newPanner.connect(audioContext.destination);
+    newPanner.pan.setValueAtTime(position, audioContext.currentTime);
+
+    activeOscillator.panner = newPanner;
+    return;
+  }
+
+  if (!(timeConstant > 0)) {
+    panner.pan.setValueAtTime(position, audioContext.currentTime);
+    return;
+  }
+
+  // Travels rather than jumping, for the same reason a glide does: a drag that
+  // steps is a drag you can hear stepping.
+  panner.pan.setTargetAtTime(position, audioContext.currentTime, timeConstant);
 }
 
 /**

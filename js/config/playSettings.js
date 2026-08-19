@@ -1,4 +1,5 @@
 import { readStoredValue, writeStoredValue } from '../storage.js';
+import { MAX_SPREAD_HZ, normaliseSpreadRatio } from '../system/dronePair.js';
 
 /**
  * How the keyboard plays, as opposed to what it plays. Kept apart from the
@@ -35,6 +36,25 @@ export const MAX_DRONE_PERIOD_SHIFT = 1;
 export const DEFAULT_DRONE_VOLUME = 0.3;
 export const MAX_DRONE_VOLUME = 1;
 
+// The drone sounds as one voice until it is asked to be two. Not implied by a
+// spread of zero: two coincident voices are not one voice, they are two voices
+// summing, so the pair is a state of its own with a switch of its own.
+export const DEFAULT_DRONE_PAIR = false;
+
+// Both spreads open neutral, so switching the pair on opens it from the pitch
+// that was already sounding rather than jumping somewhere else.
+export const DEFAULT_DRONE_SPREAD_RATIO = 1;
+export const DEFAULT_DRONE_SPREAD_HZ = 0;
+
+// Both voices open centred, which at the neutral spread is inaudible either way
+// — two identical signals hard apart and two identical signals together are the
+// same image. It decides which regime the first spread lands the player in, and
+// centred is real beating in the air, which is this app's own subject rather
+// than the binaural one it borrows.
+export const DEFAULT_DRONE_PAN = 0;
+export const MIN_DRONE_PAN = -1;
+export const MAX_DRONE_PAN = 1;
+
 // setTargetAtTime approaches its target exponentially and is within a couple of
 // cents of it after three time constants, so that is the span a player hears as
 // the glide. Dividing by it lets the control be labelled in the time it takes.
@@ -46,6 +66,11 @@ const defaultSettings = () => ({
   releaseMs: DEFAULT_RELEASE_MS,
   dronePeriodShift: DEFAULT_DRONE_PERIOD_SHIFT,
   droneVolume: DEFAULT_DRONE_VOLUME,
+  dronePair: DEFAULT_DRONE_PAIR,
+  droneSpreadRatio: DEFAULT_DRONE_SPREAD_RATIO,
+  droneSpreadHz: DEFAULT_DRONE_SPREAD_HZ,
+  droneLowerPan: DEFAULT_DRONE_PAN,
+  droneUpperPan: DEFAULT_DRONE_PAN,
 });
 
 let settings = defaultSettings();
@@ -97,6 +122,46 @@ export const getDroneVolume = () => settings.droneVolume;
 
 export const setDroneVolume = (volume) => setSetting('droneVolume', volume, MAX_DRONE_VOLUME);
 
+/** Whether the drone sounds as two voices straddling its pitch, or as one. */
+export const getDronePair = () => settings.dronePair;
+
+// Not through setSetting, which is about clamping numbers into a range.
+export const setDronePair = (on) => {
+  settings.dronePair = Boolean(on);
+  save();
+};
+
+/** How far apart the pair sits, as a ratio: geometric, and exact as an interval. */
+export const getDroneSpreadRatio = () => settings.droneSpreadRatio;
+
+// Inverted and clamped by its own setter, the way the period shift is rounded
+// by its own: the transform belongs to the one control it is about.
+export const setDroneSpreadRatio = (ratio) => {
+  if (!Number.isFinite(ratio) || ratio <= 0) return;
+
+  settings.droneSpreadRatio = normaliseSpreadRatio(ratio);
+  save();
+};
+
+/** How far apart the pair sits in hertz: arithmetic, and exact as a beat rate. */
+export const getDroneSpreadHz = () => settings.droneSpreadHz;
+
+export const setDroneSpreadHz = (hertz) => setSetting('droneSpreadHz', hertz, MAX_SPREAD_HZ);
+
+/** Where the lower voice of the pair sits in the stereo field. */
+export const getDroneLowerPan = () => settings.droneLowerPan;
+
+export const setDroneLowerPan = (pan) => setSetting(
+  'droneLowerPan', pan, MAX_DRONE_PAN, MIN_DRONE_PAN,
+);
+
+/** Where the upper voice sits. */
+export const getDroneUpperPan = () => settings.droneUpperPan;
+
+export const setDroneUpperPan = (pan) => setSetting(
+  'droneUpperPan', pan, MAX_DRONE_PAN, MIN_DRONE_PAN,
+);
+
 /** The same glide, in the units setSoundFrequency wants. */
 export const glideTimeConstant = () => getGlideMs() / (1000 * GLIDE_TIME_CONSTANTS);
 
@@ -114,7 +179,10 @@ export function loadStoredPlaySettings() {
   if (!stored) return settings;
 
   try {
-    const { glideMs, attackMs, releaseMs, dronePeriodShift, droneVolume } = JSON.parse(stored);
+    const {
+      glideMs, attackMs, releaseMs, dronePeriodShift, droneVolume,
+      dronePair, droneSpreadRatio, droneSpreadHz, droneLowerPan, droneUpperPan,
+    } = JSON.parse(stored);
 
     // Field by field, so a settings file written before a control existed still
     // restores everything it does know about.
@@ -128,6 +196,19 @@ export function loadStoredPlaySettings() {
     }
     if (Number.isFinite(droneVolume)) {
       settings.droneVolume = clamp(droneVolume, 0, MAX_DRONE_VOLUME);
+    }
+    if (typeof dronePair === 'boolean') settings.dronePair = dronePair;
+    if (Number.isFinite(droneSpreadRatio)) {
+      settings.droneSpreadRatio = normaliseSpreadRatio(droneSpreadRatio);
+    }
+    if (Number.isFinite(droneSpreadHz)) {
+      settings.droneSpreadHz = clamp(droneSpreadHz, 0, MAX_SPREAD_HZ);
+    }
+    if (Number.isFinite(droneLowerPan)) {
+      settings.droneLowerPan = clamp(droneLowerPan, MIN_DRONE_PAN, MAX_DRONE_PAN);
+    }
+    if (Number.isFinite(droneUpperPan)) {
+      settings.droneUpperPan = clamp(droneUpperPan, MIN_DRONE_PAN, MAX_DRONE_PAN);
     }
   } catch (error) {
     console.error('Stored play settings are unusable, starting fresh:', error);

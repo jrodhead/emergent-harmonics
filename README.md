@@ -241,6 +241,50 @@ means the fundamental, not wherever you happened to be when you switched the dro
 while root `4` is selected and it still sounds the fundamental. Switch to following and back if
 you want the drone on the root you are standing on.
 
+**The stereo pair.** *Stereo pair* in the footer splits the drone into two voices straddling its
+pitch, each with its own position in the stereo field. It is off by default, and it opens where
+the drone already was: both spreads start neutral and both voices start centred, so switching it
+on changes nothing you can hear until you move a spread. The pair is never louder than the single
+drone it replaced — each voice sounds at the level that adds back up to the one you set.
+
+Two controls set how far apart they are, and they are two different instruments rather than two
+ways of saying the same thing:
+
+- **Spread (ratio)** is geometric and exact as an *interval*. Type `3/2` and there is precisely a
+  just fifth between the voices. Written the other way up — `2/3` — it is read as the same
+  distance, since a spread has no direction.
+- **Spread (Hz)** is arithmetic and exact as a *beat rate*. Set 6 Hz and the two voices are
+  6 Hz apart, which is a beat you can count.
+
+They compose, ratio first and hertz second, and what is sounding is shown under the drone
+indicator: both frequencies, where each sits, how far apart they are, and the beat that
+difference actually produces.
+
+Which of the two to reach for depends on what you want the drone to be. **A hertz spread keeps
+the drone a reference** — the pair still straddles the pitch every ratio in the system is measured
+from. **A ratio spread gives that up**: half of `3/2` is 351 cents, which is not an interval in
+any system this app can build, so the pair becomes justly related to itself and to nothing else.
+Correct for setting a beat deliberately, a real loss when the drone is doing its original job.
+
+**Panning them apart changes what kind of beat it is**, and this is worth knowing before you
+decide the feature is broken. Panned together — or heard on speakers however they are panned —
+the two voices meet in the air and beat there, which is this app's own subject: the beat rate
+between two notes is what makes a tuning ring or roll. Panned hard apart *on headphones*, each ear
+hears one voice and nothing beats in the air at all; what you hear is a binaural beat,
+manufactured in the listener. The readout says which of the two you have set up, but it cannot
+know whether you are wearing headphones, so the last step of that is yours.
+
+The one thing that catches people out is the wave shape, which the drone shares with the note
+keys. A hertz spread beats on any wave, because the two fundamentals are close enough to beat
+directly. **A ratio spread on the default sine beats at nothing at all** — a sine has nothing
+above its fundamental for the other voice's partials to meet — and the readout says so rather than
+leaving you to wonder. Switch to a sawtooth and the same setting starts beating between coinciding
+harmonics, at a multiple of however far off the ratio is, which is how a piano tuner sets a fifth.
+
+At the very bottom of the drone's register a wide hertz spread would push the lower voice under
+hearing. Rather than clamping one voice — which would quietly change the beat rate — the pair
+collapses to the single centred voice and says so, and opens again as soon as the spread will fit.
+
 **The interval readout** sits under the keyboard and fills in whenever two or more voices are
 sounding — note keys, pedalled notes and the drone alike. Each row is one pair: the ratio between
 them, how far the interval sits from that ratio in cents, and the rate at which the two beat.
@@ -295,23 +339,34 @@ each root key also shows which scale it builds.
 The **Oscillator Configuration** footer sets the waveform (sine, square, sawtooth, triangle)
 and the volume, and applies to both the keyboard and the configuration previews.
 
-Five controls shape how the keyboard plays, and all five are remembered between visits:
+Ten controls shape how the keyboard plays, and all ten are remembered between visits. Three of
+them belong to the note keys:
 
 - **Attack** — how long a note takes to swell to full volume when it is struck, 0 to 2000 ms.
 - **Release** — how long it goes on sounding after its key is let go, 0 to 2000 ms. The key
   itself is free the instant you release it, so you can strike it again over its own decay.
 - **Glide** — how long a held note takes to reach its new pitch, 0 to 500 ms; at 0 the note
   arrives at once, still without being re-struck.
+
+The other seven are the drone's, grouped together under *Drone* — the drone owns most of this
+footer now, and its level is not a second oscillator volume:
+
 - **Drone pitch** — where the drone sits relative to the pitch it is a reference for, from three
   periods below to one above. A period below is the default, which puts it under your hands
   rather than in among them.
 - **Drone level** — how loud the drone is, in its own right rather than as a fraction of the
   oscillator volume. It starts below the level the note keys use, because a reference that
   competes with the notes is not being used as a reference.
+- **Stereo pair**, **Spread (ratio)**, **Spread (Hz)**, **Lower voice** and **Upper voice** — the
+  pair described above. The four that describe a pair are reachable only while there is one.
 
-Both drone controls differ from everything else in that footer in one way: they are heard *as you
+The drone's controls are hidden on the configuration screen, where the drone cannot sound: leaving
+it stops it, and the mixer wants the height for its faders.
+
+Every drone control differs from everything else in that footer in one way: they are heard *as you
 move them*. Every other control here is read when a note is struck, but the drone is already
-sounding when you reach for the fader, so it glides and re-levels under the pointer.
+sounding when you reach for the fader, so it glides, re-levels and moves across the field under
+the pointer.
 
 At 0 the attack and release switch the note on and off outright, which clicks — that click is
 what they exist to remove. `Escape` still silences everything on the spot, including notes part
@@ -331,6 +386,8 @@ js/system/
   period.js                 PERIOD_RATIO, and folding ratios into one period
   generateSystem.js         Root notes across keys 0-9; registers across the audible range
   droneFrequency.js         An anchor shifted by periods, pulled back into hearing. Pure
+  dronePair.js              Two frequencies straddling one, the level that keeps them as loud
+                            as the voice they replace, and reading a typed ratio. Pure
   interval.js               What two frequencies are to each other: the ratio, the cents, and
                             the beat between their coinciding partials. Pure
   consonance.js             How rough a set of voices is: Plomp–Levelt roughness over their
@@ -348,8 +405,8 @@ js/config/
   degrees.js                Roman numerals by position
   selectedScale.js          Which scale is being edited (screen state, not system state)
   playSettings.js           How the keyboard plays rather than what: the attack, release,
-                            glide and the drone's pitch and level, persisted
-  playSettingsHandler.js    Event wiring for those five controls, and the playSettingChanged
+                            glide, and the drone's pitch, level, pair and spreads, persisted
+  playSettingsHandler.js    Event wiring for those ten controls, and the playSettingChanged
                             event the drone follows
   viewToggle.js             config ↔ play, clearing held keys on the way
 
@@ -364,8 +421,10 @@ js/keys/
   playModeHandler.js        The * toggle
   sustainPedalHandler.js    The Space pedal: the key, the indicator, and the pedalUp event
   sustainPedalState.js      Whether it is down, read by the note keys
-  droneHandler.js           The ` drone and its ~ mode: a voice that belongs to the system
-                            rather than to a key
+  droneHandler.js           The ` drone and its ~ mode: a set of voices that belongs to the
+                            system rather than to a key, reconciled against what is sounding
+  renderDroneReadout.js     What the pair is doing: both frequencies, their distance, and the
+                            beat it produces
   intervalReadout.js        The interval readout: pairs the sounding voices and draws them.
                             Listens to the audio layer and to nothing else
   renderIntervalReadout.js  Its markup
@@ -373,11 +432,11 @@ js/keys/
   renderConsonanceMeter.js  Its markup, including the stated measure
   keyEventGuard.js          Ignoring keys typed into fields, or pressed in the config view
 
-js/audio/audioHandler.js    Web Audio: play, retune, re-level, release, stop everything, and
-                            what is sounding. Holds the voices still fading after their key was
+js/audio/audioHandler.js    Web Audio: play, retune, re-level, re-place, release, stop
+                            everything, and what is sounding. Holds the voices still fading after their key was
                             let go, and the ones the sustain pedal is keeping alive
 js/format.js                Shared display formatting (frequencies, ratios, degrees, cents,
-                            beat rates, partials)
+                            beat rates, partials, stereo positions)
 js/storage.js               localStorage that degrades to memory when it is unavailable
 ```
 

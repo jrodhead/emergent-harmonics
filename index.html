@@ -47,7 +47,9 @@
       <div id="escapeKeyTable"></div>
       <div id="playModeTable">Play mode: <span id="playMode">latch</span> (press * to switch)</div>
       <div id="sustainPedalTable">Sustain: <span id="sustainPedal">up</span> (hold Space)</div>
-      <div id="droneTable">Drone: <span id="drone">off</span>, <span id="droneMode">anchored</span> (` to toggle, ~ to switch)</div>
+      <div id="droneTable">Drone: <span id="drone">off</span>, <span id="droneMode">anchored</span> (` to toggle, ~ to switch)
+        <div id="dronePairReadout"></div>
+      </div>
       <div id="intervalReadout"></div>
       <div id="consonanceMeter"></div>
     </div>
@@ -85,16 +87,44 @@
         <input type="range" id="glideTime" min="0" max="500" step="10" value="80">
         <output for="glideTime" id="glideOutput">80 ms</output>
       </div>
-      <div class="form-group">
-        <label for="dronePeriod">Drone pitch:</label>
-        <input type="range" id="dronePeriod" min="-3" max="1" step="1" value="-1">
-        <output for="dronePeriod" id="dronePeriodOutput">1 period below</output>
-      </div>
-      <div class="form-group">
-        <label for="droneVolume">Drone level:</label>
-        <input type="range" id="droneVolume" min="0" max="1" step="0.01" value="0.3">
-        <output for="droneVolume" id="droneVolumeOutput">0.3</output>
-      </div>
+      <fieldset id="droneControls">
+        <legend>Drone</legend>
+        <div class="form-group">
+          <label for="dronePeriod">Drone pitch:</label>
+          <input type="range" id="dronePeriod" min="-3" max="1" step="1" value="-1">
+          <output for="dronePeriod" id="dronePeriodOutput">1 period below</output>
+        </div>
+        <div class="form-group">
+          <label for="droneVolume">Drone level:</label>
+          <input type="range" id="droneVolume" min="0" max="1" step="0.01" value="0.3">
+          <output for="droneVolume" id="droneVolumeOutput">0.3</output>
+        </div>
+        <div class="form-group">
+          <label for="dronePair">Stereo pair:</label>
+          <input type="checkbox" id="dronePair">
+          <output for="dronePair" id="dronePairOutput">one voice</output>
+        </div>
+        <div class="form-group">
+          <label for="droneSpreadRatio">Spread (ratio):</label>
+          <input type="text" id="droneSpreadRatio" size="6" value="1" disabled>
+          <output for="droneSpreadRatio" id="droneSpreadRatioOutput">unison</output>
+        </div>
+        <div class="form-group">
+          <label for="droneSpreadHz">Spread (Hz):</label>
+          <input type="range" id="droneSpreadHz" min="0" max="30" step="0.1" value="0" disabled>
+          <output for="droneSpreadHz" id="droneSpreadHzOutput">0 Hz</output>
+        </div>
+        <div class="form-group">
+          <label for="droneLowerPan">Lower voice:</label>
+          <input type="range" id="droneLowerPan" min="-1" max="1" step="0.01" value="0" disabled>
+          <output for="droneLowerPan" id="droneLowerPanOutput">centre</output>
+        </div>
+        <div class="form-group">
+          <label for="droneUpperPan">Upper voice:</label>
+          <input type="range" id="droneUpperPan" min="-1" max="1" step="0.01" value="0" disabled>
+          <output for="droneUpperPan" id="droneUpperPanOutput">centre</output>
+        </div>
+      </fieldset>
     </form>
   </footer>
 

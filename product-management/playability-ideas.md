@@ -87,42 +87,18 @@ hard to hear as expressive while notes still click on and off.
 
 ## Group 2 — The expressive layer
 
-The "it feels like an instrument" group. Three of it are built: *Envelopes* (see
+The "it feels like an instrument" group. Four of it are built: *Envelopes* (see
 [done-user-stories/oscillator_envelopes.md](done-user-stories/oscillator_envelopes.md)), the
 *Sustain pedal* (see
 [done-user-stories/playing_sustain-pedal.md](done-user-stories/playing_sustain-pedal.md), which
 is on `Space` and holds a chord across a root change in hold mode as well as after a key
-release), and the *Drone key* (see
+release), the *Drone key* (see
 [done-user-stories/playing_drone-key.md](done-user-stories/playing_drone-key.md) — `` ` `` to
 latch it on, `~` to switch between anchored and following, with its pitch and level configurable
-and persisted).
-
-### Stereo drone pair
-
-As someone listening for beats, I want the drone to be two voices straddling its pitch, panned
-apart, so that I can set a beat rate deliberately and hear it in isolation.
-
-**Acceptance Criteria:**
-1. The drone can sound as two voices, symmetric about the drone pitch, with the pair collapsing
-   to a single centred voice by default.
-2. The distance between them is configurable both as a ratio and as an offset in hertz.
-3. Each voice's position in the stereo field is configurable, including hard left and right.
-4. The frequencies sounding, the difference between them, and the beat that difference produces
-   are shown.
-
-**Notes:** two features wearing one coat. Panned hard apart on headphones it is a binaural beat,
-manufactured in the listener rather than in the air; panned together or heard on speakers it is
-real acoustic beating, which is this app's own subject — the beat rate between two notes is what
-makes a tuning ring or roll.
-
-The two units are not alternatives, they are two regimes, and the wave shape decides which one is
-audible: a hertz offset beats on any wave, while an interval offset produces no beating at all on
-a sine and beats between coinciding harmonics on a sawtooth, at a multiple of the offset. Which
-means criterion 4 is most of the work, and a drone wave shape of its own is probably criterion 5.
-
-The *Drone key* it depends on is built, and it wants *Live interval readout* first — criterion 4
-is that story's arithmetic, pointed at two voices instead of ten keys. Design notes are in the
-drone key story, under *Room left*, including why the drone already owns a *list* of voices.
+and persisted), and the *Stereo drone pair* (see
+[done-user-stories/playing_stereo-drone-pair.md](done-user-stories/playing_stereo-drone-pair.md)
+— two voices straddling the drone pitch, spread by a ratio or by a number of hertz, panned
+anywhere from together to opposite ears, with what they are doing to each other on screen).
 
 ### Accent and dynamics
 
@@ -135,6 +111,28 @@ can have shape.
 
 **Notes:** computer keyboards have no velocity. A modifier for accent, or a soft/loud toggle,
 gets most of the way there.
+
+### Drone wave shape
+
+As someone using the drone pair to hear beating, I want the drone to have a wave shape of its
+own, so that I can put partials under the drone without playing over a sawtooth.
+
+**Acceptance Criteria:**
+1. The drone's wave shape is configurable separately from the note keys'.
+2. What each display says about a beat is true of the voices actually sounding it.
+
+**Notes:** refused by the *Stereo drone pair*, which is where the need for it is clearest: half
+of that story's table of regimes is unreachable on the default sine, and the pair covers the trap
+with words instead. It is a story of its own because a *per-voice* wave shape is an audio-layer
+change, not a drone one — `soundingVoices` would carry the shape, the interval readout would have
+to rule that a beat between partials needs partials in both voices, and `consonanceOf` builds its
+partials for the whole sonority from a single shape.
+
+Criterion 2 is the part that is already wrong and would be fixed on the way: the readout and the
+meter both redraw when the wave shape control moves, as though a sounding voice's shape had
+changed with it. It has not — `playSound` sets `oscillator.type` at the strike and nothing updates
+it — so switching to a sawtooth mid-chord says the beats on screen have become audible while the
+oscillators making them are still sines.
 
 ---
 
@@ -175,17 +173,17 @@ I unknowingly had Caps Lock on and couldn't get any of the keys to work except n
 
 ## Suggested order
 
-**1. Stereo drone pair** — now that both the drone it extends and the readout it needs are built.
-
-A held, isolated beat with a number attached to it, over a drone that is already the system's
-reference. Its criterion 4 is `describeInterval` pointed at two drone voices instead of the
-keyboard, so it should write no arithmetic of its own.
-
-**2. Accent and dynamics** — the last of the *Why* this page was written about.
+**1. Accent and dynamics** — the last of the *Why* this page was written about.
 
 Three of the four things named in it as thin — one waveform, keys clicking on and off, no
 sustain — have been dealt with. "One volume" is what is left, and `setSoundVolume` was built by
 the drone story specifically for it, so what remains is a modifier key and a level choice.
+
+**2. Drone wave shape** — small, and it fixes something that is currently wrong.
+
+The *Stereo drone pair* named it and declined it. Its second criterion is a bug rather than a
+feature, and the fix — the wave shape stored on the voice rather than read off a select — is the
+same one line that makes the drone's own shape possible.
 
 *Chained roots* is still the most exciting and should still wait. It changes what the system
 means, and it will read as broken rather than expressive until the expressive layer exists. Its

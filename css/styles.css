@@ -37,6 +37,32 @@ footer form {
   flex-wrap: wrap;
 }
 
+/* The drone owns seven of the footer's ten controls, and two of them are levels
+   that do different things to different voices. Grouping them is what keeps the
+   drone level from reading as a second oscillator volume. */
+#droneControls {
+  display: flex;
+  align-items: baseline;
+  gap: .25rem 1rem;
+  flex-wrap: wrap;
+  padding: .25rem .75rem .5rem;
+}
+
+/* The drone cannot sound on the configuration screen — switching to it stops
+   the drone — so seven controls for a voice that cannot be heard would be seven
+   controls sitting on top of the mixer, which is the screen that wants the
+   height for its faders. */
+body[data-view="config"] #droneControls {
+  display: none;
+}
+
+/* A spread and a position describe a pair. Without one they are still there,
+   still readable, and plainly not doing anything. */
+#droneControls input:disabled,
+#droneControls input:disabled + output {
+  opacity: .45;
+}
+
 legend {
   font-size: 1rem;
   font-weight: bold;
@@ -249,9 +275,35 @@ button#play {
 
 /* The number is real; the sound is not. Shown rather than hidden, so switching
    to a sawtooth can be watched making it audible. */
-.interval-beat.inaudible {
+.interval-beat.inaudible,
+.drone-beat.inaudible {
   opacity: .45;
   text-decoration: line-through;
+}
+
+/* What the pair is actually doing. Tabular numerals for the same reason the
+   interval readout has them: a frequency sliding under a drag should not make
+   the line jump. */
+#dronePairReadout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem 1rem;
+  padding-top: .25rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#dronePairReadout:empty {
+  display: none;
+}
+
+.drone-pan {
+  opacity: .7;
+  padding-left: .35rem;
+}
+
+.drone-difference,
+.drone-regime {
+  opacity: .7;
 }
 
 .interval-more {

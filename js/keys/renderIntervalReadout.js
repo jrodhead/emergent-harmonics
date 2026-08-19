@@ -11,8 +11,12 @@ import { formatBeat, formatCents, formatPartial, formatRatio } from '../format.j
 
 const PROMPT = 'Hold two notes to see the interval between them.';
 
-/** Why a beat that is real arithmetic would not be real sound. */
-const inaudibleBecause = ({ simple, partials }, waveShape) => {
+/**
+ * Why a beat that is real arithmetic would not be real sound. Exported because
+ * the drone's own readout says the same sentence about its own two voices, and
+ * two places saying it is two places for it to drift apart.
+ */
+export const inaudibleBecause = ({ simple, partials }, waveShape) => {
   if (!simple) return null;
   if (simple.numerator === 1 && simple.denominator === 1) return null;
 

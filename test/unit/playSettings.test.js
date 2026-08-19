@@ -28,7 +28,24 @@ import {
   setDronePeriodShift,
   getDroneVolume,
   setDroneVolume,
+  DEFAULT_DRONE_PAIR,
+  DEFAULT_DRONE_SPREAD_RATIO,
+  DEFAULT_DRONE_SPREAD_HZ,
+  DEFAULT_DRONE_PAN,
+  MIN_DRONE_PAN,
+  MAX_DRONE_PAN,
+  getDronePair,
+  setDronePair,
+  getDroneSpreadRatio,
+  setDroneSpreadRatio,
+  getDroneSpreadHz,
+  setDroneSpreadHz,
+  getDroneLowerPan,
+  setDroneLowerPan,
+  getDroneUpperPan,
+  setDroneUpperPan,
 } from '../../js/config/playSettings.js';
+import { MAX_SPREAD_HZ, MAX_SPREAD_RATIO } from '../../js/system/dronePair.js';
 
 const storedSettings = () => JSON.parse(readStoredValue(STORAGE_KEY));
 
@@ -196,6 +213,91 @@ describe('the drone', () => {
   });
 });
 
+describe('the drone pair', () => {
+  it('sounds as one voice until it is asked to be two', () => {
+    assert.equal(getDronePair(), DEFAULT_DRONE_PAIR);
+    assert.equal(DEFAULT_DRONE_PAIR, false);
+  });
+
+  it('is switched on and off, and takes nothing but a yes or a no', () => {
+    setDronePair(true);
+    assert.equal(getDronePair(), true);
+
+    setDronePair(false);
+    assert.equal(getDronePair(), false);
+  });
+
+  it('opens at the pitch that was already sounding', () => {
+    assert.equal(getDroneSpreadRatio(), DEFAULT_DRONE_SPREAD_RATIO);
+    assert.equal(getDroneSpreadHz(), DEFAULT_DRONE_SPREAD_HZ);
+    assert.equal(DEFAULT_DRONE_SPREAD_RATIO, 1);
+    assert.equal(DEFAULT_DRONE_SPREAD_HZ, 0);
+  });
+
+  it('opens with both voices centred', () => {
+    assert.equal(getDroneLowerPan(), DEFAULT_DRONE_PAN);
+    assert.equal(getDroneUpperPan(), DEFAULT_DRONE_PAN);
+    assert.equal(DEFAULT_DRONE_PAN, 0);
+  });
+
+  it('takes a ratio spread, inverting one written the other way up', () => {
+    setDroneSpreadRatio(1.5);
+    assert.equal(getDroneSpreadRatio(), 1.5);
+
+    setDroneSpreadRatio(2 / 3);
+    assert.equal(getDroneSpreadRatio(), 1.5);
+  });
+
+  it('holds the ratio spread inside a period', () => {
+    setDroneSpreadRatio(MAX_SPREAD_RATIO + 2);
+
+    assert.equal(getDroneSpreadRatio(), MAX_SPREAD_RATIO);
+  });
+
+  it('ignores a ratio spread that is not a ratio', () => {
+    setDroneSpreadRatio(Number.NaN);
+    assert.equal(getDroneSpreadRatio(), DEFAULT_DRONE_SPREAD_RATIO);
+
+    setDroneSpreadRatio(0);
+    assert.equal(getDroneSpreadRatio(), DEFAULT_DRONE_SPREAD_RATIO);
+  });
+
+  it('takes a hertz spread and holds it inside its range', () => {
+    setDroneSpreadHz(6);
+    assert.equal(getDroneSpreadHz(), 6);
+
+    setDroneSpreadHz(-4);
+    assert.equal(getDroneSpreadHz(), 0);
+
+    setDroneSpreadHz(MAX_SPREAD_HZ + 10);
+    assert.equal(getDroneSpreadHz(), MAX_SPREAD_HZ);
+  });
+
+  it('takes each voice anywhere in the field, including hard left and right', () => {
+    setDroneLowerPan(MIN_DRONE_PAN);
+    setDroneUpperPan(MAX_DRONE_PAN);
+
+    assert.equal(getDroneLowerPan(), -1);
+    assert.equal(getDroneUpperPan(), 1);
+  });
+
+  it('holds each voice inside the field, and moves only the one it was given', () => {
+    setDroneLowerPan(-4);
+    assert.equal(getDroneLowerPan(), MIN_DRONE_PAN);
+    assert.equal(getDroneUpperPan(), DEFAULT_DRONE_PAN);
+
+    setDroneUpperPan(4);
+    assert.equal(getDroneUpperPan(), MAX_DRONE_PAN);
+    assert.equal(getDroneLowerPan(), MIN_DRONE_PAN);
+  });
+
+  it('ignores a position that is not a number', () => {
+    setDroneLowerPan(Number.NaN);
+
+    assert.equal(getDroneLowerPan(), DEFAULT_DRONE_PAN);
+  });
+});
+
 describe('persistence', () => {
   it('saves the glide as soon as it changes', () => {
     setGlideMs(250);
@@ -327,5 +429,59 @@ describe('persistence', () => {
     assert.equal(getDroneVolume(), 0.8);
     assert.equal(getGlideMs(), DEFAULT_GLIDE_MS);
     assert.equal(getDronePeriodShift(), DEFAULT_DRONE_PERIOD_SHIFT);
+  });
+
+  it('saves the pair and its four settings as soon as they change', () => {
+    setDronePair(true);
+    setDroneSpreadRatio(1.5);
+    setDroneSpreadHz(6);
+    setDroneLowerPan(-1);
+    setDroneUpperPan(1);
+
+    const stored = storedSettings();
+
+    assert.equal(stored.dronePair, true);
+    assert.equal(stored.droneSpreadRatio, 1.5);
+    assert.equal(stored.droneSpreadHz, 6);
+    assert.equal(stored.droneLowerPan, -1);
+    assert.equal(stored.droneUpperPan, 1);
+  });
+
+  it('restores them, holding each inside its range on the way in', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({
+      dronePair: true,
+      droneSpreadRatio: 2 / 3,
+      droneSpreadHz: MAX_SPREAD_HZ + 10,
+      droneLowerPan: -4,
+      droneUpperPan: 0.5,
+    }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getDronePair(), true);
+    assert.equal(getDroneSpreadRatio(), 1.5);
+    assert.equal(getDroneSpreadHz(), MAX_SPREAD_HZ);
+    assert.equal(getDroneLowerPan(), MIN_DRONE_PAN);
+    assert.equal(getDroneUpperPan(), 0.5);
+  });
+
+  it('restores the other nine from a settings blob written before the pair existed', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ glideMs: 200, droneVolume: 0.8 }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getGlideMs(), 200);
+    assert.equal(getDroneVolume(), 0.8);
+    assert.equal(getDronePair(), DEFAULT_DRONE_PAIR);
+    assert.equal(getDroneSpreadRatio(), DEFAULT_DRONE_SPREAD_RATIO);
+    assert.equal(getDroneLowerPan(), DEFAULT_DRONE_PAN);
+  });
+
+  it('ignores a stored pair flag that is not a yes or a no', () => {
+    writeStoredValue(STORAGE_KEY, JSON.stringify({ dronePair: 'yes please' }));
+
+    loadStoredPlaySettings();
+
+    assert.equal(getDronePair(), DEFAULT_DRONE_PAIR);
   });
 });

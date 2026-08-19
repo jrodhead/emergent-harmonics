@@ -21,6 +21,7 @@ export const recordAudio = (app) => app.evaluate(`
   window.__stops = 0;
   window.__glides = [];
   window.__levels = [];
+  window.__pans = [];
 
   // The gain node is built straight after the oscillator it belongs to, so the
   // sound being recorded is always the last one pushed.
@@ -98,5 +99,45 @@ export const recordAudio = (app) => app.evaluate(`
     };
 
     return gain;
+  };
+
+  // Where each voice sits. Only the drone's pair asks for one of these, and the
+  // node arriving at all is half of what a test wants to know: a voice with no
+  // panner is connected straight to the destination, which is not the same
+  // level as one through a centred panner.
+  const createStereoPanner = AudioContext.prototype.createStereoPanner;
+  AudioContext.prototype.createStereoPanner = function () {
+    const panner = createStereoPanner.call(this);
+    const sound = soundBeingBuilt();
+
+    const record = (value) => {
+      const pan = value === null ? null : Number(value);
+
+      window.__pans.push({ pan });
+      if (sound) sound.pan = pan;
+    };
+
+    const setPan = panner.pan.setValueAtTime.bind(panner.pan);
+    panner.pan.setValueAtTime = (value, ...rest) => {
+      record(value);
+      return setPan(value, ...rest);
+    };
+
+    const glidePan = panner.pan.setTargetAtTime.bind(panner.pan);
+    panner.pan.setTargetAtTime = (value, startTime, timeConstant) => {
+      record(value);
+      return glidePan(value, startTime, timeConstant);
+    };
+
+    // A voice given the panner back is a voice with no position again, which is
+    // a different level as well as a different place, so it is worth recording
+    // as plainly as a move is.
+    const disconnect = panner.disconnect.bind(panner);
+    panner.disconnect = (...rest) => {
+      record(null);
+      return disconnect(...rest);
+    };
+
+    return panner;
   };
 `);

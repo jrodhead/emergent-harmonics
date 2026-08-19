@@ -7,6 +7,7 @@ import {
   stopAllSounds,
   setSoundFrequency,
   setSoundVolume,
+  setSoundPan,
   isSounding,
   sustainVoice,
   releaseSustainedVoices,
@@ -21,6 +22,7 @@ import {
  */
 const oscillators = [];
 const gains = [];
+const panners = [];
 
 const stubAudio = () => {
   class FakeAudioParam {
@@ -76,9 +78,25 @@ const stubAudio = () => {
     }
 
     createGain() {
-      const gainNode = { gain: new FakeAudioParam(), connect() {}, disconnect() {} };
+      const gainNode = {
+        gain: new FakeAudioParam(),
+        connections: [],
+        connect(node) { this.connections.push(node); },
+        disconnect() { this.connections.length = 0; this.disconnected = true; },
+      };
       gains.push(gainNode);
       return gainNode;
+    }
+
+    createStereoPanner() {
+      const panner = {
+        pan: new FakeAudioParam(),
+        connections: [],
+        connect(node) { this.connections.push(node); },
+        disconnect() { this.connections.length = 0; this.disconnected = true; },
+      };
+      panners.push(panner);
+      return panner;
     }
   }
 
@@ -90,6 +108,7 @@ stubAudio();
 beforeEach(() => {
   oscillators.length = 0;
   gains.length = 0;
+  panners.length = 0;
 });
 
 afterEach((t) => {
@@ -359,6 +378,132 @@ describe('setSoundVolume', () => {
 
     assert.equal(gains[0].gain.value, 0.5);
     assert.deepEqual(gains[0].gain.targets, []);
+  });
+});
+
+describe('setSoundPan', () => {
+  it('builds a panner for a voice that has none and routes the gain through it', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', -1);
+
+    assert.equal(panners.length, 1);
+    assert.deepEqual(gains[0].connections, [panners[0]]);
+    assert.deepEqual(panners[0].connections.map(({ name }) => name), ['destination']);
+    // Born where it belongs rather than travelling there.
+    assert.equal(panners[0].pan.value, -1);
+    assert.deepEqual(panners[0].pan.targets, []);
+  });
+
+  it('moves the panner it already has rather than building another', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    setSoundPan('q', 0.5, 0.05);
+
+    assert.equal(panners.length, 1);
+    assert.deepEqual(panners[0].pan.targets, [{ value: 0.5, timeConstant: 0.05 }]);
+  });
+
+  it('arrives at once when there is no smoothing asked for', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    setSoundPan('q', 1, 0);
+
+    assert.deepEqual(panners[0].pan.targets, []);
+    assert.equal(panners[0].pan.value, 1);
+  });
+
+  it('clamps a position past the ends of the field', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', -4);
+
+    assert.equal(panners[0].pan.value, -1);
+  });
+
+  it('gives the panner back when the voice is given no position at all', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    setSoundPan('q', null);
+
+    assert.equal(panners[0].disconnected, true);
+    assert.deepEqual(gains[0].connections.map(({ name }) => name), ['destination']);
+  });
+
+  it('builds a fresh panner if the voice is panned again after that', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+    setSoundPan('q', null);
+
+    setSoundPan('q', 1);
+
+    assert.equal(panners.length, 2);
+    assert.deepEqual(gains[0].connections, [panners[1]]);
+  });
+
+  it('does nothing when a voice with no panner is given none', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', null);
+
+    assert.equal(panners.length, 0);
+  });
+
+  it('lets the panner go when the voice is stopped, so a panned strike leaks nothing', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    stopSound('q');
+
+    assert.equal(panners[0].disconnected, true);
+  });
+
+  it('lets it go through a release, a pedal lift and a panic alike', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+    stopSound('q', 0.3);
+    oscillators[0].end();
+    assert.equal(panners[0].disconnected, true);
+
+    playSound(440, 'w', 0.5, 'sine', 0);
+    setSoundPan('w', 1);
+    sustainVoice('w');
+    releaseSustainedVoices(0);
+    assert.equal(panners[1].disconnected, true);
+
+    playSound(440, 'e', 0.5, 'sine', 0);
+    setSoundPan('e', 1);
+    stopAllSounds();
+    assert.equal(panners[2].disconnected, true);
+  });
+
+  it('does nothing for a key that is not sounding', () => {
+    assert.doesNotThrow(() => setSoundPan('nothing-here', -1));
+    assert.equal(panners.length, 0);
+  });
+
+  it('refuses a position that is not a number', (t) => {
+    t.mock.method(console, 'error', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', Number.NaN);
+
+    assert.equal(panners.length, 0);
+  });
+
+  it('does not announce a sounding change, since where a voice sits is not what interval it is in', () => {
+    let notifications = 0;
+    const unsubscribe = subscribeToSounding(() => { notifications += 1; });
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', -1);
+    setSoundPan('q', null);
+
+    assert.equal(notifications, 1);
+    unsubscribe();
   });
 });
 

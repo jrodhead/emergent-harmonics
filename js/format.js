@@ -83,3 +83,20 @@ export const formatPartial = (partial) => {
 
   return `${whole}${suffix}`;
 };
+
+/**
+ * Where a voice sits in the stereo field, said the way someone would say it
+ * rather than as a signed fraction: centre, hard left, 40% right.
+ */
+export const formatPan = (pan) => {
+  if (!Number.isFinite(pan)) return '—';
+
+  const position = Math.max(-1, Math.min(1, pan));
+  const distance = Math.round(Math.abs(position) * 100);
+
+  if (distance === 0) return 'centre';
+
+  const side = position < 0 ? 'left' : 'right';
+
+  return distance === 100 ? `hard ${side}` : `${distance}% ${side}`;
+};

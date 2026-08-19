@@ -9,6 +9,7 @@ import {
   formatCents,
   formatBeat,
   formatPartial,
+  formatPan,
 } from '../../js/format.js';
 
 describe('formatFrequency', () => {
@@ -138,5 +139,29 @@ describe('formatPartial', () => {
 
   it('marks a value that is not a harmonic', () => {
     assert.equal(formatPartial(Number.NaN), '—');
+  });
+});
+
+describe('formatPan', () => {
+  it('says centre rather than nothing', () => {
+    assert.equal(formatPan(0), 'centre');
+  });
+
+  it('names the two ends the way the control is labelled', () => {
+    assert.equal(formatPan(-1), 'hard left');
+    assert.equal(formatPan(1), 'hard right');
+  });
+
+  it('says how far over anything in between is', () => {
+    assert.equal(formatPan(-0.4), '40% left');
+    assert.equal(formatPan(0.65), '65% right');
+  });
+
+  it('holds a position past the ends inside the field', () => {
+    assert.equal(formatPan(-3), 'hard left');
+  });
+
+  it('has a dash for a position that is not one', () => {
+    assert.equal(formatPan(Number.NaN), '—');
   });
 });
