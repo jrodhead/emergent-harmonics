@@ -1,4 +1,5 @@
 .DS_Store
+node_modules
 chatGPTConversation.md
 solarian-scale
 product-management/planning

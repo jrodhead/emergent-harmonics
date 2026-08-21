@@ -1,54 +1,31 @@
 /**
- * This module handles the arrow key events for changing the diapason index.
- * It exports the currentDiapasonIndex and updateCurrentDiapasonIndex variables,
- * as well as the handleDiapasonChange function.
- * The currentDiapasonIndex represents the current index of the diapason in the musical system.
- * The updateCurrentDiapasonIndex function updates the currentDiapasonIndex based on the direction provided.
- * The handleDiapasonChange function is called when the arrow keys are pressed and updates the currentDiapasonIndex
- * and the key map based on the new diapason.
+ * Handles the arrow key events that move the note keys between registers.
+ * The system now spans every register that fits inside the audible range, so
+ * the number of registers depends on the root note and the configured notes.
  */
-import { activeScaleNotesGlobal } from './numericKeyHandler.js';
-import { createDiapasonRowKeyMap } from './createDiapasonRowKeyMap.js';
-
-let currentDiapasonIndex;
+import { mapNoteKeys } from './mapNoteKeys.js';
+import { shouldIgnoreKeyEvent } from './keyEventGuard.js';
+import { registers, currentRegisterIndex, updateCurrentRegisterIndex } from '../system/state.js';
 
 /**
- * Updates the currentDiapasonIndex based on the direction provided.
- * @param {string} direction - The direction of the diapason change. Can be 'next' or 'previous'.
+ * Moves the note keys one register in the given direction, if there is one.
+ * @param {string} direction - 'next' or 'previous'.
  */
-const updateCurrentDiapasonIndex = (direction) => {
-  if (direction === 'next') {
-    currentDiapasonIndex++;
-  } else if (direction === 'previous') {
-    if (currentDiapasonIndex === 0) {
-      return; // Do not decrement if currentDiapasonIndex is already 0
-    }
-    currentDiapasonIndex--;
-  } else if (direction === 'reset') {
-    currentDiapasonIndex = 0;
-  }
+const changeRegister = (direction) => {
+  const nextIndex = direction === 'next' ? currentRegisterIndex + 1 : currentRegisterIndex - 1;
 
-  // Ensure the diapason index stays within valid bounds
-  if (currentDiapasonIndex < 0 || currentDiapasonIndex >= activeScaleNotesGlobal.length) {
-    currentDiapasonIndex = Math.max(0, Math.min(activeScaleNotesGlobal.length - 1, currentDiapasonIndex));
-    return;
-  }
+  if (nextIndex < 0 || nextIndex >= registers.length) return;
 
-  createDiapasonRowKeyMap(activeScaleNotesGlobal);
+  updateCurrentRegisterIndex(nextIndex);
+  mapNoteKeys(registers);
 };
 
-export { currentDiapasonIndex, updateCurrentDiapasonIndex};
-
 document.body.addEventListener('keydown', (ev) => {
-  // Ignore repeated keydown events
-  if (ev.repeat) return;
+  if (ev.repeat || shouldIgnoreKeyEvent(ev)) return;
 
-  // Handle diapason change with up and down arrow keys
   if (ev.key === 'ArrowUp') {
-    // Go to the next diapason (current diapason + 1)
-    updateCurrentDiapasonIndex('next');
+    changeRegister('next');
   } else if (ev.key === 'ArrowDown') {
-    // Go to the previous diapason (current diapason - 1)
-    updateCurrentDiapasonIndex('previous');
+    changeRegister('previous');
   }
 });

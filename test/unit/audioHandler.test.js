@@ -1,0 +1,825 @@
+import { describe, it, beforeEach, afterEach } from 'node:test';
+import assert from 'node:assert/strict';
+
+import {
+  playSound,
+  stopSound,
+  stopAllSounds,
+  setSoundFrequency,
+  setSoundVolume,
+  setSoundPan,
+  isSounding,
+  sustainVoice,
+  releaseSustainedVoices,
+  sustainedVoiceCount,
+  soundingVoices,
+  subscribeToSounding,
+} from '../../js/audio/audioHandler.js';
+
+/**
+ * A Web Audio stub that records what the app asks of it. Installed once,
+ * because audioHandler holds on to the first AudioContext it builds.
+ */
+const oscillators = [];
+const gains = [];
+const panners = [];
+
+const stubAudio = () => {
+  class FakeAudioParam {
+    constructor() {
+      this.value = null;
+      this.targets = [];
+      this.ramps = [];
+      this.cancelledAt = null;
+    }
+
+    setValueAtTime(value) {
+      this.value = value;
+    }
+
+    setTargetAtTime(value, startTime, timeConstant) {
+      this.targets.push({ value, timeConstant });
+      this.value = value;
+    }
+
+    linearRampToValueAtTime(value, endTime) {
+      this.ramps.push({ value, endTime, from: this.value });
+    }
+
+    cancelScheduledValues(startTime) {
+      this.cancelledAt = startTime;
+    }
+  }
+
+  class FakeAudioContext {
+    constructor() {
+      this.currentTime = 0;
+      this.destination = { name: 'destination' };
+    }
+
+    createOscillator() {
+      const oscillator = {
+        type: null,
+        frequency: new FakeAudioParam(),
+        started: false,
+        stopped: false,
+        stoppedAt: null,
+        disconnected: false,
+        onended: null,
+        start() { this.started = true; },
+        stop(when = null) { this.stopped = true; this.stoppedAt = when; },
+        connect() {},
+        disconnect() { this.disconnected = true; },
+        // What the browser does when a scheduled stop is reached.
+        end() { this.onended?.(); },
+      };
+      oscillators.push(oscillator);
+      return oscillator;
+    }
+
+    createGain() {
+      const gainNode = {
+        gain: new FakeAudioParam(),
+        connections: [],
+        connect(node) { this.connections.push(node); },
+        disconnect() { this.connections.length = 0; this.disconnected = true; },
+      };
+      gains.push(gainNode);
+      return gainNode;
+    }
+
+    createStereoPanner() {
+      const panner = {
+        pan: new FakeAudioParam(),
+        connections: [],
+        connect(node) { this.connections.push(node); },
+        disconnect() { this.connections.length = 0; this.disconnected = true; },
+      };
+      panners.push(panner);
+      return panner;
+    }
+  }
+
+  globalThis.window = { AudioContext: FakeAudioContext };
+};
+
+stubAudio();
+
+beforeEach(() => {
+  oscillators.length = 0;
+  gains.length = 0;
+  panners.length = 0;
+});
+
+afterEach((t) => {
+  t.mock.method(console, 'log', () => {});
+  stopAllSounds();
+});
+
+describe('playSound', () => {
+  it('starts an oscillator at the requested frequency and shape', () => {
+    playSound(440, 'q', '0.5', 'square');
+
+    assert.equal(oscillators.length, 1);
+    assert.equal(oscillators[0].frequency.value, 440);
+    assert.equal(oscillators[0].type, 'square');
+    assert.equal(oscillators[0].started, true);
+  });
+
+  it('refuses a frequency that is not a number', (t) => {
+    t.mock.method(console, 'error', () => {});
+
+    playSound(Number.NaN, 'q', '0.5', 'sine');
+
+    assert.equal(oscillators[0].started, false);
+  });
+
+  it('keeps a separate oscillator per key, so notes stack', () => {
+    playSound(440, 'q', '0.5', 'sine');
+    playSound(660, 'w', '0.5', 'sine');
+
+    assert.equal(oscillators.length, 2);
+  });
+});
+
+describe('the attack', () => {
+  it('swells from silence to the volume over the attack, rather than switching', () => {
+    playSound(440, 'q', 0.5, 'sine', 0.2);
+
+    assert.equal(gains[0].gain.value, 0);
+    assert.deepEqual(gains[0].gain.ramps, [{ value: 0.5, endTime: 0.2, from: 0 }]);
+  });
+
+  it('reads a volume that arrived from a form field as a number', () => {
+    playSound(440, 'q', '0.4', 'sine', 0.2);
+
+    assert.equal(gains[0].gain.ramps[0].value, 0.4);
+  });
+
+  it('starts at the volume when there is no attack, without scheduling a ramp', () => {
+    playSound(440, 'q', '0.5', 'sine', 0);
+
+    assert.equal(gains[0].gain.value, '0.5');
+    assert.deepEqual(gains[0].gain.ramps, []);
+  });
+});
+
+describe('the release', () => {
+  it('fades to silence over the release and stops the oscillator there', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    stopSound('q', 0.3);
+
+    assert.deepEqual(gains[0].gain.ramps, [{ value: 0, endTime: 0.3, from: 0.5 }]);
+    assert.equal(oscillators[0].stoppedAt, 0.3);
+  });
+
+  it('releases from where the attack had got to, so a stab does not swell first', () => {
+    playSound(440, 'q', 0.5, 'sine', 2);
+    // Part-way up the attack, which is where a key let go early leaves it.
+    gains[0].gain.value = 0.1;
+
+    stopSound('q', 0.3);
+
+    assert.equal(gains[0].gain.cancelledAt, 0);
+    assert.equal(gains[0].gain.ramps[1].from, 0.1);
+  });
+
+  it('frees the key at once, so it can be struck again while the voice fades', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    stopSound('q', 0.3);
+    assert.equal(isSounding('q'), false);
+
+    playSound(660, 'q', 0.5, 'sine', 0);
+
+    assert.equal(oscillators.length, 2);
+    assert.equal(oscillators[1].stopped, false);
+    assert.equal(isSounding('q'), true);
+  });
+
+  it('leaves a fading voice where it was released, out of reach of a root change', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    stopSound('q', 0.3);
+
+    setSoundFrequency('q', 550);
+
+    assert.equal(oscillators[0].frequency.value, 440);
+  });
+
+  it('tears the voice down only once it has finished sounding', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    stopSound('q', 0.3);
+    assert.equal(oscillators[0].disconnected, false);
+
+    oscillators[0].end();
+    assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('stops dead when there is no release, as it always did', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    stopSound('q', 0);
+
+    assert.equal(oscillators[0].stoppedAt, null);
+    assert.equal(oscillators[0].disconnected, true);
+  });
+});
+
+describe('setSoundFrequency', () => {
+  it('retunes a sound that is playing', () => {
+    playSound(440, 'q', '0.5', 'sine');
+
+    setSoundFrequency('q', 550);
+
+    assert.equal(oscillators[0].frequency.value, 550);
+  });
+
+  it('glides rather than jumping, so a drag does not click', () => {
+    playSound(440, 'q', '0.5', 'sine');
+
+    setSoundFrequency('q', 550);
+
+    assert.equal(oscillators[0].frequency.targets.length, 1);
+    assert.ok(oscillators[0].frequency.targets[0].timeConstant > 0);
+  });
+
+  it('glides for as long as it is asked to', () => {
+    playSound(440, 'q', '0.5', 'sine');
+
+    setSoundFrequency('q', 550, 0.05);
+
+    assert.equal(oscillators[0].frequency.targets[0].timeConstant, 0.05);
+  });
+
+  it('arrives at once when the glide is off, without re-striking the note', () => {
+    playSound(440, 'q', '0.5', 'sine');
+
+    setSoundFrequency('q', 550, 0);
+
+    assert.deepEqual(oscillators[0].frequency.targets, []);
+    assert.equal(oscillators[0].frequency.value, 550);
+    assert.equal(oscillators[0].stopped, false);
+  });
+
+  it('retunes only the key it was given, leaving the others alone', () => {
+    playSound(440, 'q', '0.5', 'sine');
+    playSound(660, 'w', '0.5', 'sine');
+
+    setSoundFrequency('w', 700);
+
+    assert.equal(oscillators[0].frequency.value, 440);
+    assert.equal(oscillators[1].frequency.value, 700);
+  });
+
+  it('does nothing for a key that is not sounding', () => {
+    assert.doesNotThrow(() => setSoundFrequency('nothing-here', 550));
+  });
+
+  it('does nothing once the sound has stopped', () => {
+    playSound(440, 'q', '0.5', 'sine');
+    stopSound('q');
+
+    setSoundFrequency('q', 550);
+
+    assert.equal(oscillators[0].frequency.value, 440);
+  });
+
+  it('refuses a frequency that is not a number', (t) => {
+    t.mock.method(console, 'error', () => {});
+    playSound(440, 'q', '0.5', 'sine');
+
+    setSoundFrequency('q', Number.NaN);
+
+    assert.equal(oscillators[0].frequency.value, 440);
+  });
+});
+
+describe('setSoundVolume', () => {
+  it('moves a sounding voice toward the new level over the time constant', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', 0.2, 0.05);
+
+    assert.deepEqual(gains[0].gain.targets, [{ value: 0.2, timeConstant: 0.05 }]);
+    assert.equal(oscillators[0].stopped, false);
+  });
+
+  it('freezes the gain where it has got to before moving it', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', 0.2);
+
+    assert.equal(gains[0].gain.cancelledAt, 0);
+    assert.ok(gains[0].gain.targets[0].timeConstant > 0);
+  });
+
+  it('takes over from an attack still running, rather than being overtaken by it', () => {
+    playSound(440, 'q', 0.5, 'sine', 2);
+    // Part-way up the attack, which is where a fader moved early leaves it.
+    gains[0].gain.value = 0.1;
+
+    setSoundVolume('q', 0.8);
+
+    // The attack's ramp is cancelled, so it cannot drag the voice back to 0.5.
+    assert.equal(gains[0].gain.cancelledAt, 0);
+    assert.equal(gains[0].gain.ramps.length, 1);
+    assert.equal(gains[0].gain.targets[0].value, 0.8);
+  });
+
+  it('arrives at once when there is no smoothing asked for', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', 0.2, 0);
+
+    assert.deepEqual(gains[0].gain.targets, []);
+    assert.equal(gains[0].gain.value, 0.2);
+  });
+
+  it('releases from the level it was moved to, not the one it was struck at', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundVolume('q', 0.2, 0);
+
+    stopSound('q', 0.3);
+
+    assert.deepEqual(gains[0].gain.ramps, [{ value: 0, endTime: 0.3, from: 0.2 }]);
+    assert.equal(oscillators[0].stoppedAt, 0.3);
+  });
+
+  it('levels only the key it was given, leaving the others alone', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+
+    setSoundVolume('w', 0.2, 0);
+
+    assert.equal(gains[0].gain.value, 0.5);
+    assert.equal(gains[1].gain.value, 0.2);
+  });
+
+  it('does nothing for a key that is not sounding', () => {
+    assert.doesNotThrow(() => setSoundVolume('nothing-here', 0.2));
+  });
+
+  it('does nothing once the sound has stopped, so a release is not cancelled', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    stopSound('q', 0.3);
+
+    setSoundVolume('q', 0.2);
+
+    assert.deepEqual(gains[0].gain.targets, []);
+  });
+
+  it('refuses a volume that is not a number', (t) => {
+    t.mock.method(console, 'error', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundVolume('q', Number.NaN);
+
+    assert.equal(gains[0].gain.value, 0.5);
+    assert.deepEqual(gains[0].gain.targets, []);
+  });
+});
+
+describe('setSoundPan', () => {
+  it('builds a panner for a voice that has none and routes the gain through it', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', -1);
+
+    assert.equal(panners.length, 1);
+    assert.deepEqual(gains[0].connections, [panners[0]]);
+    assert.deepEqual(panners[0].connections.map(({ name }) => name), ['destination']);
+    // Born where it belongs rather than travelling there.
+    assert.equal(panners[0].pan.value, -1);
+    assert.deepEqual(panners[0].pan.targets, []);
+  });
+
+  it('moves the panner it already has rather than building another', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    setSoundPan('q', 0.5, 0.05);
+
+    assert.equal(panners.length, 1);
+    assert.deepEqual(panners[0].pan.targets, [{ value: 0.5, timeConstant: 0.05 }]);
+  });
+
+  it('arrives at once when there is no smoothing asked for', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    setSoundPan('q', 1, 0);
+
+    assert.deepEqual(panners[0].pan.targets, []);
+    assert.equal(panners[0].pan.value, 1);
+  });
+
+  it('clamps a position past the ends of the field', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', -4);
+
+    assert.equal(panners[0].pan.value, -1);
+  });
+
+  it('gives the panner back when the voice is given no position at all', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    setSoundPan('q', null);
+
+    assert.equal(panners[0].disconnected, true);
+    assert.deepEqual(gains[0].connections.map(({ name }) => name), ['destination']);
+  });
+
+  it('builds a fresh panner if the voice is panned again after that', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+    setSoundPan('q', null);
+
+    setSoundPan('q', 1);
+
+    assert.equal(panners.length, 2);
+    assert.deepEqual(gains[0].connections, [panners[1]]);
+  });
+
+  it('does nothing when a voice with no panner is given none', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', null);
+
+    assert.equal(panners.length, 0);
+  });
+
+  it('lets the panner go when the voice is stopped, so a panned strike leaks nothing', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+
+    stopSound('q');
+
+    assert.equal(panners[0].disconnected, true);
+  });
+
+  it('lets it go through a release, a pedal lift and a panic alike', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    setSoundPan('q', -1);
+    stopSound('q', 0.3);
+    oscillators[0].end();
+    assert.equal(panners[0].disconnected, true);
+
+    playSound(440, 'w', 0.5, 'sine', 0);
+    setSoundPan('w', 1);
+    sustainVoice('w');
+    releaseSustainedVoices(0);
+    assert.equal(panners[1].disconnected, true);
+
+    playSound(440, 'e', 0.5, 'sine', 0);
+    setSoundPan('e', 1);
+    stopAllSounds();
+    assert.equal(panners[2].disconnected, true);
+  });
+
+  it('does nothing for a key that is not sounding', () => {
+    assert.doesNotThrow(() => setSoundPan('nothing-here', -1));
+    assert.equal(panners.length, 0);
+  });
+
+  it('refuses a position that is not a number', (t) => {
+    t.mock.method(console, 'error', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', Number.NaN);
+
+    assert.equal(panners.length, 0);
+  });
+
+  it('does not announce a sounding change, since where a voice sits is not what interval it is in', () => {
+    let notifications = 0;
+    const unsubscribe = subscribeToSounding(() => { notifications += 1; });
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundPan('q', -1);
+    setSoundPan('q', null);
+
+    assert.equal(notifications, 1);
+    unsubscribe();
+  });
+});
+
+describe('isSounding', () => {
+  it('tells a key with a voice from one without, so a held note can be moved', () => {
+    assert.equal(isSounding('q'), false);
+
+    playSound(440, 'q', '0.5', 'sine');
+    assert.equal(isSounding('q'), true);
+
+    stopSound('q');
+    assert.equal(isSounding('q'), false);
+  });
+});
+
+describe('stopSound', () => {
+  it('stops and disconnects the oscillator for that key', () => {
+    playSound(440, 'q', '0.5', 'sine');
+
+    stopSound('q');
+
+    assert.equal(oscillators[0].stopped, true);
+    assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('does nothing for a key that is not sounding', () => {
+    assert.doesNotThrow(() => stopSound('nothing-here'));
+  });
+});
+
+describe('the sustain pedal', () => {
+  it('frees the key while the voice sounds on, untouched', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    sustainVoice('q');
+
+    assert.equal(isSounding('q'), false);
+    assert.equal(sustainedVoiceCount(), 1);
+    assert.equal(oscillators[0].stopped, false);
+    assert.deepEqual(gains[0].gain.ramps, []);
+  });
+
+  it('lets the key be struck again over what it left ringing', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    playSound(660, 'q', 0.5, 'sine', 0);
+
+    assert.equal(oscillators.length, 2);
+    assert.equal(oscillators[0].stopped, false);
+    assert.equal(isSounding('q'), true);
+  });
+
+  it('stacks a voice for every strike, as a piano does', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    assert.equal(sustainedVoiceCount(), 2);
+  });
+
+  it('leaves a sustained voice in the tuning it was let go in', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    setSoundFrequency('q', 550);
+
+    assert.equal(oscillators[0].frequency.value, 440);
+  });
+
+  it('fades everything it was holding when the pedal is lifted', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+    sustainVoice('q');
+    sustainVoice('w');
+
+    releaseSustainedVoices(0.3);
+
+    assert.equal(sustainedVoiceCount(), 0);
+    assert.deepEqual(gains[0].gain.ramps, [{ value: 0, endTime: 0.3, from: 0.5 }]);
+    assert.equal(oscillators[0].stoppedAt, 0.3);
+    assert.equal(oscillators[1].stoppedAt, 0.3);
+  });
+
+  it('tears a lifted voice down only once it has finished sounding', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    releaseSustainedVoices(0.3);
+    assert.equal(oscillators[0].disconnected, false);
+
+    oscillators[0].end();
+    assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('stops dead on a lift when there is no release', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    releaseSustainedVoices(0);
+
+    assert.equal(oscillators[0].stoppedAt, null);
+    assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('does nothing for a key that is not sounding, so hold mode can pedal silence', () => {
+    assert.doesNotThrow(() => sustainVoice('nothing-here'));
+    assert.equal(sustainedVoiceCount(), 0);
+  });
+
+  it('has nothing to do when the pedal was holding nothing', () => {
+    assert.doesNotThrow(() => releaseSustainedVoices(0.3));
+  });
+});
+
+describe('stopAllSounds', () => {
+  it('stops every sounding key', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', '0.5', 'sine');
+    playSound(660, 'w', '0.5', 'sine');
+
+    stopAllSounds();
+
+    assert.ok(oscillators.every((oscillator) => oscillator.stopped));
+    setSoundFrequency('q', 550);
+    assert.equal(oscillators[0].frequency.value, 440);
+  });
+
+  it('silences a voice that is still fading, being the panic stop', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    stopSound('q', 2);
+
+    stopAllSounds();
+
+    assert.equal(gains[0].gain.value, 0);
+    assert.equal(oscillators[0].stoppedAt, null);
+    assert.equal(oscillators[0].disconnected, true);
+  });
+
+  it('silences a voice the pedal is holding, being the panic stop', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    stopAllSounds();
+
+    assert.equal(gains[0].gain.value, 0);
+    assert.equal(oscillators[0].stopped, true);
+    assert.equal(oscillators[0].disconnected, true);
+    assert.equal(sustainedVoiceCount(), 0);
+  });
+
+  it('leaves nothing behind to tear down twice', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    stopSound('q', 2);
+    stopAllSounds();
+
+    oscillators[0].disconnected = false;
+    oscillators[0].end();
+
+    assert.equal(oscillators[0].disconnected, false);
+  });
+});
+
+describe('soundingVoices', () => {
+  it('lists a struck voice under its key, at the frequency it was struck at', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    assert.deepEqual(soundingVoices(), [{ key: 'q', frequency: 440, sustained: false }]);
+  });
+
+  it('reports a glided voice at the frequency it was moved to', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundFrequency('q', 550);
+
+    assert.deepEqual(soundingVoices(), [{ key: 'q', frequency: 550, sustained: false }]);
+  });
+
+  it('reports a voice that arrived at once the same way', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    setSoundFrequency('q', 550, 0);
+
+    assert.equal(soundingVoices()[0].frequency, 550);
+  });
+
+  it('drops a released voice at once, while it is still fading', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    stopSound('q', 2);
+
+    assert.deepEqual(soundingVoices(), []);
+  });
+
+  it('keeps a pedalled voice, with its key and the tuning it was let go in', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    sustainVoice('q');
+
+    assert.deepEqual(soundingVoices(), [{ key: 'q', frequency: 440, sustained: true }]);
+  });
+
+  it('lists a re-struck key beside the voice the pedal is still holding', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+    playSound(660, 'q', 0.5, 'sine', 0);
+
+    assert.deepEqual(soundingVoices(), [
+      { key: 'q', frequency: 660, sustained: false },
+      { key: 'q', frequency: 440, sustained: true },
+    ]);
+  });
+
+  it('empties when the pedal is lifted', () => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    sustainVoice('q');
+
+    releaseSustainedVoices(0.3);
+
+    assert.deepEqual(soundingVoices(), []);
+  });
+
+  it('empties on the panic stop', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+    sustainVoice('w');
+
+    stopAllSounds();
+
+    assert.deepEqual(soundingVoices(), []);
+  });
+});
+
+describe('subscribeToSounding', () => {
+  /** Counts notifications for one test, and unsubscribes itself afterwards. */
+  const countNotifications = (t) => {
+    let count = 0;
+    const unsubscribe = subscribeToSounding(() => { count += 1; });
+
+    t.after(unsubscribe);
+
+    return () => count;
+  };
+
+  it('fires when a voice starts', (t) => {
+    const notifications = countNotifications(t);
+
+    playSound(440, 'q', 0.5, 'sine', 0);
+
+    assert.equal(notifications(), 1);
+  });
+
+  it('fires when a voice is retuned, gliding or not', (t) => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    setSoundFrequency('q', 550);
+    setSoundFrequency('q', 660, 0);
+
+    assert.equal(notifications(), 2);
+  });
+
+  it('fires when a voice stops, is pedalled, or is lifted', (t) => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    playSound(660, 'w', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    stopSound('q', 0.3);
+    sustainVoice('w');
+    releaseSustainedVoices(0.3);
+
+    assert.equal(notifications(), 3);
+  });
+
+  it('fires on the panic stop', (t) => {
+    t.mock.method(console, 'log', () => {});
+    playSound(440, 'q', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    stopAllSounds();
+
+    assert.equal(notifications(), 1);
+  });
+
+  it('does not fire for a level change, which cannot move an interval', (t) => {
+    playSound(440, 'q', 0.5, 'sine', 0);
+    const notifications = countNotifications(t);
+
+    setSoundVolume('q', 0.2);
+
+    assert.equal(notifications(), 0);
+  });
+
+  it('does not fire when the call was a no-op', (t) => {
+    const notifications = countNotifications(t);
+
+    stopSound('nothing-here');
+    sustainVoice('nothing-here');
+    setSoundFrequency('nothing-here', 550);
+
+    assert.equal(notifications(), 0);
+  });
+
+  it('stops firing once unsubscribed', () => {
+    let count = 0;
+    const unsubscribe = subscribeToSounding(() => { count += 1; });
+
+    playSound(440, 'q', 0.5, 'sine', 0);
+    unsubscribe();
+    playSound(660, 'w', 0.5, 'sine', 0);
+
+    assert.equal(count, 1);
+  });
+});
