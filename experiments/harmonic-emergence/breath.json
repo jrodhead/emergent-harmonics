@@ -1,0 +1,111 @@
+{
+  "name": "Breath",
+  "notes": "A breath pacer, not a simulation and not a measurement. The instrument's job is to be a metronome for the lungs: audio paces respiration, respiration is a behaviour rather than a cortical rhythm, and respiration has its own well-evidenced route to autonomic and cortical state. Nothing here senses the person, scores them, or verifies that anything happened to them -- the practitioner's own interoception is the only instrument pointed at the body, which is why there are no permissions to grant and no numbers to optimise. The cue is an offer, not a command: everything moves on raised-cosine curves with no transients anywhere, so drifting off the pace produces no sense of having failed.",
+
+  "voice": {
+    "f0": 36.0,
+    "widthEmpty": 0.12,
+    "widthFull": 0.62,
+    "out": 0.80,
+    "default": "sparse",
+    "crossfadeMs": 25,
+
+    "sets": {
+      "sparse": {
+        "label": "Sparse — resolved",
+        "note": "Every adjacent pair 1.07-1.53 ERB apart, so none of them fall inside one auditory filter. Nine partials, 216-1188 Hz.",
+        "partials": [6, 8, 10, 12, 15, 18, 22, 27, 33],
+        "cutoffEmpty": 6.5,
+        "cutoffFull": 36.0,
+        "rolloff": 4.0,
+        "ampFloor": 0.40,
+        "trim": 0.6328
+      },
+      "dense": {
+        "label": "Dense — contiguous",
+        "note": "Every integer harmonic from 6 to 30, spaced a constant 36 Hz. All 24 adjacent pairs sit inside one critical band (0.26-0.72 ERB), which fuses hard but is also rough. The original set, kept as an A/B reference.",
+        "partials": [6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30],
+        "cutoffEmpty": 6.5,
+        "cutoffFull": 34.0,
+        "rolloff": 4.0,
+        "ampFloor": 0.40,
+        "trim": 1.0
+      }
+    }
+  },
+
+  "voiceNotes": {
+    "sets": "Two partial sets ship so the choice between them can be made by ear rather than by argument, switchable live mid-breath. Both keep the same 36 Hz lattice and the same unsounded fundamental -- the GCD of each set is 1, so the missing-fundamental percept is intact either way. What differs is critical-band spacing, and therefore roughness. Add more sets here and they appear in the page automatically.",
+    "trim": "Per-set level match, and the reason the comparison is worth anything. Measured over a full breath cycle, sparse came out 3.98 dB louder than dense -- easily enough that the louder one wins an A/B on loudness alone regardless of timbre. Dense cannot be trimmed up (it already peaks at 0.795 against the L1 bound and would clip at 1.26), so sparse is trimmed down by that 3.98 dB to meet it. Both now sit at -18.96 dBFS over a cycle. Re-measure and update these if you change any set's partials, cutoffs, or ampFloor.",
+    "crossfadeMs": "Time constant for the one-pole smoothing on partial gains. Its real job is making a live set-swap click-free -- gains for partials leaving the set glide to zero rather than dropping -- and at 25 ms it is far shorter than any breath motion, so it is invisible during normal use. Fast enough that an A/B still feels immediate, which matters because auditory memory for timbre is short.",
+    "normalisation": "Partial gains are divided by their L1 sum, so |output| <= out * amp arithmetically for any phase relationship. These are exact harmonics of one fundamental and their peaks coincide periodically however the phases are initialised, so an L2 (constant-RMS) normalisation understates the true worst case and clips -- measured at 1.07 before this was fixed. L1 costs headroom but needs no limiter, and a limiter would put frequencies in the air that nobody chose.",
+    "ampFloor": "Set well below 1 because L1 normalisation makes the bright end quieter in RMS terms -- energy spreads across more partials -- which would otherwise invert the loudness cue against the brightness cue. That effect was severe with the old 25-partial contiguous set (RMS actually FELL 4 dB from empty to full before this was compensated) and is milder with nine, so the same 0.40 now yields a ~3.5 dB swell toward full rather than ~2. Left as is: monotonic, gentle, and still nothing like a transient.",
+    "out": "Peak is bounded by this value arithmetically, so it can sit near unity without risk. Measured peak with the current partial set is 0.60, so 0.80 is the guarantee rather than the observation, and RMS lands around -13 dBFS at full."
+  },
+
+  "safety": {
+    "maxExhaleHoldSeconds": 20,
+    "maxInhaleHoldSeconds": 20,
+    "maxSessionMinutes": 90,
+    "abortGlideSeconds": 20
+  },
+
+  "safetyNotes": {
+    "maxExhaleHoldSeconds": "Hard cap, applied at load time to every phase of every protocol regardless of what the protocol asks for. Empty-lung retention after heavy ventilation is the shallow-water-blackout mechanism, and a retention is the one segment where the practitioner is deliberately overriding the urge to breathe -- so it is the one place 'listen to your body' is weakest and a fixed number has to do the work instead. Not user-adjustable by design.",
+    "maxInhaleHoldSeconds": "Same reasoning, lower risk.",
+    "maxSessionMinutes": "Total wall-clock cap on a session.",
+    "abortGlideSeconds": "How long the instrument takes to glide from wherever it is into the abort phase's cycle. Abort must never cut to silence -- an abrupt stop in a deep state is its own problem -- so it decelerates into slow breathing instead."
+  },
+
+  "cycleNotes": {
+    "shape": "Every phase names a breath cycle as four durations in seconds: inhale, inhaleHold, exhale, exhaleHold. Absolute seconds rather than rate-plus-ratio because that is how protocols are actually written (4-7-8, box 4-4-4-4). Rate is derived from the sum, not configured.",
+    "zero": "Zero is a legal value for any of the four. Circular and connected breathing is defined by having no pauses at all, so {1.2, 0, 1.2, 0} has to produce a seamless turnaround rather than a special case. The raised-cosine openness curve has zero derivative at both ends of inhale and exhale, so the apex is smooth without needing a crossfade.",
+    "direction": "Heart rate rises during inhale (vagal withdrawal) and falls during exhale (vagal return), so exhale-dominant cycles are calming and inhale-dominant cycles are activating. Both are legitimate; the engine does not prefer either. This note is documentation for whoever writes a protocol, not a constraint the code enforces.",
+    "ramps": "A phase interpolates from one cycle to another. Interpolating four-tuples means a ramp can change rate and shape at once -- {4,0,6,0} to {1.5,0,1.5,0} both accelerates and migrates from exhale-dominant to symmetric, which is what a real settle-to-ramp transition does. from equal to to gives a steady phase, so there is no separate case."
+  },
+
+  "protocols": {
+    "resonance": {
+      "label": "Resonance — slow paced breathing",
+      "riskClass": "low",
+      "about": "Slow exhale-weighted breathing at 6/min. Sits at the baroreflex resonance near 0.1 Hz, where respiratory and blood-pressure oscillations phase-align and heart rate oscillations amplify. 5.5/min is the population mode and the fixed rate that outperformed nothing and matched individualised resonance frequency in a four-week trial -- so this is a default to start from and adjust by feel, not a target to hit.",
+      "abortTo": "settle",
+      "phases": [
+        { "name": "settle",    "seconds": 120, "from": [4.0, 0, 5.0, 0], "to": [4.0, 0, 6.0, 0] },
+        { "name": "resonance", "seconds": 720, "from": [4.0, 0, 6.0, 0], "to": [4.0, 0, 6.0, 0] },
+        { "name": "rest",      "seconds": 180, "from": [4.0, 0, 6.0, 0], "to": [4.0, 0, 5.0, 0] }
+      ]
+    },
+
+    "box": {
+      "label": "Box — 4-4-4-4",
+      "riskClass": "low",
+      "about": "Equal quarters with both retentions. Included because it is the protocol that exercises all four segments at once, which is what the cue has to stay legible through.",
+      "abortTo": "rest",
+      "phases": [
+        { "name": "settle", "seconds": 90,  "from": [4, 0, 6, 0], "to": [4, 4, 4, 4] },
+        { "name": "box",    "seconds": 480, "from": [4, 4, 4, 4], "to": [4, 4, 4, 4] },
+        { "name": "rest",   "seconds": 120, "from": [4, 4, 4, 4], "to": [4, 0, 6, 0] }
+      ]
+    },
+
+    "ramp-test": {
+      "label": "Ramp test — 6/min to 25/min and back",
+      "riskClass": "low",
+      "about": "Not a practice protocol. It exists to stress the two ends the cue has to work at simultaneously: a 10-second cycle where every segment is long and slow, and a 2.4-second circular cycle with no holds at all, where the inhale/exhale turnaround happens twice a second. If the cue reads clearly at both without clicking at the apex, the engine is right.",
+      "abortTo": "rest",
+      "phases": [
+        { "name": "slow",  "seconds": 60,  "from": [4.0, 0, 6.0, 0], "to": [4.0, 0, 6.0, 0] },
+        { "name": "ramp",  "seconds": 120, "from": [4.0, 0, 6.0, 0], "to": [1.2, 0, 1.2, 0] },
+        { "name": "fast",  "seconds": 60,  "from": [1.2, 0, 1.2, 0], "to": [1.2, 0, 1.2, 0] },
+        { "name": "hold",  "untilUserInput": true, "from": [0, 0, 0, 15], "to": [0, 0, 0, 15] },
+        { "name": "rest",  "seconds": 120, "from": [4.0, 0, 6.0, 0], "to": [4.0, 0, 6.0, 0] }
+      ]
+    }
+  },
+
+  "protocolNotes": {
+    "phases": "Ordered. Each runs for `seconds`, or until the practitioner advances it when `untilUserInput` is true. A user-terminated retention is both more faithful to how retentions are actually practised -- held until you need to breathe, not for a number someone else chose -- and safer, because it returns the decision to the person.",
+    "abortTo": "Names the phase that the abort control glides into. Defaults to the last phase if absent."
+  }
+}
