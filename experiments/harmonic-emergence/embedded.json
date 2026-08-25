@@ -1,0 +1,53 @@
+{
+  "name": "Embedded",
+  "notes": "Three harmonic populations, each locked onto its own fundamental by default and mutually unrelated to the other two -- three organised, mutually illegible identities, a sonic model of segregated processing networks. A single control, permeability (Theta), scales how strongly the three identities -- and a fourth, silent, phantom voice built from live microphone pitch-tracking -- pull toward a shared consensus. Below its critical value the populations stay segregated. Above it, their own fundamentals bend toward each other and toward whatever the room is doing, and the stereo image collapses toward centre as it goes. S is the order parameter: how far the three populations plus the room agree on an identity none of them individually holds. The room, like the fundamental in the earlier pieces, participates without ever being sounded.",
+
+  "populations": [
+    { "name": "interior",   "f0": 36.0,          "pan": -0.7 },
+    { "name": "relational", "f0": 50.911688245,  "pan": 0.0 },
+    { "name": "exterior",   "f0": 58.249223595,  "pan": 0.7 }
+  ],
+  "partials": [8, 9, 10, 12, 15, 16, 20, 24],
+  "voice": { "gainCoefficient": 1.5, "out": 0.3 },
+
+  "params": {
+    "K": 2.0,
+    "G": 2.5,
+    "T": 0.03,
+    "D": 0.006,
+    "Theta": 0.0,
+    "G2": 120.0,
+    "homeRate": 10.0,
+    "scaleHz": 6,
+    "envWeight": 1.0,
+    "envFloor": 0.05,
+    "boundary": 0.5,
+    "pulseMs": 4500
+  },
+
+  "paramNotes": {
+    "K": "identity coupling, rad/s. Each population locks to its own consensus at K comfortably above v2's measured critical ~1.2, so every population is a stable, coherent identity by default -- independent of Theta, independent of the other two.",
+    "G": "per-population coherence gain: K_eff = K + G*excess(r_k)^2, the same self-reinforcement trick verify.js already confirmed for v2, applied separately inside each population.",
+    "T": "phase noise -- what each population's internal coherence has to be maintained against.",
+    "D": "disorder -- spread of natural frequencies away from each population's own lattice nodes.",
+    "Theta": "permeability. The primary control -- how strongly each population's EFFECTIVE fundamental (not its home identity, which never moves) is pulled toward the consensus of the other two and the room. Below its critical value, homeRate wins and every population sits at its own fundamental: segregated. Above it, the pull to consensus wins and the fundamentals collapse together.",
+    "G2": "embeddedness gain -- the same excess-squared self-reinforcement as G, applied one level up to S (frequency agreement) instead of r (phase agreement). Produces a second bistability: past a critical Theta, embeddedness sustains itself rather than needing to be held there.",
+    "homeRate": "1/s. How hard each population's effective fundamental is pulled back toward its own home value. This is what Theta has to overcome -- raising it makes identity stickier and raises the critical Theta. At the shipped value the transition is genuinely bistable: past Theta~2 the field locks into a shared consensus and turning Theta back down to 0 does NOT release it -- only re-individuate does.",
+    "scaleHz": "how many Hz of spread between the three fundamentals (and the room) counts as 'still one identity' versus 'clearly separate' -- sets where S sits between 0 and 1 for a given spread.",
+    "envWeight": "master fader on how much the microphone's detected pitch counts in the consensus, multiplying its own moment-to-moment clarity.",
+    "envFloor": "minimum weight the room carries in the census even in silence -- the room is always part of the count, usually a quiet part.",
+    "boundary": "feedback of the comb at the interior population's own period (1/f0). Passes harmonics of 36 Hz, rejects everything else. Inverted from v2 on purpose: this firms while the field is segregated and opens as S rises. The boundary is what falls away as embeddedness grows, not what builds.",
+    "pulseMs": "how long a key's context pulse holds the room's weight near 1.0 before decaying back to envWeight * clarity."
+  },
+
+  "keys": {
+    "a": { "ratio": 1,             "label": "1/1   36.00 Hz" },
+    "s": { "ratio": 1.125,         "label": "9/8   40.50 Hz" },
+    "d": { "ratio": 1.25,          "label": "5/4   45.00 Hz" },
+    "f": { "ratio": 1.3333333333,  "label": "4/3   48.00 Hz" },
+    "g": { "ratio": 1.5,           "label": "3/2   54.00 Hz" },
+    "h": { "ratio": 1.6666666667,  "label": "5/3   60.00 Hz" },
+    "j": { "ratio": 1.75,          "label": "7/4   63.00 Hz" },
+    "k": { "ratio": 2,             "label": "2/1   72.00 Hz" }
+  }
+}

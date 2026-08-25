@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Field — emergent harmonic locking</title>
+<style>
+  :root {
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --ink:#e6ebf0;
+    --dim:#7d8b99; --accent:#6fe3c4; --warn:#f0b429; --cold:#5b9dff;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:26px; background:var(--bg); color:var(--ink);
+         font:13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  h1 { font-size:20px; margin:0 0 4px; letter-spacing:.04em; font-weight:600; }
+  .sub { color:var(--dim); margin:0 0 20px; max-width:80ch; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+  .panel h2 { font-size:10px; text-transform:uppercase; letter-spacing:.15em;
+              color:var(--dim); margin:0 0 10px; font-weight:600; }
+  .wide { grid-column:1/-1; }
+  canvas { display:block; width:100%; border-radius:6px; background:#0e1216; }
+  .row { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+  .row label { width:110px; color:var(--dim); flex:none; }
+  .row input[type=range] { flex:1; accent-color:var(--accent); }
+  .row .val { width:56px; text-align:right; color:var(--ink); }
+  button { background:#1b2028; border:1px solid var(--line); color:var(--ink);
+           border-radius:6px; padding:7px 13px; cursor:pointer; font:inherit; }
+  button:hover { border-color:var(--accent); }
+  button.on { background:#22463d; border-color:var(--accent); }
+  .keys { display:flex; flex-wrap:wrap; gap:7px; }
+  .key { min-width:120px; text-align:left; }
+  .key .cap { color:var(--accent); font-weight:600; }
+  .key .lab { color:var(--dim); font-size:11px; display:block; }
+  .key.lit { background:#22463d; border-color:var(--accent); }
+  .stats { display:flex; gap:22px; flex-wrap:wrap; color:var(--dim); margin-top:10px; font-size:12px; }
+  .stats b { color:var(--ink); }
+  .lock { display:grid; grid-template-columns:34px 1fr 62px; gap:6px; align-items:center;
+          margin-bottom:3px; font-size:11px; }
+  .lock .n { color:var(--dim); text-align:right; }
+  .lock .bar { position:relative; height:9px; background:#0e1216; border-radius:2px; overflow:hidden; }
+  .lock .bar i { position:absolute; top:0; bottom:0; width:2px; background:var(--accent); left:50%; }
+  .lock .bar u { position:absolute; top:0; bottom:0; width:1px; background:#2c343d; left:50%; }
+  .lock .c { color:var(--dim); text-align:right; }
+  .hint { color:var(--dim); font-size:11px; margin-top:9px; }
+  code { color:var(--accent); }
+  #err { color:var(--warn); }
+</style>
+</head>
+<body>
+
+<h1>Field</h1>
+<p class="sub">
+  Eighteen phase oscillators, each mistuned off a node of the 36&nbsp;Hz lattice, coupled
+  through the fundamental each one <em>implies</em> rather than the frequency it plays.
+  Raise coupling past its critical value and the ensemble locks itself into exact integer
+  ratios — the harmonic series arrives as a phase transition instead of a score. Nothing
+  is scheduled; it runs until you stop it. Keys perturb the field rather than trigger it.
+</p>
+
+<div class="grid">
+
+  <div class="panel">
+    <h2>Order parameter — the fundamental nobody plays</h2>
+    <canvas id="circle" width="520" height="520" style="aspect-ratio:1"></canvas>
+    <div class="stats">
+      <span>r <b id="rv">0.00</b></span>
+      <span>K<sub>eff</sub> <b id="kv">0.00</b></span>
+      <span>f₀ <b id="fv">36.0</b> Hz</span>
+      <span id="state"><b>incoherent</b></span>
+    </div>
+    <div class="hint">
+      Each dot is one voice's implied fundamental. The arrow is their vector mean:
+      length&nbsp;=&nbsp;r. Scattered dots mean eighteen disagreeing fundamentals; a clump
+      means one, inferred by all of them and sounded by none.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Locking — cents off the lattice node</h2>
+    <div id="locks"></div>
+    <div class="hint">±50 cents full scale. Centre line is the exact integer ratio.</div>
+  </div>
+
+  <div class="panel">
+    <h2>Hysteresis — r against coupling</h2>
+    <canvas id="hyst" width="520" height="300" style="aspect-ratio:520/300"></canvas>
+    <div class="row" style="margin-top:10px">
+      <button id="sweep">sweep K 0 → 4 → 0</button>
+      <button id="clear">clear trace</button>
+    </div>
+    <div class="hint">
+      The field locks near K=1.2 on the way up and stays locked all the way back to K=0.
+      In that gap both states are stable at the same coupling, so what you hear is not a
+      function of the control — it is a function of the field's history. Scramble it below
+      K=1.2 and it will not come back; scramble it above and it heals.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Membrane — spectrum after the comb</h2>
+    <canvas id="spec" width="520" height="300" style="aspect-ratio:520/300"></canvas>
+    <div class="hint">
+      Noise is mixed in before a comb tuned to 1/f₀. Partials of the fundamental survive
+      the loop; everything else cancels. Identity as what gets kept out.
+    </div>
+  </div>
+
+  <div class="panel wide">
+    <h2>Parameters</h2>
+    <div class="grid" style="gap:0 26px">
+      <div>
+        <div class="row"><label>coupling K</label><input type="range" id="p_K" min="0" max="4" step="0.01"><span class="val" id="v_K"></span></div>
+        <div class="row"><label>coherence gain</label><input type="range" id="p_G" min="0" max="5" step="0.01"><span class="val" id="v_G"></span></div>
+        <div class="row"><label>temperature</label><input type="range" id="p_T" min="0" max="0.5" step="0.002"><span class="val" id="v_T"></span></div>
+        <div class="row"><label>disorder</label><input type="range" id="p_D" min="0" max="0.02" step="0.0002"><span class="val" id="v_D"></span></div>
+      </div>
+      <div>
+        <div class="row"><label>environment</label><input type="range" id="p_env" min="0" max="0.4" step="0.005"><span class="val" id="v_env"></span></div>
+        <div class="row"><label>membrane</label><input type="range" id="p_mem" min="0" max="0.7" step="0.01"><span class="val" id="v_mem"></span></div>
+        <div class="row"><label>level</label><input type="range" id="p_vol" min="0" max="1" step="0.01" value="0.7"><span class="val" id="v_vol"></span></div>
+        <div class="row">
+          <button id="run">start</button>
+          <button id="auto" class="on">membrane auto</button>
+          <button id="scramble">scramble phases</button>
+        </div>
+      </div>
+    </div>
+    <div class="stats">
+      <span id="err"></span><span id="src"></span>
+    </div>
+  </div>
+
+  <div class="panel wide">
+    <h2>Keys — perturbation, not trigger</h2>
+    <div class="keys" id="keys"></div>
+    <div class="hint">
+      A key sets a new target fundamental and scrambles phases in proportion to the jump.
+      The field then has to find its way back to coherence — or fail to.
+      <b>space</b> scrambles, <b>esc</b> stops.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const EMBEDDED =
+{
+  "name": "Field",
+  "notes": "A continuously running harmonic oscillator network. Each voice has its own natural frequency near a lattice node, mistuned by disorder D. Voices are coupled through their reduced phase phi_i = theta_i / n_i -- the phase of the fundamental each one implies. Coupling K pulls the implied fundamentals together; above a critical K the ensemble spontaneously locks into exact integer ratios and the harmonic series appears without being imposed. The order parameter r is the degree to which the voices agree on a fundamental none of them plays.",
+
+  "f0": 36.0,
+  "voice": { "gainCoefficient": 1.6, "out": 0.32 },
+
+  "partials": [
+    { "n": 8,  "pan": 0.0,   "axis": "2" },
+    { "n": 9,  "pan": -0.45, "axis": "3" },
+    { "n": 10, "pan": 0.3,   "axis": "5" },
+    { "n": 11, "pan": 0.85,  "axis": "11" },
+    { "n": 12, "pan": -0.3,  "axis": "3" },
+    { "n": 15, "pan": 0.0,   "axis": "3x5" },
+    { "n": 16, "pan": 0.0,   "axis": "2" },
+    { "n": 17, "pan": -0.9,  "axis": "17" },
+    { "n": 20, "pan": 0.5,   "axis": "5" },
+    { "n": 21, "pan": 0.0,   "axis": "3x7" },
+    { "n": 24, "pan": -0.5,  "axis": "3" },
+    { "n": 25, "pan": 0.6,   "axis": "5" },
+    { "n": 27, "pan": -0.6,  "axis": "3" },
+    { "n": 28, "pan": -0.85, "axis": "7" },
+    { "n": 32, "pan": 0.0,   "axis": "2" },
+    { "n": 33, "pan": 0.0,   "axis": "3x11" },
+    { "n": 35, "pan": 0.0,   "axis": "5x7" },
+    { "n": 45, "pan": 0.0,   "axis": "3x5" }
+  ],
+
+  "params": {
+    "K": 0.0,
+    "G": 2.5,
+    "T": 0.03,
+    "D": 0.006,
+    "environment": 0.05,
+    "membrane": 0.55,
+    "glideMs": 800,
+    "kick": 1.0
+  },
+
+  "paramNotes": {
+    "K": "coupling, rad/s. The field locks around K=1.2 on the way up and holds all the way down to K=0 on the way back. Above K~1.2 a scramble heals; below it, a scramble is permanent.",
+    "G": "coherence gain. K_eff = K + G*((r-r0)/(1-r0))^2 with r0 = 1/sqrt(N), the incoherent floor. Below K ~ 1.2 the field is bistable: locked and incoherent are both stable, so coherence sustains itself and a scramble destroys it permanently.",
+    "T": "environment temperature: phase noise. What coherence has to be maintained against.",
+    "D": "disorder: spread of natural frequencies away from exact lattice nodes.",
+    "environment": "level of the inharmonic noise bed admitted to the membrane.",
+    "membrane": "feedback of the comb at 1/f0. Passes harmonics of the fundamental, rejects everything else. Tracks r when auto is on.",
+    "glideMs": "how long the ensemble takes to slide to a new target fundamental when a key is pressed.",
+    "kick": "phase scramble applied on key press, proportional to the size of the jump."
+  },
+
+  "keys": {
+    "a": { "ratio": 1,            "label": "1/1  36.00 Hz" },
+    "s": { "ratio": 1.125,        "label": "9/8  40.50 Hz" },
+    "d": { "ratio": 1.25,         "label": "5/4  45.00 Hz" },
+    "f": { "ratio": 1.3333333333, "label": "4/3  48.00 Hz" },
+    "g": { "ratio": 1.5,          "label": "3/2  54.00 Hz" },
+    "h": { "ratio": 1.6666666667, "label": "5/3  60.00 Hz" },
+    "j": { "ratio": 1.75,         "label": "7/4  63.00 Hz" },
+    "k": { "ratio": 2,            "label": "2/1  72.00 Hz" }
+  }
+};
+const PROCESSOR_SRC = "// Harmonic Kuramoto field.\n//\n// Each voice i is a phase oscillator theta_i sitting near lattice node n_i.\n// Its reduced phase phi_i = theta_i / n_i is the phase of the fundamental that\n// voice implies. Coupling acts on the reduced phases, so what the ensemble\n// synchronises on is not a common frequency but a common *fundamental* -- which\n// means locking produces exact integer ratios rather than a unison.\n//\n//   phi_i' = f0*2pi*(1 + delta_i) - K_eff * r * sin(phi_i - Psi) + noise\n//   theta_i' = n_i * phi_i'\n//   r e^{i Psi} = (1/N) sum_j e^{i phi_j}\n//\n// r is the order parameter: how completely the voices agree on a fundamental\n// that none of them plays. An incoherent ensemble of N does not sit at r=0 but at\n// the finite-size floor 1/sqrt(N) ~ 0.24, so the self-reinforcement term counts\n// only order in EXCESS of that floor, squared:\n//\n//   K_eff = K + G * ((r - r0)/(1 - r0))^2 ,  r0 = 1/sqrt(N)\n//\n// Feeding back raw r instead leaves the loop switched on while the field is still\n// disordered, which washes out the lower branch and the field never has a state it\n// could fail to hold. With the floor subtracted the system is genuinely bistable:\n// for K below about 1.2 both the locked and the incoherent state are stable, so\n// coherence persists on its own and a hard enough perturbation destroys it for good.\n//\n// theta_i is wrapped modulo 2*pi*n_i, not 2*pi, so that phi_i is single-valued.\n// The coupling term is unaffected either way; the order parameter is not.\n\nclass FieldProcessor extends AudioWorkletProcessor {\n  constructor(options) {\n    super();\n    const cfg = options.processorOptions;\n\n    this.N = cfg.partials.length;\n    this.n = Float64Array.from(cfg.partials, p => p.n);\n    this.amp = Float64Array.from(cfg.partials, p => cfg.coef / p.n);\n    this.gL = new Float64Array(this.N);\n    this.gR = new Float64Array(this.N);\n    for (let i = 0; i < this.N; i++) {\n      const a = (cfg.partials[i].pan + 1) * Math.PI / 4;   // equal power\n      this.gL[i] = Math.cos(a);\n      this.gR[i] = Math.sin(a);\n    }\n\n    this.theta = new Float64Array(this.N);\n    this.delta = new Float64Array(this.N);\n    this.freq  = new Float64Array(this.N);\n    this.phi   = new Float64Array(this.N);\n\n    this.f0 = cfg.f0;\n    this.f0target = cfg.f0;\n    this.out = cfg.out;\n\n    this.K = cfg.params.K;\n    this.G = cfg.params.G;\n    this.T = cfg.params.T;\n    this.D = cfg.params.D;\n    this.glide = cfg.params.glideMs;\n    this.kickAmt = cfg.params.kick;\n    this.running = true;\n\n    this.r = 0; this.psi = 0; this.t = 0; this.blocks = 0;\n    this.r0 = 1 / Math.sqrt(this.N);          // incoherent floor for N oscillators\n    this.reseed();\n    this.scramble(1);\n\n    this.port.onmessage = (e) => {\n      const m = e.data;\n      if (m.type === 'param') {\n        this[m.key] = m.value;\n        if (m.key === 'D') this.reseed();\n      } else if (m.type === 'f0') {\n        this.f0target = m.value;\n        if (m.kick) this.scramble(Math.min(1, m.kick * this.kickAmt));\n      } else if (m.type === 'scramble') {\n        this.scramble(m.amount ?? 1);\n      } else if (m.type === 'running') {\n        this.running = m.value;\n      }\n    };\n  }\n\n  // Natural frequencies are drawn once and then drift slowly: the disorder the\n  // field has to overcome is itself a moving target.\n  reseed() {\n    for (let i = 0; i < this.N; i++) this.delta[i] = (Math.random() * 2 - 1) * this.D;\n  }\n\n  scramble(amount) {\n    for (let i = 0; i < this.N; i++) {\n      const span = 2 * Math.PI * this.n[i];\n      this.theta[i] = (this.theta[i] + Math.random() * span * amount) % span;\n    }\n  }\n\n  order() {\n    let sx = 0, sy = 0;\n    for (let i = 0; i < this.N; i++) {\n      const p = this.theta[i] / this.n[i];\n      this.phi[i] = p;\n      sx += Math.cos(p); sy += Math.sin(p);\n    }\n    sx /= this.N; sy /= this.N;\n    this.r = Math.sqrt(sx * sx + sy * sy);\n    this.psi = Math.atan2(sy, sx);\n  }\n\n  process(inputs, outputs) {\n    const out = outputs[0];\n    const L = out[0], R = out[1] || out[0];\n    const n = L.length;\n    const dt = 1 / sampleRate;\n\n    if (!this.running) { L.fill(0); R.fill(0); return true; }\n\n    this.order();\n    const r = this.r, psi = this.psi;\n    const e = (r - this.r0) / (1 - this.r0);\n    const Keff = this.K + this.G * (e > 0 ? e * e : 0);\n\n    // Environment breathes on two slow periods that are themselves harmonic\n    // subdivisions of the fundamental: f0/1024 and f0/4096.\n    this.t += n * dt;\n    const breath = 1\n      + 0.8 * Math.sin(2 * Math.PI * (this.f0 / 1024) * this.t)\n      + 0.4 * Math.sin(2 * Math.PI * (this.f0 / 4096) * this.t);\n    const Teff = this.T * Math.max(0, breath);\n    const noiseScale = Math.sqrt(2 * Teff * dt);\n\n    // slow random walk of the natural frequencies\n    for (let i = 0; i < this.N; i++) {\n      this.delta[i] += (Math.random() * 2 - 1) * this.D * 0.004;\n      if (this.delta[i] >  this.D * 1.5) this.delta[i] =  this.D * 1.5;\n      if (this.delta[i] < -this.D * 1.5) this.delta[i] = -this.D * 1.5;\n    }\n\n    const glideCoef = 1 - Math.exp(-1000 / (this.glide * sampleRate));\n\n    for (let s = 0; s < n; s++) {\n      this.f0 += (this.f0target - this.f0) * glideCoef;\n      const w0 = 2 * Math.PI * this.f0;\n      let l = 0, rr = 0;\n\n      for (let i = 0; i < this.N; i++) {\n        const ni = this.n[i];\n        const span = 2 * Math.PI * ni;\n        const phi = this.theta[i] / ni;\n\n        // reduced-phase velocity, then lifted back to the partial\n        const dphi = w0 * (1 + this.delta[i]) - Keff * r * Math.sin(phi - psi);\n        let th = this.theta[i] + ni * (dphi * dt + noiseScale * (Math.random() * 2 - 1) * 1.732);\n        th %= span;\n        if (th < 0) th += span;\n        this.theta[i] = th;\n\n        const v = Math.sin(th) * this.amp[i];\n        l += v * this.gL[i];\n        rr += v * this.gR[i];\n\n        if (s === 0) this.freq[i] = ni * dphi / (2 * Math.PI);\n      }\n\n      L[s] = l * this.out;\n      R[s] = rr * this.out;\n    }\n\n    if ((this.blocks++ & 7) === 0) {\n      this.port.postMessage({\n        r, psi, f0: this.f0, Keff,\n        phi: Array.from(this.phi),\n        freq: Array.from(this.freq)\n      });\n    }\n    return true;\n  }\n}\n\nregisterProcessor('field', FieldProcessor);\n";
+
+let SYS = EMBEDDED;
+let ctx, node, master, comp, delay, fbGain, fbLP, wet, dry, noiseGain, analyser;
+let running = false, autoMembrane = true;
+let last = { r: 0, psi: 0, f0: 36, Keff: 0, phi: [], freq: [] };
+const P = {};
+
+/* ---------------- audio ---------------- */
+
+async function boot() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const url = URL.createObjectURL(new Blob([PROCESSOR_SRC], { type: 'text/javascript' }));
+  await ctx.audioWorklet.addModule(url);
+  URL.revokeObjectURL(url);
+
+  node = new AudioWorkletNode(ctx, 'field', {
+    numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2],
+    processorOptions: {
+      partials: SYS.partials, f0: SYS.f0,
+      coef: SYS.voice.gainCoefficient, out: SYS.voice.out,
+      params: P
+    }
+  });
+  node.port.onmessage = e => { last = e.data; };
+
+  const mix = ctx.createGain();
+  node.connect(mix);
+
+  // environment: broadband noise, admitted to the membrane alongside the field
+  const len = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buf; noise.loop = true;
+  const nlp = ctx.createBiquadFilter(); nlp.type = 'lowpass'; nlp.frequency.value = 5000;
+  noiseGain = ctx.createGain(); noiseGain.gain.value = P.environment;
+  noise.connect(nlp).connect(noiseGain).connect(mix);
+  noise.start();
+
+  // membrane: comb at 1/f0. Reinforces partials of the fundamental, cancels the rest.
+  delay = ctx.createDelay(1);
+  delay.delayTime.value = 1 / SYS.f0;
+  fbGain = ctx.createGain(); fbGain.gain.value = P.membrane;
+  fbLP = ctx.createBiquadFilter(); fbLP.type = 'lowpass'; fbLP.frequency.value = 3500;
+  wet = ctx.createGain(); wet.gain.value = 0.5;
+  dry = ctx.createGain(); dry.gain.value = 0.85;
+
+  comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 5;
+  comp.attack.value = 0.01; comp.release.value = 0.3;
+  master = ctx.createGain(); master.gain.value = parseFloat(el('p_vol').value);
+  analyser = ctx.createAnalyser();
+  analyser.fftSize = 4096; analyser.smoothingTimeConstant = 0.7;
+
+  mix.connect(dry).connect(comp);
+  mix.connect(delay);
+  delay.connect(fbLP).connect(fbGain).connect(delay);
+  delay.connect(wet).connect(comp);
+  comp.connect(master).connect(analyser);
+  master.connect(ctx.destination);
+}
+
+function el(id) { return document.getElementById(id); }
+
+async function start() {
+  if (!ctx) {
+    try { await boot(); }
+    catch (e) { el('err').textContent = 'audio worklet failed: ' + e.message
+      + ' — serve the directory (npm start) and reload'; return; }
+  }
+  if (ctx.state === 'suspended') await ctx.resume();
+  running = true;
+  node.port.postMessage({ type: 'running', value: true });
+  el('run').textContent = 'stop'; el('run').classList.add('on');
+}
+function stop() {
+  running = false;
+  if (node) node.port.postMessage({ type: 'running', value: false });
+  el('run').textContent = 'start'; el('run').classList.remove('on');
+}
+
+function send(key, value) { if (node) node.port.postMessage({ type: 'param', key, value }); }
+
+function setF0(ratio, kick) {
+  const f = SYS.f0 * ratio;
+  if (node) node.port.postMessage({ type: 'f0', value: f, kick });
+  if (delay) delay.delayTime.setTargetAtTime(1 / f, ctx.currentTime, 0.12);
+}
+
+/* ---------------- views ---------------- */
+
+const circle = el('circle'), cctx = circle.getContext('2d');
+function drawCircle() {
+  const w = circle.width, h = circle.height, cx = w / 2, cy = h / 2, R = w * 0.40;
+  cctx.clearRect(0, 0, w, h);
+  cctx.strokeStyle = '#232a32'; cctx.lineWidth = 2;
+  cctx.beginPath(); cctx.arc(cx, cy, R, 0, 7); cctx.stroke();
+  cctx.strokeStyle = '#181e25';
+  for (let k = 0; k < 12; k++) {
+    const a = k * Math.PI / 6;
+    cctx.beginPath();
+    cctx.moveTo(cx + Math.cos(a) * R * 0.93, cy + Math.sin(a) * R * 0.93);
+    cctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+    cctx.stroke();
+  }
+  const phi = last.phi || [];
+  for (let i = 0; i < phi.length; i++) {
+    const a = phi[i];
+    const x = cx + Math.cos(a) * R, y = cy + Math.sin(a) * R;
+    cctx.fillStyle = axisColour(SYS.partials[i].axis);
+    cctx.beginPath(); cctx.arc(x, y, 7, 0, 7); cctx.fill();
+  }
+  const r = last.r || 0, psi = last.psi || 0;
+  cctx.strokeStyle = '#6fe3c4'; cctx.lineWidth = 4;
+  cctx.beginPath(); cctx.moveTo(cx, cy);
+  cctx.lineTo(cx + Math.cos(psi) * R * r, cy + Math.sin(psi) * R * r);
+  cctx.stroke();
+  cctx.fillStyle = '#6fe3c4';
+  cctx.beginPath(); cctx.arc(cx + Math.cos(psi) * R * r, cy + Math.sin(psi) * R * r, 6, 0, 7); cctx.fill();
+}
+function axisColour(a) {
+  if (a === '2') return '#8894a3';
+  if (a.includes('x')) return '#6fe3c4';
+  if (a === '3') return '#5b9dff';
+  if (a === '5') return '#f0b429';
+  if (a === '7') return '#e46bd0';
+  return '#a78bfa';
+}
+
+const locksEl = el('locks');
+function buildLocks() {
+  locksEl.innerHTML = '';
+  SYS.partials.forEach((p, i) => {
+    const d = document.createElement('div');
+    d.className = 'lock';
+    d.innerHTML = `<span class="n">${p.n}</span>`
+      + `<span class="bar"><u></u><i id="b${i}"></i></span>`
+      + `<span class="c" id="c${i}">—</span>`;
+    locksEl.appendChild(d);
+  });
+}
+function drawLocks() {
+  const f0 = last.f0 || SYS.f0;
+  SYS.partials.forEach((p, i) => {
+    const f = (last.freq || [])[i];
+    const bar = el('b' + i), lab = el('c' + i);
+    if (!f || f <= 0) return;
+    const cents = 1200 * Math.log2(f / (p.n * f0));
+    const clamped = Math.max(-50, Math.min(50, cents));
+    bar.style.left = `calc(${50 + clamped}% - 1px)`;
+    bar.style.background = Math.abs(cents) < 1.5 ? '#6fe3c4'
+                         : Math.abs(cents) < 8 ? '#f0b429' : '#e4566b';
+    lab.textContent = (cents >= 0 ? '+' : '') + cents.toFixed(1) + 'c';
+  });
+}
+
+const hyst = el('hyst'), hctx = hyst.getContext('2d');
+let trace = [], sweeping = false, sweepT0 = 0;
+function drawHyst() {
+  const w = hyst.width, h = hyst.height, pad = 34;
+  hctx.clearRect(0, 0, w, h);
+  hctx.strokeStyle = '#232a32'; hctx.lineWidth = 1;
+  hctx.strokeRect(pad, 10, w - pad - 12, h - pad - 6);
+  hctx.fillStyle = '#7d8b99'; hctx.font = '18px ui-monospace, monospace';
+  hctx.fillText('r', 8, 24); hctx.fillText('K', w - 22, h - 10);
+  hctx.fillText('1', 8, 26 + 0); hctx.fillText('0', 10, h - pad + 6);
+  const X = k => pad + (k / 4) * (w - pad - 12);
+  const Y = r => (h - pad) - r * (h - pad - 16);
+  for (const seg of [[0, '#5b9dff'], [1, '#f0b429']]) {
+    hctx.strokeStyle = seg[1]; hctx.lineWidth = 3; hctx.beginPath();
+    let started = false;
+    for (const pt of trace) {
+      if (pt.dir !== seg[0]) { started = false; continue; }
+      const x = X(pt.k), y = Y(pt.r);
+      started ? hctx.lineTo(x, y) : hctx.moveTo(x, y);
+      started = true;
+    }
+    hctx.stroke();
+  }
+  if (typeof P.K === 'number') {
+    hctx.fillStyle = '#6fe3c4';
+    hctx.beginPath(); hctx.arc(X(P.K), Y(last.r || 0), 6, 0, 7); hctx.fill();
+  }
+  hctx.fillStyle = '#5b9dff'; hctx.fillText('rising', pad + 8, 30);
+  hctx.fillStyle = '#f0b429'; hctx.fillText('falling', pad + 8, 52);
+}
+
+const spec = el('spec'), sctx = spec.getContext('2d');
+function drawSpec() {
+  if (!analyser) return;
+  const n = analyser.frequencyBinCount;
+  const data = new Uint8Array(n);
+  analyser.getByteFrequencyData(data);
+  const w = spec.width, h = spec.height;
+  sctx.clearRect(0, 0, w, h);
+  const maxHz = 2200, binHz = ctx.sampleRate / analyser.fftSize;
+  const bins = Math.min(n, Math.floor(maxHz / binHz));
+  // lattice guides
+  const f0 = last.f0 || SYS.f0;
+  sctx.strokeStyle = '#1e2630'; sctx.lineWidth = 1;
+  for (const p of SYS.partials) {
+    const x = (p.n * f0 / maxHz) * w;
+    sctx.beginPath(); sctx.moveTo(x, 0); sctx.lineTo(x, h); sctx.stroke();
+  }
+  sctx.fillStyle = '#6fe3c4';
+  for (let i = 0; i < bins; i++) {
+    const v = data[i] / 255;
+    const x = (i / bins) * w;
+    sctx.fillRect(x, h - v * h, Math.max(1, w / bins), v * h);
+  }
+}
+
+/* ---------------- loop ---------------- */
+
+function frame(now) {
+  requestAnimationFrame(frame);
+
+  if (sweeping) {
+    const t = (now - sweepT0) / 1000, dur = 60;
+    const u = t / dur;
+    if (u >= 1) { sweeping = false; el('sweep').classList.remove('on'); }
+    else {
+      const k = u < 0.5 ? (u / 0.5) * 4 : (1 - (u - 0.5) / 0.5) * 4;
+      setParam('K', k);
+      trace.push({ k, r: last.r || 0, dir: u < 0.5 ? 0 : 1 });
+    }
+  }
+
+  if (autoMembrane && fbGain) {
+    const target = 0.20 + 0.40 * (last.r || 0);
+    fbGain.gain.setTargetAtTime(target, ctx.currentTime, 0.1);
+    setSlider('mem', target);
+  }
+
+  el('rv').textContent = (last.r || 0).toFixed(3);
+  el('kv').textContent = (last.Keff || 0).toFixed(2);
+  el('fv').textContent = (last.f0 || SYS.f0).toFixed(2);
+  const r = last.r || 0;
+  el('state').innerHTML = '<b>' + (r > 0.85 ? 'locked' : r > 0.5 ? 'binding'
+    : r > 0.3 ? 'partial' : 'incoherent') + '</b>';
+
+  drawCircle(); drawLocks(); drawHyst(); if (running) drawSpec();
+}
+requestAnimationFrame(frame);
+
+/* ---------------- controls ---------------- */
+
+const SLIDERS = {
+  K: ['p_K', 'v_K', v => v.toFixed(2), v => send('K', v)],
+  G: ['p_G', 'v_G', v => v.toFixed(2), v => send('G', v)],
+  T: ['p_T', 'v_T', v => v.toFixed(3), v => send('T', v)],
+  D: ['p_D', 'v_D', v => v.toFixed(4), v => send('D', v)],
+  environment: ['p_env', 'v_env', v => v.toFixed(3),
+    v => noiseGain && noiseGain.gain.setTargetAtTime(v, ctx.currentTime, 0.1)],
+  membrane: ['p_mem', 'v_mem', v => v.toFixed(2),
+    v => fbGain && fbGain.gain.setTargetAtTime(v, ctx.currentTime, 0.1)]
+};
+function setParam(key, v) {
+  P[key] = v;
+  const s = SLIDERS[key];
+  el(s[0]).value = v; el(s[1]).textContent = s[2](v);
+  s[3](v);
+}
+function setSlider(short, v) {
+  const key = short === 'mem' ? 'membrane' : short;
+  P[key] = v;
+  el(SLIDERS[key][0]).value = v;
+  el(SLIDERS[key][1]).textContent = SLIDERS[key][2](v);
+}
+
+function wire() {
+  for (const [key, s] of Object.entries(SLIDERS)) {
+    el(s[0]).oninput = e => {
+      if (key === 'membrane' && autoMembrane) { autoMembrane = false; el('auto').classList.remove('on'); }
+      setParam(key, parseFloat(e.target.value));
+    };
+  }
+  el('p_vol').oninput = e => {
+    el('v_vol').textContent = parseFloat(e.target.value).toFixed(2);
+    if (master) master.gain.value = parseFloat(e.target.value);
+  };
+  el('run').onclick = () => running ? stop() : start();
+  el('auto').onclick = () => { autoMembrane = !autoMembrane; el('auto').classList.toggle('on', autoMembrane); };
+  el('scramble').onclick = () => node && node.port.postMessage({ type: 'scramble', amount: 1 });
+  el('sweep').onclick = async () => {
+    await start();
+    trace = []; sweeping = true; sweepT0 = performance.now();
+    el('sweep').classList.add('on');
+  };
+  el('clear').onclick = () => { trace = []; };
+}
+
+function buildKeys() {
+  const wrap = el('keys'); wrap.innerHTML = '';
+  for (const [cap, k] of Object.entries(SYS.keys)) {
+    const b = document.createElement('button');
+    b.className = 'key'; b.dataset.cap = cap;
+    b.innerHTML = `<span class="cap">${cap}</span><span class="lab">${k.label}</span>`;
+    b.onclick = async () => { await start(); press(cap, k.ratio); };
+    wrap.appendChild(b);
+  }
+}
+let currentRatio = 1;
+function press(cap, ratio) {
+  const jump = Math.abs(Math.log2(ratio / currentRatio));
+  currentRatio = ratio;
+  setF0(ratio, Math.min(1, jump * 2.2));
+  const b = document.querySelector(`.key[data-cap="${cap}"]`);
+  if (b) { b.classList.add('lit'); setTimeout(() => b.classList.remove('lit'), 260); }
+}
+
+addEventListener('keydown', async ev => {
+  if (ev.repeat || ev.target.tagName === 'INPUT') return;
+  const k = ev.key.toLowerCase();
+  if (ev.code === 'Space') { ev.preventDefault(); await start();
+    node.port.postMessage({ type: 'scramble', amount: 1 }); return; }
+  if (k === 'escape') { stop(); return; }
+  if (SYS.keys[k]) { await start(); press(k, SYS.keys[k].ratio); }
+});
+
+function adopt(sys, src) {
+  SYS = sys;
+  Object.assign(P, sys.params);
+  el('src').textContent = `system: ${sys.name} (${src})`;
+  buildKeys(); buildLocks(); wire();
+  for (const key of Object.keys(SLIDERS)) setParam(key, P[key]);
+  el('v_vol').textContent = parseFloat(el('p_vol').value).toFixed(2);
+}
+
+fetch('field.json')
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(j => adopt(j, 'field.json'))
+  .catch(() => adopt(EMBEDDED, 'embedded copy'));
+</script>
+</body>
+</html>

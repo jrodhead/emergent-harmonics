@@ -1,0 +1,61 @@
+{
+  "name": "Field",
+  "notes": "A continuously running harmonic oscillator network. Each voice has its own natural frequency near a lattice node, mistuned by disorder D. Voices are coupled through their reduced phase phi_i = theta_i / n_i -- the phase of the fundamental each one implies. Coupling K pulls the implied fundamentals together; above a critical K the ensemble spontaneously locks into exact integer ratios and the harmonic series appears without being imposed. The order parameter r is the degree to which the voices agree on a fundamental none of them plays.",
+
+  "f0": 36.0,
+  "voice": { "gainCoefficient": 1.6, "out": 0.32 },
+
+  "partials": [
+    { "n": 8,  "pan": 0.0,   "axis": "2" },
+    { "n": 9,  "pan": -0.45, "axis": "3" },
+    { "n": 10, "pan": 0.3,   "axis": "5" },
+    { "n": 11, "pan": 0.85,  "axis": "11" },
+    { "n": 12, "pan": -0.3,  "axis": "3" },
+    { "n": 15, "pan": 0.0,   "axis": "3x5" },
+    { "n": 16, "pan": 0.0,   "axis": "2" },
+    { "n": 17, "pan": -0.9,  "axis": "17" },
+    { "n": 20, "pan": 0.5,   "axis": "5" },
+    { "n": 21, "pan": 0.0,   "axis": "3x7" },
+    { "n": 24, "pan": -0.5,  "axis": "3" },
+    { "n": 25, "pan": 0.6,   "axis": "5" },
+    { "n": 27, "pan": -0.6,  "axis": "3" },
+    { "n": 28, "pan": -0.85, "axis": "7" },
+    { "n": 32, "pan": 0.0,   "axis": "2" },
+    { "n": 33, "pan": 0.0,   "axis": "3x11" },
+    { "n": 35, "pan": 0.0,   "axis": "5x7" },
+    { "n": 45, "pan": 0.0,   "axis": "3x5" }
+  ],
+
+  "params": {
+    "K": 0.0,
+    "G": 2.5,
+    "T": 0.03,
+    "D": 0.006,
+    "environment": 0.05,
+    "membrane": 0.55,
+    "glideMs": 800,
+    "kick": 1.0
+  },
+
+  "paramNotes": {
+    "K": "coupling, rad/s. The field locks around K=1.2 on the way up and holds all the way down to K=0 on the way back. Above K~1.2 a scramble heals; below it, a scramble is permanent.",
+    "G": "coherence gain. K_eff = K + G*((r-r0)/(1-r0))^2 with r0 = 1/sqrt(N), the incoherent floor. Below K ~ 1.2 the field is bistable: locked and incoherent are both stable, so coherence sustains itself and a scramble destroys it permanently.",
+    "T": "environment temperature: phase noise. What coherence has to be maintained against.",
+    "D": "disorder: spread of natural frequencies away from exact lattice nodes.",
+    "environment": "level of the inharmonic noise bed admitted to the membrane.",
+    "membrane": "feedback of the comb at 1/f0. Passes harmonics of the fundamental, rejects everything else. Tracks r when auto is on.",
+    "glideMs": "how long the ensemble takes to slide to a new target fundamental when a key is pressed.",
+    "kick": "phase scramble applied on key press, proportional to the size of the jump."
+  },
+
+  "keys": {
+    "a": { "ratio": 1,            "label": "1/1  36.00 Hz" },
+    "s": { "ratio": 1.125,        "label": "9/8  40.50 Hz" },
+    "d": { "ratio": 1.25,         "label": "5/4  45.00 Hz" },
+    "f": { "ratio": 1.3333333333, "label": "4/3  48.00 Hz" },
+    "g": { "ratio": 1.5,          "label": "3/2  54.00 Hz" },
+    "h": { "ratio": 1.6666666667, "label": "5/3  60.00 Hz" },
+    "j": { "ratio": 1.75,         "label": "7/4  63.00 Hz" },
+    "k": { "ratio": 2,            "label": "2/1  72.00 Hz" }
+  }
+}

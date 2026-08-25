@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Embedded — permeability and the room</title>
+<style>
+  :root {
+    --bg:#0b0d10; --panel:#14181d; --line:#232a32; --ink:#e6ebf0;
+    --dim:#7d8b99; --accent:#6fe3c4; --warn:#f0b429; --cold:#5b9dff; --hot:#e46bd0;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; padding:26px; background:var(--bg); color:var(--ink);
+         font:13px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  h1 { font-size:20px; margin:0 0 4px; letter-spacing:.04em; font-weight:600; }
+  .sub { color:var(--dim); margin:0 0 20px; max-width:82ch; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:14px; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:14px; }
+  .panel h2 { font-size:10px; text-transform:uppercase; letter-spacing:.15em;
+              color:var(--dim); margin:0 0 10px; font-weight:600; }
+  .wide { grid-column:1/-1; }
+  canvas { display:block; width:100%; border-radius:6px; background:#0e1216; }
+  .row { display:flex; align-items:center; gap:10px; margin-bottom:7px; }
+  .row label { width:112px; color:var(--dim); flex:none; }
+  .row input[type=range] { flex:1; accent-color:var(--accent); }
+  .row .val { width:58px; text-align:right; color:var(--ink); }
+  button { background:#1b2028; border:1px solid var(--line); color:var(--ink);
+           border-radius:6px; padding:7px 13px; cursor:pointer; font:inherit; }
+  button:hover { border-color:var(--accent); }
+  button.on { background:#22463d; border-color:var(--accent); }
+  button.warn.on { background:#4a3a17; border-color:var(--warn); }
+  .keys { display:flex; flex-wrap:wrap; gap:7px; }
+  .key { min-width:120px; text-align:left; }
+  .key .cap { color:var(--accent); font-weight:600; }
+  .key .lab { color:var(--dim); font-size:11px; display:block; }
+  .key.lit { background:#22463d; border-color:var(--accent); }
+  .stats { display:flex; gap:22px; flex-wrap:wrap; color:var(--dim); margin-top:10px; font-size:12px; }
+  .stats b { color:var(--ink); }
+  .bar3 { display:grid; grid-template-columns:76px 1fr 46px; gap:8px; align-items:center; margin-bottom:6px; }
+  .bar3 .name { color:var(--dim); }
+  .bar3 .track { position:relative; height:12px; background:#0e1216; border-radius:3px; overflow:hidden; }
+  .bar3 .fill { position:absolute; top:0; bottom:0; left:0; border-radius:3px; }
+  .bar3 .v { text-align:right; }
+  .hint { color:var(--dim); font-size:11px; margin-top:9px; }
+  .note { color:var(--dim); font-size:11px; margin-top:9px; border-left:2px solid var(--line); padding-left:9px; }
+  code { color:var(--accent); }
+  #err { color:var(--warn); }
+</style>
+</head>
+<body>
+
+<h1>Embedded</h1>
+<p class="sub">
+  Three harmonic populations, each locked onto its own fundamental by default and mutually
+  unrelated to the other two — three organised, mutually illegible identities. A single
+  control, <b>permeability</b>, governs how strongly they — and a live, silent voice built
+  from microphone pitch-tracking — pull toward a shared consensus. Past its critical value
+  the populations' own fundamentals bend together and the field's stereo image collapses to
+  centre. Unlike the earlier piece, this is <em>not</em> a loop you can simply turn back off:
+  once genuinely embedded, dropping permeability to zero does not un-embed it. Only
+  <b>re-individuate</b> does.
+</p>
+
+<div class="grid">
+
+  <div class="panel">
+    <h2>Embeddedness — S, and where the three fundamentals sit</h2>
+    <canvas id="line" width="520" height="170" style="aspect-ratio:520/170"></canvas>
+    <div class="stats">
+      <span>S <b id="sv">0.00</b></span>
+      <span>Θ<sub>eff</sub> <b id="tv">0.00</b></span>
+      <span id="state"><b>segregated</b></span>
+    </div>
+    <div class="hint">
+      Filled dots are the three populations' effective fundamentals. The hollow dot is the
+      room — silent, felt only through this pull. All four converging is embeddedness; a
+      wide spread is segregation.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Within-population order — r<sub>k</sub></h2>
+    <div id="rbars"></div>
+    <div class="hint">
+      Each population's own internal coherence. This should stay high through the whole
+      permeability range — collapsing into a shared identity is not the same as dissolving
+      into noise. If a bar drops near zero, that population has lost itself, not just its
+      boundary.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>One-way door — S against permeability</h2>
+    <canvas id="hyst" width="520" height="300" style="aspect-ratio:520/300"></canvas>
+    <div class="row" style="margin-top:10px">
+      <button id="sweep">sweep Θ 0 → 4 → 0</button>
+      <button id="clear">clear trace</button>
+    </div>
+    <div class="hint">
+      Past Θ≈1.8 the field locks. Sweep back down and watch the trace <em>not</em> retrace
+      itself — it stays near the top all the way to Θ=0. That is the claim this piece makes
+      instead of v2's ordinary hysteresis loop: embeddedness, once reached, does not need
+      permeability to hold it.
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>Spectrum after the boundary</h2>
+    <canvas id="spec" width="520" height="300" style="aspect-ratio:520/300"></canvas>
+    <div class="hint">
+      Comb tuned to the interior population's own period. Feedback firms while segregated
+      and opens as S rises — inverted from v2 on purpose. The boundary is what falls away as
+      embeddedness grows, not what builds.
+    </div>
+  </div>
+
+  <div class="panel wide">
+    <h2>Parameters</h2>
+    <div class="grid" style="gap:0 26px">
+      <div>
+        <div class="row"><label>permeability Θ</label><input type="range" id="p_Theta" min="0" max="4" step="0.02"><span class="val" id="v_Theta"></span></div>
+        <div class="row"><label>identity K</label><input type="range" id="p_K" min="0" max="4" step="0.01"><span class="val" id="v_K"></span></div>
+        <div class="row"><label>coherence gain G</label><input type="range" id="p_G" min="0" max="5" step="0.01"><span class="val" id="v_G"></span></div>
+        <div class="row"><label>temperature</label><input type="range" id="p_T" min="0" max="0.5" step="0.002"><span class="val" id="v_T"></span></div>
+        <div class="row"><label>disorder</label><input type="range" id="p_D" min="0" max="0.02" step="0.0002"><span class="val" id="v_D"></span></div>
+      </div>
+      <div>
+        <div class="row"><label>room weight</label><input type="range" id="p_envWeight" min="0" max="1" step="0.01"><span class="val" id="v_envWeight"></span></div>
+        <div class="row"><label>boundary</label><input type="range" id="p_boundary" min="0" max="0.75" step="0.01"><span class="val" id="v_boundary"></span></div>
+        <div class="row"><label>level</label><input type="range" id="p_vol" min="0" max="1" step="0.01" value="0.7"><span class="val" id="v_vol"></span></div>
+        <div class="row">
+          <button id="run">start</button>
+          <button id="auto" class="on">boundary auto</button>
+          <button id="scramble">scramble phases</button>
+          <button id="reindividuate" class="warn">re-individuate</button>
+        </div>
+      </div>
+    </div>
+    <div class="stats">
+      <span id="err"></span><span id="src"></span>
+    </div>
+  </div>
+
+  <div class="panel wide">
+    <h2>The room — microphone</h2>
+    <div class="row">
+      <button id="listen">start listening</button>
+      <span id="roomStat" class="hint" style="margin:0">microphone off — the room carries only its floor weight</span>
+    </div>
+    <div class="note">
+      Audio from the microphone is analysed locally for its dominant pitch and how clear
+      that pitch is — never played back, never sent anywhere. A confident, sustained tone
+      counts for more in the census than noise or silence does, the same way the source
+      study found a clear, "ethereal" musical context reorganised the brain more than
+      resting or watching a silent film did.
+    </div>
+  </div>
+
+  <div class="panel wide">
+    <h2>Keys — a context pulse, not a fundamental</h2>
+    <div class="keys" id="keys"></div>
+    <div class="hint">
+      A key briefly makes the room's voice unmistakably clear at that pitch — a stand-in for
+      "the room suddenly plays a clear tone." Below critical Θ the field ignores it. Above,
+      the shared identity audibly bends toward it. <b>esc</b> stops.
+    </div>
+  </div>
+
+</div>
+
+<script>
+const EMBEDDED =
+{
+  "name": "Embedded",
+  "notes": "Three harmonic populations, each locked onto its own fundamental by default and mutually unrelated to the other two -- three organised, mutually illegible identities, a sonic model of segregated processing networks. A single control, permeability (Theta), scales how strongly the three identities -- and a fourth, silent, phantom voice built from live microphone pitch-tracking -- pull toward a shared consensus. Below its critical value the populations stay segregated. Above it, their own fundamentals bend toward each other and toward whatever the room is doing, and the stereo image collapses toward centre as it goes. S is the order parameter: how far the three populations plus the room agree on an identity none of them individually holds. The room, like the fundamental in the earlier pieces, participates without ever being sounded.",
+
+  "populations": [
+    { "name": "interior",   "f0": 36.0,          "pan": -0.7 },
+    { "name": "relational", "f0": 50.911688245,  "pan": 0.0 },
+    { "name": "exterior",   "f0": 58.249223595,  "pan": 0.7 }
+  ],
+  "partials": [8, 9, 10, 12, 15, 16, 20, 24],
+  "voice": { "gainCoefficient": 1.5, "out": 0.3 },
+
+  "params": {
+    "K": 2.0,
+    "G": 2.5,
+    "T": 0.03,
+    "D": 0.006,
+    "Theta": 0.0,
+    "G2": 120.0,
+    "homeRate": 10.0,
+    "scaleHz": 6,
+    "envWeight": 1.0,
+    "envFloor": 0.05,
+    "boundary": 0.5,
+    "pulseMs": 4500
+  },
+
+  "keys": {
+    "a": { "ratio": 1,             "label": "1/1   36.00 Hz" },
+    "s": { "ratio": 1.125,         "label": "9/8   40.50 Hz" },
+    "d": { "ratio": 1.25,          "label": "5/4   45.00 Hz" },
+    "f": { "ratio": 1.3333333333,  "label": "4/3   48.00 Hz" },
+    "g": { "ratio": 1.5,           "label": "3/2   54.00 Hz" },
+    "h": { "ratio": 1.6666666667,  "label": "5/3   60.00 Hz" },
+    "j": { "ratio": 1.75,          "label": "7/4   63.00 Hz" },
+    "k": { "ratio": 2,             "label": "2/1   72.00 Hz" }
+  }
+};
+
+const PROCESSOR_SRC = "// Three-population harmonic Kuramoto field, hierarchically coupled.\n//\n// Each of three populations is a copy of v2's field: eight phase oscillators near\n// nodes of its OWN lattice, coupled to its OWN mean reduced phase so it locks onto\n// its own fundamental. That is the \"identity coupling\" K, and it is fixed above\n// criticality -- every population is a stable, organised whole by default, entirely\n// independent of the other two. This is segregation: not noise, structure.\n//\n//   phi_ki' = 2pi*f0eff_k*(1+delta_ki) - K_eff_k * r_k * sin(phi_ki - psi_k) + noise\n//\n// f0eff_k is what makes this hierarchical rather than a bare copy of v2 three times\n// over. A first draft tried to close the gap between populations with a second PHASE\n// coupling term, on the model of v2's own coupling -- and it did nothing at any\n// realistic permeability, because v2's trick only works when the things being\n// synchronised already share nearly the same frequency (locking a spread of natural\n// frequencies within a few percent of each other). These three populations are\n// mistuned from one another by design -- 36, 50.9, 58.2 Hz, tens of Hz apart -- so a\n// phase term just averages three independently-spinning phasors into noise. What\n// closes a frequency gap that large is a pull on the frequency itself:\n//\n//   f0eff_k' = homeRate * (f0home_k - f0eff_k)  -  Theta_eff * (f0eff_k - fBar)\n//\n// fBar is the weighted mean of all three f0eff's and a fourth, silent phantom voice\n// (envFreq) whose frequency is set from outside -- in the browser, from live\n// microphone pitch-tracking; in verify-embedded.js, from a synthetic \"room\". Weak\n// Theta loses to homeRate and every population's effective fundamental just sits at\n// its own home value: segregation. Past a critical Theta the pull to consensus wins\n// and the three (four, with the room) fundamentals collapse together -- a single\n// emergent identity none of them started with. S measures how close together they\n// currently are, normalised the same way v2 normalises r:\n//\n//   S = 1 / (1 + spread(f0eff, envFreq) / scaleHz)\n//   Theta_eff = Theta + G2 * excess(S)^2,   excess(x) = max(0, (x-S0)/(1-S0))\n//\n// so embeddedness is self-reinforcing the same way v2's coherence is: being close\n// makes the pull to get closer stronger. But unlike v2's r, this self-reinforcement\n// is tuned strong enough (relative to homeRate) that once past its critical Theta,\n// the locked state does not need Theta to hold it -- turning permeability back down\n// to zero does NOT re-segregate the field. verify-embedded.js confirms this: it is a\n// one-way door, a genuine asymmetry v2 doesn't have. What DOES undo it is a direct\n// 'reindividuate' message, which is not physics the field does to itself -- it is\n// the one intervention this design gives from outside, deliberately not reachable by\n// the permeability knob alone. Once f0eff_k moves, the population's own unchanged\n// internal coupling re-locks its eight oscillators around wherever it now is --\n// exactly the mechanism v2 already uses to glide to a new key-pressed fundamental,\n// just driven continuously instead of by a keypress.\n//\n// The room is never sounded. It is one more voice in the census, exactly the way the\n// fundamental in v1/v2 was present in the coupling math and absent from the air.\n\nclass EmbeddedProcessor extends AudioWorkletProcessor {\n  constructor(options) {\n    super();\n    const cfg = options.processorOptions;\n\n    this.n = Float64Array.from(cfg.partials);\n    this.NP = this.n.length;                 // oscillators per population\n    this.K3 = cfg.f0.length;                 // number of populations (3)\n    this.amp = Float64Array.from(this.n, ni => cfg.coef / ni);\n\n    // jitter: a small deterministic low-discrepancy spread, independent of S, so a\n    // little spatial detail survives even when the populations fully collapse to centre\n    this.jitter = Float64Array.from(this.n, (_, i) => (((i * 0.6180339887) % 1) - 0.5) * 0.35);\n\n    this.f0home = Float64Array.from(cfg.f0);\n    this.f0eff = Float64Array.from(cfg.f0);        // what the oscillators actually track\n    this.pan0 = Float64Array.from(cfg.pan);\n    this.out = cfg.out;\n\n    this.homeRate = cfg.params.homeRate;\n    this.scaleHz = cfg.params.scaleHz;\n\n    this.theta = []; this.delta = []; this.freq = []; this.phi = [];\n    for (let k = 0; k < this.K3; k++) {\n      this.theta.push(new Float64Array(this.NP));\n      this.delta.push(new Float64Array(this.NP));\n      this.freq.push(new Float64Array(this.NP));\n      this.phi.push(new Float64Array(this.NP));\n    }\n    this.r = new Float64Array(this.K3);\n    this.psi = new Float64Array(this.K3);\n    this.gL = []; this.gR = [];\n    for (let k = 0; k < this.K3; k++) { this.gL.push(new Float64Array(this.NP)); this.gR.push(new Float64Array(this.NP)); }\n\n    this.K = cfg.params.K;\n    this.G = cfg.params.G;\n    this.T = cfg.params.T;\n    this.D = cfg.params.D;\n    this.Theta = cfg.params.Theta;\n    this.G2 = cfg.params.G2;\n    this.envWeight = cfg.params.envWeight;\n    this.envFloor = cfg.params.envFloor;\n    this.pulseMs = cfg.params.pulseMs;\n    this.running = true;\n\n    this.r0pop = 1 / Math.sqrt(this.NP);\n    this.t = 0; this.blocks = 0;\n\n    // the room: a silent phantom voice, phase-only. freq/clarity arrive by message.\n    // Its rest frequency is the mean of the home fundamentals, not an arbitrary\n    // constant -- an \"unheard\" room contributes zero net pull rather than a hidden\n    // bias, which matters for S0 below.\n    const meanHome = this.f0home.reduce((a, b) => a + b, 0) / this.K3;\n    this.envFreq = meanHome;\n    this.envFreqTarget = meanHome;\n    this.envClarity = 0;\n    this.envClarityTarget = 0;\n    this.pulseBoost = 0;\n    this.pulseFreqTarget = null;\n\n    // S0: the segregated floor, measured by running the ACTUAL consensus formula at\n    // rest (f0eff = home, room silent) rather than a hand-derived approximation that\n    // could drift out of sync with it. Any mismatch there is exactly what makes\n    // \"segregated\" fail to be a true fixed point -- see the header note.\n    this.S0 = this.consensus().S;\n\n    this.reseed();\n    this.scramble(1);\n\n    this.port.onmessage = (e) => {\n      const m = e.data;\n      if (m.type === 'param') { this[m.key] = m.value; if (m.key === 'D') this.reseed(); }\n      else if (m.type === 'env') { this.envFreqTarget = m.freq; this.envClarityTarget = m.clarity; }\n      else if (m.type === 'contextPulse') { this.pulseFreqTarget = m.freq; this.pulseBoost = 1; }\n      else if (m.type === 'scramble') this.scramble(m.amount ?? 1);\n      else if (m.type === 'reindividuate') this.f0eff.set(this.f0home);\n      else if (m.type === 'running') this.running = m.value;\n    };\n  }\n\n  reseed() {\n    for (let k = 0; k < this.K3; k++)\n      for (let i = 0; i < this.NP; i++) this.delta[k][i] = (Math.random() * 2 - 1) * this.D;\n  }\n\n  scramble(amount) {\n    for (let k = 0; k < this.K3; k++) {\n      for (let i = 0; i < this.NP; i++) {\n        const span = 2 * Math.PI * this.n[i];\n        this.theta[k][i] = (this.theta[k][i] + Math.random() * span * amount) % span;\n      }\n    }\n  }\n\n  order() {\n    for (let k = 0; k < this.K3; k++) {\n      let sx = 0, sy = 0;\n      for (let i = 0; i < this.NP; i++) {\n        const p = this.theta[k][i] / this.n[i];\n        this.phi[k][i] = p;\n        sx += Math.cos(p); sy += Math.sin(p);\n      }\n      sx /= this.NP; sy /= this.NP;\n      this.r[k] = Math.sqrt(sx * sx + sy * sy);\n      this.psi[k] = Math.atan2(sy, sx);\n    }\n  }\n\n  // Between-population consensus, in frequency rather than phase -- see the header\n  // note on why phase coupling can't close a tens-of-Hz gap. fBar/S/Theta_eff feed\n  // the f0eff relaxation in process(); wEnv is exposed for display.\n  consensus() {\n    const wEnv = Math.min(1, this.envFloor + this.envWeight * this.envClarity + this.pulseBoost);\n    let sum = 0, w = 0;\n    for (let k = 0; k < this.K3; k++) sum += this.f0eff[k];\n    w = this.K3;\n    sum += wEnv * this.envFreq; w += wEnv;\n    const fBar = sum / w;\n    let variance = 0;\n    for (let k = 0; k < this.K3; k++) variance += (this.f0eff[k] - fBar) ** 2;\n    variance += wEnv * (this.envFreq - fBar) ** 2;\n    variance /= w;\n    const S = 1 / (1 + Math.sqrt(variance) / this.scaleHz);\n    this.wEnv = wEnv;\n    return { fBar, S };\n  }\n\n  process(inputs, outputs) {\n    const out = outputs[0];\n    const L = out[0], R = out[1] || out[0];\n    const n = L.length;\n    const dt = 1 / sampleRate;\n\n    if (!this.running) { L.fill(0); R.fill(0); return true; }\n\n    // smooth the externally-driven room state so its phase rate never kinks\n    const envCoef = 1 - Math.exp(-n * dt / 0.08);\n    this.envFreq += (this.envFreqTarget - this.envFreq) * envCoef;\n    this.envClarity += (this.envClarityTarget - this.envClarity) * envCoef;\n    if (this.pulseFreqTarget != null) { this.envFreq += (this.pulseFreqTarget - this.envFreq) * 0.5; }\n    this.pulseBoost *= Math.exp(-n * dt * 1000 / this.pulseMs);\n    if (this.pulseBoost < 0.01) { this.pulseBoost = 0; this.pulseFreqTarget = null; }\n\n    this.order();\n    const r = this.r, psi = this.psi;\n    const KeffPop = new Float64Array(this.K3);\n    for (let k = 0; k < this.K3; k++) {\n      const e = (r[k] - this.r0pop) / (1 - this.r0pop);\n      KeffPop[k] = this.K + this.G * (e > 0 ? e * e : 0);\n    }\n\n    const { fBar, S } = this.consensus();\n    this.S = S;\n    const eS = (S - this.S0) / (1 - this.S0);\n    const ThetaEff = this.Theta + this.G2 * (eS > 0 ? eS * eS : 0);\n\n    // frequency-domain relaxation: each population's effective fundamental drifts\n    // between its own home value and the consensus, at a rate set by permeability.\n    // One Euler step per block is plenty -- this moves on a multi-second timescale.\n    const blockDt = n * dt;\n    for (let k = 0; k < this.K3; k++) {\n      this.f0eff[k] += blockDt * (this.homeRate * (this.f0home[k] - this.f0eff[k]) - ThetaEff * (this.f0eff[k] - fBar));\n    }\n\n    // stereo collapse: populations pull toward centre as S rises; jitter never does\n    for (let k = 0; k < this.K3; k++) {\n      const basePan = this.pan0[k] * (1 - S);\n      for (let i = 0; i < this.NP; i++) {\n        const p = Math.max(-1, Math.min(1, basePan + this.jitter[i]));\n        const a = (p + 1) * Math.PI / 4;\n        this.gL[k][i] = Math.cos(a); this.gR[k][i] = Math.sin(a);\n      }\n    }\n\n    // environment breathes on two slow periods harmonic to the interior population's\n    // own fundamental, exactly as v2's does -- the same lattice still governs the\n    // rhythm of what coherence has to be held against.\n    this.t += n * dt;\n    const f0i = this.f0home[0];\n    const breath = 1\n      + 0.8 * Math.sin(2 * Math.PI * (f0i / 1024) * this.t)\n      + 0.4 * Math.sin(2 * Math.PI * (f0i / 4096) * this.t);\n    const Teff = this.T * Math.max(0, breath);\n    const noiseScale = Math.sqrt(2 * Teff * dt);\n    for (let k = 0; k < this.K3; k++)\n      for (let i = 0; i < this.NP; i++) {\n        this.delta[k][i] += (Math.random() * 2 - 1) * this.D * 0.004;\n        if (this.delta[k][i] >  this.D * 1.5) this.delta[k][i] =  this.D * 1.5;\n        if (this.delta[k][i] < -this.D * 1.5) this.delta[k][i] = -this.D * 1.5;\n      }\n\n    for (let s = 0; s < n; s++) {\n      let l = 0, rr = 0;\n      for (let k = 0; k < this.K3; k++) {\n        const w0 = 2 * Math.PI * this.f0eff[k];\n        for (let i = 0; i < this.NP; i++) {\n          const ni = this.n[i];\n          const span = 2 * Math.PI * ni;\n          const phi = this.theta[k][i] / ni;\n\n          const dphi = w0 * (1 + this.delta[k][i])\n            - KeffPop[k] * r[k] * Math.sin(phi - psi[k]);\n\n          let th = this.theta[k][i] + ni * (dphi * dt + noiseScale * (Math.random() * 2 - 1) * 1.732);\n          th %= span; if (th < 0) th += span;\n          this.theta[k][i] = th;\n\n          const v = Math.sin(th) * this.amp[i];\n          l += v * this.gL[k][i];\n          rr += v * this.gR[k][i];\n          if (s === 0) this.freq[k][i] = ni * dphi / (2 * Math.PI);\n        }\n      }\n      L[s] = l * this.out;\n      R[s] = rr * this.out;\n    }\n\n    if ((this.blocks++ & 7) === 0) {\n      this.port.postMessage({\n        r: Array.from(r), psi: Array.from(psi), S, fBar,\n        f0eff: Array.from(this.f0eff), ThetaEff, wEnv: this.wEnv, envFreq: this.envFreq,\n        phi: this.phi.map(a => Array.from(a)),\n        freq: this.freq.map(a => Array.from(a))\n      });\n    }\n    return true;\n  }\n}\n\nregisterProcessor('embedded', EmbeddedProcessor);\n";
+
+let SYS = EMBEDDED;
+let ctx, node, master, comp, delay, fbGain, fbLP, wet, dry, noiseGain, analyser;
+let micStream = null, micSource = null, micAnalyser = null, micTimer = null;
+let running = false, autoBoundary = true, listening = false;
+let last = { r:[0,0,0], S:0, ThetaEff:0, f0eff:[36,50.9,58.2], envFreq:48, wEnv:0.05, phi:[[],[],[]], freq:[[],[],[]] };
+const P = {};
+
+/* ---------------- audio ---------------- */
+
+async function boot() {
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  const url = URL.createObjectURL(new Blob([PROCESSOR_SRC], { type: 'text/javascript' }));
+  await ctx.audioWorklet.addModule(url);
+  URL.revokeObjectURL(url);
+
+  node = new AudioWorkletNode(ctx, 'embedded', {
+    numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2],
+    processorOptions: {
+      partials: SYS.partials,
+      f0: SYS.populations.map(p => p.f0),
+      pan: SYS.populations.map(p => p.pan),
+      coef: SYS.voice.gainCoefficient, out: SYS.voice.out,
+      params: P
+    }
+  });
+  node.port.onmessage = e => { last = e.data; };
+
+  const mix = ctx.createGain();
+  node.connect(mix);
+
+  // environment texture: broadband noise, admitted to the boundary alongside the field.
+  // Independent of the mic-driven room voice, which is never itself audible.
+  const len = ctx.sampleRate * 2;
+  const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+  for (let c = 0; c < 2; c++) {
+    const d = buf.getChannelData(c);
+    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+  }
+  const noise = ctx.createBufferSource();
+  noise.buffer = buf; noise.loop = true;
+  const nlp = ctx.createBiquadFilter(); nlp.type = 'lowpass'; nlp.frequency.value = 5000;
+  noiseGain = ctx.createGain(); noiseGain.gain.value = 0.05;
+  noise.connect(nlp).connect(noiseGain).connect(mix);
+  noise.start();
+
+  // boundary: comb at 1/f0 of the interior population. Feedback firms while segregated,
+  // opens as S rises -- inverted from v2's membrane on purpose.
+  delay = ctx.createDelay(1);
+  delay.delayTime.value = 1 / SYS.populations[0].f0;
+  fbGain = ctx.createGain(); fbGain.gain.value = P.boundary;
+  fbLP = ctx.createBiquadFilter(); fbLP.type = 'lowpass'; fbLP.frequency.value = 3500;
+  wet = ctx.createGain(); wet.gain.value = 0.45;
+  dry = ctx.createGain(); dry.gain.value = 0.9;
+
+  comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -16; comp.knee.value = 10; comp.ratio.value = 5;
+  comp.attack.value = 0.01; comp.release.value = 0.3;
+  master = ctx.createGain(); master.gain.value = parseFloat(el('p_vol').value);
+  analyser = ctx.createAnalyser();
+  analyser.fftSize = 4096; analyser.smoothingTimeConstant = 0.7;
+
+  mix.connect(dry).connect(comp);
+  mix.connect(delay);
+  delay.connect(fbLP).connect(fbGain).connect(delay);
+  delay.connect(wet).connect(comp);
+  comp.connect(master).connect(analyser);
+  master.connect(ctx.destination);
+}
+
+function el(id) { return document.getElementById(id); }
+
+async function start() {
+  if (!ctx) {
+    try { await boot(); }
+    catch (e) { el('err').textContent = 'audio worklet failed: ' + e.message
+      + ' — serve the directory (npm start) and reload'; return; }
+  }
+  if (ctx.state === 'suspended') await ctx.resume();
+  running = true;
+  node.port.postMessage({ type: 'running', value: true });
+  el('run').textContent = 'stop'; el('run').classList.add('on');
+}
+function stop() {
+  running = false;
+  if (node) node.port.postMessage({ type: 'running', value: false });
+  el('run').textContent = 'start'; el('run').classList.remove('on');
+}
+
+function send(key, value) { if (node) node.port.postMessage({ type: 'param', key, value }); }
+
+/* ---------------- the room: microphone pitch-tracking ---------------- */
+
+// Normalised autocorrelation with clipping and parabolic interpolation -- a standard,
+// simple pitch detector. clarity is the normalised peak: near 1 for a clean sustained
+// tone, near 0 for noise or silence.
+function detectPitch(buf, sampleRate) {
+  const SIZE = buf.length;
+  let rms = 0;
+  for (let i = 0; i < SIZE; i++) rms += buf[i] * buf[i];
+  rms = Math.sqrt(rms / SIZE);
+  if (rms < 0.008) return { freq: 0, clarity: 0 };
+
+  const thres = 0.2;
+  let r1 = 0, r2 = SIZE - 1;
+  for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+  for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+  const trimmed = buf.slice(r1, r2);
+  const n = trimmed.length;
+  if (n < 8) return { freq: 0, clarity: 0 };
+
+  const c = new Float32Array(n);
+  for (let i = 0; i < n; i++) { let sum = 0; for (let j = 0; j < n - i; j++) sum += trimmed[j] * trimmed[j + i]; c[i] = sum; }
+
+  let d = 0; while (d < n - 1 && c[d] > c[d + 1]) d++;
+  let maxVal = -1, maxPos = -1;
+  for (let i = d; i < n; i++) if (c[i] > maxVal) { maxVal = c[i]; maxPos = i; }
+  if (maxPos <= 0 || c[0] <= 0) return { freq: 0, clarity: 0 };
+
+  let T0 = maxPos;
+  const x1 = c[T0 - 1] ?? c[T0], x2 = c[T0], x3 = c[T0 + 1] ?? c[T0];
+  const a = (x1 + x3 - 2 * x2) / 2, b = (x3 - x1) / 2;
+  if (a) T0 -= b / (2 * a);
+
+  const freq = sampleRate / T0;
+  const clarity = Math.max(0, Math.min(1, maxVal / c[0]));
+  if (freq < 20 || freq > 2000) return { freq: 0, clarity: 0 };
+  return { freq, clarity };
+}
+
+async function toggleListen() {
+  if (listening) {
+    listening = false;
+    if (micTimer) clearInterval(micTimer);
+    if (micStream) micStream.getTracks().forEach(t => t.stop());
+    micStream = null; micSource = null;
+    el('listen').textContent = 'start listening'; el('listen').classList.remove('on');
+    el('roomStat').textContent = 'microphone off — the room carries only its floor weight';
+    if (node) node.port.postMessage({ type: 'env', freq: 0, clarity: 0 });
+    return;
+  }
+  if (!ctx) await boot();
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  } catch (e) {
+    el('roomStat').textContent = 'microphone permission denied — the room stays silent';
+    return;
+  }
+  micSource = ctx.createMediaStreamSource(micStream);
+  micAnalyser = ctx.createAnalyser();
+  micAnalyser.fftSize = 2048;
+  micSource.connect(micAnalyser);   // analysis only -- never connected onward to the speakers
+
+  listening = true;
+  el('listen').textContent = 'stop listening'; el('listen').classList.add('on');
+  const buf = new Float32Array(micAnalyser.fftSize);
+  micTimer = setInterval(() => {
+    micAnalyser.getFloatTimeDomainData(buf);
+    const { freq, clarity } = detectPitch(buf, ctx.sampleRate);
+    if (node) node.port.postMessage({ type: 'env', freq: freq || last.envFreq || 48, clarity });
+    el('roomStat').textContent = freq
+      ? `room: ${freq.toFixed(1)} Hz, clarity ${clarity.toFixed(2)}`
+      : 'room: no clear pitch right now';
+  }, 120);
+}
+
+/* ---------------- views ---------------- */
+
+const POP_COLOUR = ['#5b9dff', '#a78bfa', '#e46bd0'];
+
+const line = el('line'), lctx = line.getContext('2d');
+function drawLine() {
+  const w = line.width, h = line.height, pad = 30;
+  lctx.clearRect(0, 0, w, h);
+  const lo = 30, hi = 65;
+  const X = f => pad + ((f - lo) / (hi - lo)) * (w - pad * 2);
+  lctx.strokeStyle = '#232a32'; lctx.lineWidth = 1;
+  lctx.beginPath(); lctx.moveTo(pad, h / 2); lctx.lineTo(w - pad, h / 2); lctx.stroke();
+  lctx.fillStyle = '#7d8b99'; lctx.font = '11px ui-monospace, monospace';
+  for (let f = 30; f <= 65; f += 5) {
+    const x = X(f);
+    lctx.strokeStyle = '#181e25'; lctx.beginPath(); lctx.moveTo(x, h / 2 - 6); lctx.lineTo(x, h / 2 + 6); lctx.stroke();
+    lctx.fillText(f + '', x - 8, h / 2 + 22);
+  }
+  const f0eff = last.f0eff || [];
+  f0eff.forEach((f, k) => {
+    const x = X(f);
+    lctx.fillStyle = POP_COLOUR[k];
+    lctx.beginPath(); lctx.arc(x, h / 2, 9, 0, 7); lctx.fill();
+  });
+  if ((last.wEnv || 0) > 0.06) {
+    const x = X(last.envFreq || 48);
+    lctx.strokeStyle = '#f0b429'; lctx.lineWidth = 2;
+    lctx.beginPath(); lctx.arc(x, h / 2, 9, 0, 7); lctx.stroke();
+  }
+}
+
+const rbarsEl = el('rbars');
+const POP_NAME = ['interior', 'relational', 'exterior'];
+function buildRbars() {
+  rbarsEl.innerHTML = '';
+  for (let k = 0; k < 3; k++) {
+    const d = document.createElement('div');
+    d.className = 'bar3';
+    d.innerHTML = `<span class="name">${POP_NAME[k]}</span>`
+      + `<span class="track"><span class="fill" id="rf${k}" style="background:${POP_COLOUR[k]}"></span></span>`
+      + `<span class="v" id="rv${k}">0.00</span>`;
+    rbarsEl.appendChild(d);
+  }
+}
+function drawRbars() {
+  const r = last.r || [0, 0, 0];
+  for (let k = 0; k < 3; k++) {
+    const v = Math.max(0, Math.min(1, r[k] || 0));
+    el('rf' + k).style.width = (v * 100).toFixed(1) + '%';
+    el('rv' + k).textContent = v.toFixed(2);
+  }
+}
+
+const hyst = el('hyst'), hctx = hyst.getContext('2d');
+let trace = [], sweeping = false, sweepT0 = 0;
+function drawHyst() {
+  const w = hyst.width, h = hyst.height, pad = 34;
+  hctx.clearRect(0, 0, w, h);
+  hctx.strokeStyle = '#232a32'; hctx.lineWidth = 1;
+  hctx.strokeRect(pad, 10, w - pad - 12, h - pad - 6);
+  hctx.fillStyle = '#7d8b99'; hctx.font = '18px ui-monospace, monospace';
+  hctx.fillText('S', 8, 24); hctx.fillText('Θ', w - 22, h - 10);
+  const X = t => pad + (t / 4) * (w - pad - 12);
+  const Y = s => (h - pad) - s * (h - pad - 16);
+  for (const seg of [[0, '#5b9dff'], [1, '#f0b429']]) {
+    hctx.strokeStyle = seg[1]; hctx.lineWidth = 3; hctx.beginPath();
+    let started = false;
+    for (const pt of trace) {
+      if (pt.dir !== seg[0]) { started = false; continue; }
+      const x = X(pt.t), y = Y(pt.s);
+      started ? hctx.lineTo(x, y) : hctx.moveTo(x, y);
+      started = true;
+    }
+    hctx.stroke();
+  }
+  if (typeof P.Theta === 'number') {
+    hctx.fillStyle = '#6fe3c4';
+    hctx.beginPath(); hctx.arc(X(P.Theta), Y(last.S || 0), 6, 0, 7); hctx.fill();
+  }
+  hctx.fillStyle = '#5b9dff'; hctx.fillText('rising', pad + 8, 30);
+  hctx.fillStyle = '#f0b429'; hctx.fillText('falling', pad + 8, 52);
+}
+
+const spec = el('spec'), sctx = spec.getContext('2d');
+function drawSpec() {
+  if (!analyser) return;
+  const n = analyser.frequencyBinCount;
+  const data = new Uint8Array(n);
+  analyser.getByteFrequencyData(data);
+  const w = spec.width, h = spec.height;
+  sctx.clearRect(0, 0, w, h);
+  const maxHz = 2200, binHz = ctx.sampleRate / analyser.fftSize;
+  const bins = Math.min(n, Math.floor(maxHz / binHz));
+  sctx.fillStyle = '#6fe3c4';
+  for (let i = 0; i < bins; i++) {
+    const v = data[i] / 255;
+    const x = (i / bins) * w;
+    sctx.fillRect(x, h - v * h, Math.max(1, w / bins), v * h);
+  }
+}
+
+/* ---------------- loop ---------------- */
+
+function frame(now) {
+  requestAnimationFrame(frame);
+
+  if (sweeping) {
+    const t = (now - sweepT0) / 1000, dur = 70;
+    const u = t / dur;
+    if (u >= 1) { sweeping = false; el('sweep').classList.remove('on'); }
+    else {
+      const theta = u < 0.5 ? (u / 0.5) * 4 : (1 - (u - 0.5) / 0.5) * 4;
+      setParam('Theta', theta);
+      trace.push({ t: theta, s: last.S || 0, dir: u < 0.5 ? 0 : 1 });
+    }
+  }
+
+  if (autoBoundary && fbGain) {
+    const target = Math.max(0.08, 0.72 - 0.60 * (last.S || 0));
+    fbGain.gain.setTargetAtTime(target, ctx.currentTime, 0.15);
+    setSlider('boundary', target);
+  }
+
+  el('sv').textContent = (last.S || 0).toFixed(3);
+  el('tv').textContent = (last.ThetaEff || 0).toFixed(2);
+  const S = last.S || 0;
+  el('state').innerHTML = '<b>' + (S > 0.75 ? 'embedded' : S > 0.55 ? 'embedding' : 'segregated') + '</b>';
+
+  drawLine(); drawRbars(); drawHyst(); if (running) drawSpec();
+}
+requestAnimationFrame(frame);
+
+/* ---------------- controls ---------------- */
+
+const SLIDERS = {
+  Theta: ['p_Theta', 'v_Theta', v => v.toFixed(2), v => send('Theta', v)],
+  K: ['p_K', 'v_K', v => v.toFixed(2), v => send('K', v)],
+  G: ['p_G', 'v_G', v => v.toFixed(2), v => send('G', v)],
+  T: ['p_T', 'v_T', v => v.toFixed(3), v => send('T', v)],
+  D: ['p_D', 'v_D', v => v.toFixed(4), v => send('D', v)],
+  envWeight: ['p_envWeight', 'v_envWeight', v => v.toFixed(2), v => send('envWeight', v)],
+  boundary: ['p_boundary', 'v_boundary', v => v.toFixed(2),
+    v => fbGain && fbGain.gain.setTargetAtTime(v, ctx.currentTime, 0.1)]
+};
+function setParam(key, v) {
+  P[key] = v;
+  const s = SLIDERS[key];
+  el(s[0]).value = v; el(s[1]).textContent = s[2](v);
+  s[3](v);
+}
+function setSlider(key, v) {
+  P[key] = v;
+  el(SLIDERS[key][0]).value = v;
+  el(SLIDERS[key][1]).textContent = SLIDERS[key][2](v);
+}
+
+function wire() {
+  for (const [key, s] of Object.entries(SLIDERS)) {
+    el(s[0]).oninput = e => {
+      if (key === 'boundary' && autoBoundary) { autoBoundary = false; el('auto').classList.remove('on'); }
+      setParam(key, parseFloat(e.target.value));
+    };
+  }
+  el('p_vol').oninput = e => {
+    el('v_vol').textContent = parseFloat(e.target.value).toFixed(2);
+    if (master) master.gain.value = parseFloat(e.target.value);
+  };
+  el('run').onclick = () => running ? stop() : start();
+  el('auto').onclick = () => { autoBoundary = !autoBoundary; el('auto').classList.toggle('on', autoBoundary); };
+  el('scramble').onclick = () => node && node.port.postMessage({ type: 'scramble', amount: 1 });
+  el('reindividuate').onclick = () => node && node.port.postMessage({ type: 'reindividuate' });
+  el('listen').onclick = toggleListen;
+  el('sweep').onclick = async () => {
+    await start();
+    trace = []; sweeping = true; sweepT0 = performance.now();
+    el('sweep').classList.add('on');
+  };
+  el('clear').onclick = () => { trace = []; };
+}
+
+function buildKeys() {
+  const wrap = el('keys'); wrap.innerHTML = '';
+  for (const [cap, k] of Object.entries(SYS.keys)) {
+    const b = document.createElement('button');
+    b.className = 'key'; b.dataset.cap = cap;
+    b.innerHTML = `<span class="cap">${cap}</span><span class="lab">${k.label}</span>`;
+    b.onclick = async () => { await start(); press(cap, k.ratio); };
+    wrap.appendChild(b);
+  }
+}
+function press(cap, ratio) {
+  const freq = SYS.populations[0].f0 * ratio;
+  if (node) node.port.postMessage({ type: 'contextPulse', freq });
+  const b = document.querySelector(`.key[data-cap="${cap}"]`);
+  if (b) { b.classList.add('lit'); setTimeout(() => b.classList.remove('lit'), 260); }
+}
+
+addEventListener('keydown', async ev => {
+  if (ev.repeat || ev.target.tagName === 'INPUT') return;
+  const k = ev.key.toLowerCase();
+  if (k === 'escape') { stop(); return; }
+  if (SYS.keys[k]) { await start(); press(k, SYS.keys[k].ratio); }
+});
+
+function adopt(sys, src) {
+  SYS = sys;
+  Object.assign(P, sys.params);
+  el('src').textContent = `system: ${sys.name} (${src})`;
+  buildKeys(); buildRbars(); wire();
+  for (const key of Object.keys(SLIDERS)) setParam(key, P[key]);
+  el('v_vol').textContent = parseFloat(el('p_vol').value).toFixed(2);
+}
+
+fetch('embedded.json')
+  .then(r => r.ok ? r.json() : Promise.reject())
+  .then(j => adopt(j, 'embedded.json'))
+  .catch(() => adopt(EMBEDDED, 'embedded copy'));
+</script>
+</body>
+</html>
