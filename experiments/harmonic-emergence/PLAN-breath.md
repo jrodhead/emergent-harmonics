@@ -287,7 +287,62 @@ spread energy so widely that RMS fell 4 dB from empty to full and `ampFloor` had
 with nine it rises monotonically, +3.5 dB, and peak dropped from 0.795 to 0.602 against the
 same bound.
 
-## 8. The cue
+## 8. The breath layer — noise, and why it tracks flow rather than volume
+
+The drone maps openness to brightness, and that mapping is **arbitrary**: you have to be
+told that brighter means fuller. A second layer fixes that, and it isn't an analogy —
+**breath sound literally is filtered noise**, turbulent airflow through the airway shaped
+by throat and mouth. Modelling that gives an **iconic** cue: one that means what it
+resembles, needs no learning, and stands a chance of being synchronised to without
+deliberate effort. For a pacer that is the whole game.
+
+The design decision that mattered: **`openness` is lung volume, but breath sound is
+produced by airflow, which is its derivative.** The raised cosine differentiates
+analytically —
+
+```
+inhale:  o = 0.5 − 0.5·cos(πp)   →   flow ∝ sin(πp) / duration
+```
+
+— so the envelope costs no new parameters and comes out physically correct for free. It
+swells and fades within each inhale and exhale, loudest in the middle, and is **exactly
+zero throughout both retentions**. Holding your breath makes no sound, and the model
+produces that rather than being told it. Getting this wrong — driving noise level from
+volume instead of flow — would have made the sound loudest while the breath was
+motionless, which is precisely backwards.
+
+Faster breathing genuinely produces more airflow and therefore more sound, and that is
+kept: circular breathing at 25/min measures **9.8 dB louder** than slow resonance
+breathing. Literal flow would give 14 dB; a compression exponent of 0.8 keeps the effort
+contrast audible while leaving slow breathing clearly present rather than nearly silent.
+
+Pink rather than white. White noise has equal energy per hertz, which puts its
+perceptual weight up high — hissy and genuinely fatiguing over a seventeen-minute
+session. Pink is equal energy per octave, which is roughly how natural broadband sounds
+distribute, breath included. The sign of the flow derivative also tells us direction for
+free, so inhale and exhale get different filter centres and stop being acoustic mirror
+images — a cue dimension the drone does not have.
+
+**It supplements rather than replaces**, and the reason is concrete: noise alone goes
+silent through retentions, so box breathing would have no cue at all for 50% of its
+cycle. The drone stays underneath as the anchor. Both layers are independently
+switchable so this can be heard instead of argued about.
+
+### What the layer cost
+
+The drone alone is bounded arithmetically — L1 normalisation guarantees `|out| <= out`
+with no limiter. **Noise is not bounded that way, so the total is no longer provable and
+has to be measured.** That is a real downgrade in how tightly this thing is pinned down,
+and it showed up immediately: the binding case is the dense set (crest factor ~7, peaking
+at 0.795 alone) plus breath at circular breathing, which measured **0.972** at the
+original output level — effectively clipping. Dropping `out` from 0.80 to 0.65 brings
+that worst combination to 0.763 with real margin.
+
+Claim 12 in `verify-breath.js` renders every drone-set × layer combination and fails if
+any approaches full scale. That check is the replacement for the guarantee this layer
+cost, and it is why the guarantee being lost is acceptable rather than merely regrettable.
+
+## 9. The cue
 
 One control value, `openness`, 0 = empty and 1 = full. Everything audible is a function of it.
 Brightness is a smooth low-pass in partial-index space whose cutoff tracks openness, so full is

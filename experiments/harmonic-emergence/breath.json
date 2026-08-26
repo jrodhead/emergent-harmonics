@@ -6,14 +6,24 @@
     "f0": 36.0,
     "widthEmpty": 0.12,
     "widthFull": 0.62,
-    "out": 0.80,
-    "default": "sparse",
+    "out": 0.65,
+    "default": "balanced",
     "crossfadeMs": 25,
 
     "sets": {
+      "balanced": {
+        "label": "Balanced — resolved + stable",
+        "note": "Resolved like sparse (every adjacent pair 1.22-1.53 ERB apart, so no roughness) but with COPRIME low partials, so the implied fundamental is 36 Hz at every point in the breath rather than drifting an octave. Also has the widest brightness sweep of the three at 11.6 semitones. Seven partials, 216-1188 Hz.",
+        "partials": [6, 11, 15, 18, 22, 27, 33],
+        "cutoffEmpty": 6.5,
+        "cutoffFull": 36.0,
+        "rolloff": 4.0,
+        "ampFloor": 0.40,
+        "trim": 0.5072
+      },
       "sparse": {
-        "label": "Sparse — resolved",
-        "note": "Every adjacent pair 1.07-1.53 ERB apart, so none of them fall inside one auditory filter. Nine partials, 216-1188 Hz.",
+        "label": "Sparse — resolved, pitch drifts",
+        "note": "Resolved (1.07-1.53 ERB) and therefore smooth, but its four lowest partials are all EVEN multiples of 36 -- 6, 8, 10, 12 -- and the first odd partial is 32 dB down. At the bottom of the breath the ear is given harmonics 3, 4 and 5 of 72 Hz, which is squarely the dominance region for virtual pitch, so the implied fundamental is an octave high there and falls to 36 Hz as the breath opens. Pitch dropping while brightness rises is two cues in opposition. Kept as a reference; superseded by balanced.",
         "partials": [6, 8, 10, 12, 15, 18, 22, 27, 33],
         "cutoffEmpty": 6.5,
         "cutoffFull": 36.0,
@@ -40,7 +50,32 @@
     "crossfadeMs": "Time constant for the one-pole smoothing on partial gains. Its real job is making a live set-swap click-free -- gains for partials leaving the set glide to zero rather than dropping -- and at 25 ms it is far shorter than any breath motion, so it is invisible during normal use. Fast enough that an A/B still feels immediate, which matters because auditory memory for timbre is short.",
     "normalisation": "Partial gains are divided by their L1 sum, so |output| <= out * amp arithmetically for any phase relationship. These are exact harmonics of one fundamental and their peaks coincide periodically however the phases are initialised, so an L2 (constant-RMS) normalisation understates the true worst case and clips -- measured at 1.07 before this was fixed. L1 costs headroom but needs no limiter, and a limiter would put frequencies in the air that nobody chose.",
     "ampFloor": "Set well below 1 because L1 normalisation makes the bright end quieter in RMS terms -- energy spreads across more partials -- which would otherwise invert the loudness cue against the brightness cue. That effect was severe with the old 25-partial contiguous set (RMS actually FELL 4 dB from empty to full before this was compensated) and is milder with nine, so the same 0.40 now yields a ~3.5 dB swell toward full rather than ~2. Left as is: monotonic, gentle, and still nothing like a transient.",
-    "out": "Peak is bounded by this value arithmetically, so it can sit near unity without risk. Measured peak with the current partial set is 0.60, so 0.80 is the guarantee rather than the observation, and RMS lands around -13 dBFS at full."
+    "out": "Lowered from 0.80 to 0.65 when the breath layer was added, and the reason is worth recording: the L1 bound guarantees the DRONE alone stays under out, but noise is not bounded that way, so the total is no longer provable and has to be measured. The binding case is the dense set (crest factor about 7, peaking at 0.795 on its own) plus noise at circular breathing, which measured 0.972 at the old level -- effectively clipping. At 0.65 that worst combination measures about 0.79 with real margin, and everything else sits far below. Claim 12 in verify-breath.js renders every drone-set x layer combination and fails if any of them approaches full scale, which is the replacement for the arithmetic guarantee this layer cost us."
+  },
+
+  "layers": {
+    "drone": 1.0,
+    "noise": 1.0
+  },
+
+  "noise": {
+    "centerEmpty": 320,
+    "centerFull": 1500,
+    "inhaleTilt": 1.25,
+    "exhaleTilt": 0.82,
+    "Q": 1.2,
+    "flowRef": 1.31,
+    "flowGamma": 0.8,
+    "gain": 1.8
+  },
+
+  "noiseNotes": {
+    "why": "Breath sound IS filtered noise -- turbulent airflow through the airway, shaped by throat and mouth. So this layer is not an analogy for breathing, it is a model of the same physics. That makes the cue iconic rather than arbitrary: the drone has to be learned (brighter means fuller), while this means what it resembles.",
+    "amplitudeTracksFlow": "The crucial detail. `openness` is lung VOLUME, but breath sound is produced by AIRFLOW, which is its derivative. The raised-cosine openness curve differentiates analytically -- flow is proportional to sin(pi*p)/duration -- so the envelope costs no new parameters and comes out physically right: it swells and fades within each inhale and exhale, loudest in the middle, and is exactly zero through any retention. Holding your breath makes no sound, and the model produces that for free rather than needing a rule for it.",
+    "flowRef": "Flow that maps to full noise level, in openness-units per second. 1.31 is the peak flow of the fastest shipped cycle (circular at 25/min), so that protocol reaches the top of the range and slower ones sit below it.",
+    "flowGamma": "Compression exponent on flow. 1.0 would be physically literal -- 14 dB between a slow resonance exhale and circular breathing. 0.8 keeps faster protocols audibly more effortful (about 8 dB) while leaving slow breathing clearly audible rather than nearly silent. Raise toward 1.0 for more contrast between protocols, lower for less.",
+    "tilts": "Real breath differs by direction: inhale is brighter and more turbulent, exhale lower and broader. The sign of the flow derivative tells us which without any extra state, so the two directions get different filter centres and stop being acoustic mirror images. This is a cue dimension the drone does not have.",
+    "layering": "The drone stays underneath as the anchor. Noise alone would go silent through retentions -- correct physically, but box breathing is 50 percent holds, so half the cycle would have no cue at all and the timing reference would vanish. Layers are independently switchable so that can be heard rather than argued about."
   },
 
   "safety": {

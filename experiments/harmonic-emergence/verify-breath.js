@@ -290,12 +290,40 @@ console.log('\n8. partial sets — critical-band spacing, and the unsounded fund
     if (isDefault) console.log(`   ${' '.repeat(20)}${check(rough === 0, 'the default set has partials inside one critical band')}`);
     if (g !== 1) { failures++; console.log(`   ${' '.repeat(20)}FAIL — GCD is ${g}, so this set implies ${g * f0} Hz, not ${f0}`); }
   }
-  console.log(`   every set has GCD 1, so all of them imply the same unsounded ${f0} Hz —`);
-  console.log(`   ${f0} Hz is never played and neither are partials 1-5; it is what the ear infers,`);
-  console.log('   and it is the one thing carried over from v1 intact.');
+  console.log(`   every set has GCD 1 overall, so all of them imply the unsounded ${f0} Hz at full —`);
+  console.log(`   but see the next check: GCD over the whole set is necessary, not sufficient.`);
 }
 
-console.log('\n9. the A/B sets are level-matched, so the comparison is about timbre');
+console.log('\n9. the implied fundamental holds steady across the breath, not just at the top');
+{
+  // GCD over the whole partial list is the wrong test on its own. The low-pass means
+  // only the lowest partials are audible at the bottom of the breath, and if THOSE
+  // share a common factor the ear is handed a different fundamental there -- an octave
+  // of pitch drift correlated with the breath, moving opposite to brightness. Virtual
+  // pitch is dominated by the loudest low harmonics, so this is judged on the audible
+  // subset at each point, not on the declared set.
+  const V = cfg.voice, f0 = V.f0;
+  const gcd = (x, y) => y ? gcd(y, x % y) : x;
+  const THRESH_DB = -25;
+  for (const [name, S] of Object.entries(V.sets)) {
+    const implied = [];
+    for (const o of [0, 0.25, 0.5, 0.75, 1]) {
+      const cut = S.cutoffEmpty + (S.cutoffFull - S.cutoffEmpty) * o;
+      const g = S.partials.map(n => (1 / (1 + Math.pow(n / cut, S.rolloff))) / n);
+      const mx = Math.max(...g);
+      const audible = S.partials.filter((n, i) => 20 * Math.log10(g[i] / mx) > THRESH_DB);
+      implied.push(audible.reduce(gcd) * f0);
+    }
+    const stable = implied.every(x => x === f0);
+    const isDefault = name === V.default;
+    console.log(`   ${name.padEnd(9)} implied f0 across the breath: ${implied.join(' / ')} Hz  ${stable ? 'stable' : 'DRIFTS'}`
+      + (isDefault ? `  ${check(stable, 'the default set changes perceived pitch across the breath')}` : '  (reference)'));
+  }
+  console.log(`   (judged on partials within ${THRESH_DB} dB of the loudest, since quieter ones`);
+  console.log('    contribute little to virtual pitch)');
+}
+
+console.log('\n10. the A/B sets are level-matched, so the comparison is about timbre');
 {
   // A 4 dB difference decides a listening comparison on loudness alone. Both sets are
   // rendered over a full breath and their cycle RMS compared; trims in breath.json are
@@ -343,7 +371,7 @@ console.log('\n9. the A/B sets are level-matched, so the comparison is about tim
   console.log(`   none clip: ${check(!anyClip, 'a set peaks at or above full scale')}`);
 }
 
-console.log('\n10. the rendered signal has no transients — the cue is an offer, not a metronome');
+console.log('\n11. the rendered signal has no transients — the cue is an offer, not a metronome');
 {
   // Replica of the processor's voice section, rendered at audio rate. A click is a
   // discontinuity, so the test is the largest sample-to-sample step in the output:
@@ -404,6 +432,127 @@ console.log('\n10. the rendered signal has no transients — the cue is an offer
   }
   console.log(`   (band limit is one sample of a ${topHz} Hz sine at the measured peak; a click`);
   console.log('    from a gain jump or a segment discontinuity would read well above 1x)');
+}
+
+console.log('\n12. drone + breath layer together never approach full scale');
+{
+  // The drone alone is bounded arithmetically by its L1 normalisation. Noise is not,
+  // so the total has to be measured rather than proved -- this check is the price of
+  // the breath layer and the replacement for the guarantee it cost. The binding case
+  // is the peakiest drone set (dense, crest factor ~7) plus the loudest breath
+  // (circular, where airflow is highest).
+  const V = cfg.voice, NZ = cfg.noise, SR = 48000, BLOCK = 128;
+  function render(setName, c, drone, noise, seconds) {
+    const S = V.sets[setName], ns = S.partials, NP = ns.length;
+    const th = new Float64Array(NP);
+    for (let i = 0; i < NP; i++) th[i] = 2 * Math.PI * ((i * 0.6180339887) % 1);
+    const gp = new Float64Array(NP), sm = new Float64Array(NP), pb = new Float64Array(7);
+    let svfLow = 0, svfBand = 0, fcS = NZ.centerEmpty, nS = 0;
+    const total = c[0] + c[1] + c[2] + c[3];
+    let u = 0, sumSq = 0, cnt = 0, peak = 0;
+    const blockDt = BLOCK / SR;
+    for (let bi = 0; bi < Math.floor(seconds * SR / BLOCK); bi++) {
+      const b1 = c[0] / total, b2 = (c[0] + c[1]) / total, b3 = (c[0] + c[1] + c[2]) / total;
+      let seg, p;
+      if (u < b1) { seg = 'inhale'; p = b1 > 0 ? u / b1 : 1; }
+      else if (u < b2) { seg = 'inhaleHold'; p = 1; }
+      else if (u < b3) { seg = 'exhale'; p = (b3 - b2) > 0 ? (u - b2) / (b3 - b2) : 1; }
+      else { seg = 'exhaleHold'; p = 1; }
+      const open = seg === 'inhale' ? 0.5 - 0.5 * Math.cos(Math.PI * p)
+        : seg === 'inhaleHold' ? 1
+        : seg === 'exhale' ? 0.5 + 0.5 * Math.cos(Math.PI * p) : 0;
+      let flow = 0;
+      if (seg === 'inhale' && c[0] > 0) flow = 0.5 * Math.PI * Math.sin(Math.PI * p) / c[0];
+      else if (seg === 'exhale' && c[2] > 0) flow = 0.5 * Math.PI * Math.sin(Math.PI * p) / c[2];
+      const cut = S.cutoffEmpty + (S.cutoffFull - S.cutoffEmpty) * open;
+      const g = new Float64Array(NP); let sum = 0;
+      for (let i = 0; i < NP; i++) { const w = 1 / (1 + Math.pow(ns[i] / cut, S.rolloff)); g[i] = w / ns[i]; sum += g[i]; }
+      const norm = 1 / sum, amp = (S.ampFloor + (1 - S.ampFloor) * open) * (S.trim ?? 1);
+      const sc = 1 - Math.exp(-blockDt * 1000 / V.crossfadeMs);
+      for (let i = 0; i < NP; i++) { g[i] *= norm * amp; sm[i] += (g[i] - sm[i]) * sc; g[i] = sm[i]; }
+      const fcT = NZ.centerEmpty * Math.pow(NZ.centerFull / NZ.centerEmpty, open)
+        * (seg === 'inhale' ? NZ.inhaleTilt : seg === 'exhale' ? NZ.exhaleTilt : 1);
+      const nT = noise * Math.pow(Math.min(1, Math.abs(flow) / NZ.flowRef), NZ.flowGamma) * NZ.gain;
+      fcS += (fcT - fcS) * sc; const n0 = nS; nS += (nT - nS) * sc;
+      const f = Math.min(0.9, 2 * Math.sin(Math.PI * fcS / SR)), q = 1 / NZ.Q;
+      for (let s = 0; s < BLOCK; s++) {
+        const mix = (s + 1) / BLOCK; let v = 0;
+        if (drone) for (let i = 0; i < NP; i++) {
+          const gi = gp[i] + (g[i] - gp[i]) * mix;
+          th[i] += 2 * Math.PI * V.f0 * ns[i] / SR;
+          if (th[i] > 2 * Math.PI) th[i] -= 2 * Math.PI;
+          v += Math.sin(th[i]) * gi;
+        }
+        v *= drone;
+        const nAmp = n0 + (nS - n0) * mix;
+        if (nAmp > 1e-6) {
+          const w = Math.random() * 2 - 1;
+          pb[0] = 0.99886 * pb[0] + w * 0.0555179; pb[1] = 0.99332 * pb[1] + w * 0.0750759;
+          pb[2] = 0.96900 * pb[2] + w * 0.1538520; pb[3] = 0.86650 * pb[3] + w * 0.3104856;
+          pb[4] = 0.55000 * pb[4] + w * 0.5329522; pb[5] = -0.7616 * pb[5] - w * 0.0168980;
+          const pink = (pb[0] + pb[1] + pb[2] + pb[3] + pb[4] + pb[5] + pb[6] + w * 0.5362) * 0.11;
+          pb[6] = w * 0.115926;
+          svfLow += f * svfBand; const high = pink - svfLow - q * svfBand; svfBand += f * high;
+          v += svfBand * nAmp;
+        }
+        v *= V.out; sumSq += v * v; cnt++; peak = Math.max(peak, Math.abs(v));
+      }
+      for (let i = 0; i < NP; i++) gp[i] = g[i];
+      u += blockDt / total; while (u >= 1) u -= 1;
+    }
+    return { rms: Math.sqrt(sumSq / cnt), peak };
+  }
+  const circ = [1.2, 0, 1.2, 0], reso = [4, 0, 6, 0];
+  let worstPeak = 0;
+  for (const set of Object.keys(V.sets)) {
+    const r = render(set, circ, 1, 1, 30);
+    worstPeak = Math.max(worstPeak, r.peak);
+    console.log(`   ${set.padEnd(9)} + breath, circular   peak ${r.peak.toFixed(3)}  RMS ${(20 * Math.log10(r.rms)).toFixed(1)} dBFS`);
+  }
+  const nr = render('balanced', reso, 0, 1, 30);
+  const nc = render('balanced', circ, 0, 1, 30);
+  console.log(`   breath only, resonance       peak ${nr.peak.toFixed(3)}  RMS ${(20 * Math.log10(nr.rms)).toFixed(1)} dBFS`);
+  console.log(`   breath only, circular        peak ${nc.peak.toFixed(3)}  RMS ${(20 * Math.log10(nc.rms)).toFixed(1)} dBFS`);
+  const effort = 20 * Math.log10(nc.rms / nr.rms);
+  console.log(`   worst peak across every combination: ${worstPeak.toFixed(3)}  ${check(worstPeak < 0.92, 'drone + breath approaches full scale')}`);
+  console.log(`   circular is ${effort.toFixed(1)} dB louder than resonance  ${check(effort > 4, 'faster protocols do not read as more effortful')}`);
+  console.log('   (airflow drives the level, so faster breathing is genuinely louder — intended)');
+}
+
+console.log('\n13. wiring — the page hands the processor every config section it reads');
+{
+  // This one exists because everything above it passed while the instrument was
+  // completely silent. The checks replicate the processor's LOGIC; none of them touch
+  // the page's WIRING, so a processorOptions object missing `noise` and `layers` made
+  // `cfg.layers.drone` throw in the constructor. That happens on the audio thread, so
+  // it never reached the try/catch around boot(): no sound, no postMessage, and the UI
+  // left displaying its placeholder state forever. A static comparison is cheap and
+  // catches the whole class.
+  const procSrc = readFileSync(join(here, 'breath-processor.js'), 'utf8');
+  const pageSrc = readFileSync(join(here, 'breath.html'), 'utf8');
+
+  const reads = [...new Set([...procSrc.matchAll(/\bcfg\.(\w+)/g)].map(m => m[1]))].sort();
+  const optsBlock = pageSrc.match(/processorOptions:\s*\{([\s\S]*?)\}\s*\n?\s*\}\);/);
+  const passes = optsBlock
+    ? [...new Set([...optsBlock[1].matchAll(/(\w+)\s*:/g)].map(m => m[1]))].sort()
+    : [];
+  const missing = reads.filter(k => !passes.includes(k));
+
+  console.log(`   processor reads: ${reads.join(', ')}`);
+  console.log(`   page passes:     ${passes.join(', ') || '(could not parse processorOptions)'}`);
+  console.log(`   ${check(optsBlock && missing.length === 0, 'page does not pass: ' + missing.join(', ') + ' — the processor will throw on construction')}`);
+
+  // and the config actually has those sections to hand over
+  const absent = reads.filter(k => !(k in cfg));
+  console.log(`   breath.json provides all of them: ${check(absent.length === 0, 'breath.json is missing: ' + absent.join(', '))}`);
+
+  // the embedded copy must match the standalone files, or file:// runs stale code
+  const emb = pageSrc.match(/const PROCESSOR_SRC = ("[\s\S]*?");\n/);
+  const embCfg = pageSrc.match(/const EMBEDDED = ([\s\S]*?);\nconst PROCESSOR_SRC/);
+  const procMatches = emb && JSON.parse(emb[1]) === procSrc;
+  const cfgMatches = embCfg && JSON.stringify(JSON.parse(embCfg[1])) === JSON.stringify(cfg);
+  console.log(`   embedded processor matches breath-processor.js: ${check(procMatches, 'embedded copy is stale — rebuild breath.html')}`);
+  console.log(`   embedded config matches breath.json:            ${check(cfgMatches, 'embedded copy is stale — rebuild breath.html')}`);
 }
 
 console.log(failures === 0

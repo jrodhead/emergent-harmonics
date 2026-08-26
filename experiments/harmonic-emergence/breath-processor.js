@@ -93,6 +93,24 @@ class BreathProcessor extends AudioWorkletProcessor {
     this.out = v.out;
     this.crossfadeMs = v.crossfadeMs ?? 25;
 
+    // Breath layer: pink noise through a swept bandpass, amplitude driven by AIRFLOW
+    // rather than lung volume -- see the note in breath.json. Kellet's economy pink
+    // filter (six one-pole sections summed) is flat to within a fraction of a dB across
+    // the band that matters here and costs almost nothing.
+    // Defaulted rather than assumed: a missing config section should cost the breath
+    // layer, not the whole instrument. A throw here happens on the audio thread and
+    // silently kills the processor -- no sound, no messages, and the page left showing
+    // whatever its placeholder state was.
+    this.noise = cfg.noise ?? {
+      centerEmpty: 320, centerFull: 1500, inhaleTilt: 1, exhaleTilt: 1,
+      Q: 1.2, flowRef: 1.3, flowGamma: 0.8, gain: 0
+    };
+    this.layers = { drone: cfg.layers?.drone ?? 1, noise: cfg.layers?.noise ?? 0 };
+    this.pb = new Float64Array(7);
+    this.svfLow = 0; this.svfBand = 0;
+    this.fcSmooth = this.noise.centerEmpty;
+    this.nAmpSmooth = 0;
+
     this.safety = cfg.safety;
     this.queue = [];
     this.qi = 0;
@@ -112,6 +130,10 @@ class BreathProcessor extends AudioWorkletProcessor {
       if (m.type === 'load') this.load(m.protocol);
       else if (m.type === 'running') this.running = m.value;
       else if (m.type === 'voice') { if (m.name in this.sets) this.active = m.name; }
+      else if (m.type === 'layers') {
+        if (typeof m.drone === 'number') this.layers.drone = m.drone;
+        if (typeof m.noise === 'number') this.layers.noise = m.noise;
+      }
       else if (m.type === 'advance') this.advance();
       else if (m.type === 'extend') this.extend(m.seconds ?? 60);
       else if (m.type === 'abort') this.abort();
@@ -238,8 +260,16 @@ class BreathProcessor extends AudioWorkletProcessor {
     else if (seg === 'exhale')     openness = 0.5 + 0.5 * Math.cos(Math.PI * p);
     else                           openness = 0;
 
+    // Airflow: d(openness)/dt, analytic from the raised cosine. Zero at both ends of
+    // inhale and exhale and zero throughout both retentions, which is what makes the
+    // breath layer fall silent during a hold without being told to.
+    let flow = 0;
+    if (seg === 'inhale' && c[0] > 0)      flow = 0.5 * Math.PI * Math.sin(Math.PI * p) / c[0];
+    else if (seg === 'exhale' && c[2] > 0) flow = 0.5 * Math.PI * Math.sin(Math.PI * p) / c[2];
+
     this.segment = seg;
     this.openness = openness;
+    this.flow = flow;
 
     const cur = this.queue[this.qi];
 
@@ -309,6 +339,24 @@ class BreathProcessor extends AudioWorkletProcessor {
       this.gR[i] = Math.sin(a);
     }
 
+    // ---- breath layer ------------------------------------------------------
+    const NZ = this.noise;
+    // Centre sweeps logarithmically with lung volume, then tilts by direction so an
+    // inhale and an exhale at the same volume are not acoustic mirror images.
+    const fcBase = NZ.centerEmpty * Math.pow(NZ.centerFull / NZ.centerEmpty, openness);
+    const fcTarget = fcBase * (seg === 'inhale' ? NZ.inhaleTilt
+                             : seg === 'exhale' ? NZ.exhaleTilt : 1);
+    const nAmpTarget = this.layers.noise
+      * Math.pow(Math.min(1, Math.abs(flow) / NZ.flowRef), NZ.flowGamma) * NZ.gain;
+    // smooth both so a segment boundary cannot step the filter or the level
+    const nsc = 1 - Math.exp(-blockDt * 1000 / this.crossfadeMs);
+    this.fcSmooth += (fcTarget - this.fcSmooth) * nsc;
+    const nAmp0 = this.nAmpSmooth;
+    this.nAmpSmooth += (nAmpTarget - this.nAmpSmooth) * nsc;
+    const svfF = Math.min(0.9, 2 * Math.sin(Math.PI * this.fcSmooth / sampleRate));
+    const svfQ = 1 / NZ.Q;
+    const droneLvl = this.layers.drone;
+
     // per-sample linear ramp from last block's gains: no steps, no zipper noise
     const step = 1 / n;
     for (let s = 0; s < n; s++) {
@@ -322,6 +370,28 @@ class BreathProcessor extends AudioWorkletProcessor {
         l += val * this.gL[i];
         r += val * this.gR[i];
       }
+      l *= droneLvl; r *= droneLvl;
+
+      const nAmp = nAmp0 + (this.nAmpSmooth - nAmp0) * mix;
+      if (nAmp > 1e-6) {
+        const w = Math.random() * 2 - 1;
+        const b = this.pb;
+        b[0] = 0.99886 * b[0] + w * 0.0555179;
+        b[1] = 0.99332 * b[1] + w * 0.0750759;
+        b[2] = 0.96900 * b[2] + w * 0.1538520;
+        b[3] = 0.86650 * b[3] + w * 0.3104856;
+        b[4] = 0.55000 * b[4] + w * 0.5329522;
+        b[5] = -0.7616 * b[5] - w * 0.0168980;
+        const pink = (b[0] + b[1] + b[2] + b[3] + b[4] + b[5] + b[6] + w * 0.5362) * 0.11;
+        b[6] = w * 0.115926;
+        // Chamberlin state-variable filter, bandpass tap
+        this.svfLow += svfF * this.svfBand;
+        const high = pink - this.svfLow - svfQ * this.svfBand;
+        this.svfBand += svfF * high;
+        const bp = this.svfBand * nAmp;
+        l += bp; r += bp;                      // centred: it is your own breath
+      }
+
       L[s] = l * this.out;
       R[s] = r * this.out;
     }
@@ -332,7 +402,8 @@ class BreathProcessor extends AudioWorkletProcessor {
         phase: cur ? cur.name : '', qi: this.qi, phases: this.queue.length,
         phaseT: this.phaseT, phaseSeconds: cur ? cur.seconds : 0,
         untilUserInput: cur ? cur.untilUserInput : false,
-        segment: seg, openness, cycle: c, total, u: this.u, voice: this.active,
+        segment: seg, openness, flow, cycle: c, total, u: this.u, voice: this.active,
+        layers: this.layers,
         breaths: this.breaths, elapsed: this.elapsed,
         finished: this.finished, aborting: this.aborting, pending: this.pending
       });
