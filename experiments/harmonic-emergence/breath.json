@@ -136,6 +136,18 @@
         { "name": "hold",  "untilUserInput": true, "from": [0, 0, 0, 15], "to": [0, 0, 0, 15] },
         { "name": "rest",  "seconds": 120, "from": [4.0, 0, 6.0, 0], "to": [4.0, 0, 6.0, 0] }
       ]
+    },
+
+    "yoga-nidra": {
+      "label": "Yoga Nidra",
+      "riskClass": "low",
+      "about": "Test flow",
+      "abortTo": "rest",
+      "phases": [
+        { "name": "box",    "seconds": 120, "from": [5.5, 5.5, 5.5, 5.5], "to": [5.5, 5.5, 5.5, 5.5] },
+        { "name": "theta", "seconds": 1200,  "from": [0, 0, 0, 0], "to": [0, 0, 0, 0] },
+        { "name": "rest",   "seconds": 120, "from": [4, 4, 4, 4], "to": [4, 0, 6, 0] }
+      ]
     }
   },
 
