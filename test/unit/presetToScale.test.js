@@ -53,6 +53,44 @@ describe('presetToNotes', () => {
     assert.equal(new Set(ratios).size, ratios.length);
   });
 
+  it('keeps the Earth modes inharmonic, near the just intervals but never on them', () => {
+    // The modes of a sphere go as the square root of n(n+1) rather than as
+    // whole multiples, and the near-misses are the whole character of the
+    // scale. Rounding any of these onto the interval it sits beside would
+    // leave a scale that is no longer the Earth's, so the distances are held
+    // here: a fifth 16 cents sharp, an octave three quarters of a tone sharp.
+    const cents = (ratio, just) => Math.round(1200 * Math.log2(ratio / just));
+    const byName = new Map(presetToNotes('earthModes', oneScale('earthModes'))
+      .map((note) => [note.intervalName.split(' ')[0], note.ratioToRoot]));
+
+    assert.equal(cents(byName.get('0T2'), 6 / 5), 28);
+    assert.equal(cents(byName.get('0S3'), 3 / 2), 16);
+    // 0S4 and 0S0 have folded down a period, so they are measured against the
+    // intervals they land beside rather than the ones they started from.
+    assert.equal(cents(byName.get('0S4'), 1), 75);
+    assert.equal(cents(byName.get('0S0'), 4 / 3), -24);
+  });
+
+  it('takes the Schumann resonances as measured, not as the ideal cavity', () => {
+    // A lossless sphere would space these as the square root of n(n+1). The
+    // real cavity leaks, and every mode above the first sits well sharp of
+    // where the formula puts it — 92 cents by the second, 188 by the fifth.
+    // Swapping the measured values for the tidy ones would be a different
+    // scale entirely, so the gap is held here.
+    const cents = (ratio, other) => Math.round(1200 * Math.log2(ratio / other));
+    const ideal = (n) => Math.sqrt(n * (n + 1)) / Math.sqrt(2);
+    const byName = new Map(presetToNotes('schumann', oneScale('schumann'))
+      .map((note) => [note.intervalName.split(' ')[0], note.ratioToRoot]));
+
+    // Folded into the period, so the ideal is folded the same way to compare.
+    assert.equal(cents(byName.get('SR2'), ideal(2)), 92);
+    assert.equal(cents(byName.get('SR3'), ideal(3) / 2), 140);
+    assert.equal(cents(byName.get('SR5'), ideal(5) / 4), 188);
+    // And the two that land close enough to common intervals to sound meant.
+    assert.equal(cents(byName.get('SR3'), 4 / 3), -7);
+    assert.equal(cents(byName.get('SR4'), 7 / 4), -7);
+  });
+
   it('points every note at a scale of the family, never at a preset', () => {
     presetIds.forEach((presetId) => {
       const scales = scalesFor(presetId);

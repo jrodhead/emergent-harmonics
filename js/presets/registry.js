@@ -5,6 +5,8 @@ import { majorPentatonicScaleNotes } from './majorPentatonicScale.js';
 import { minorPentatonicScaleNotes } from './minorPentatonicScale.js';
 import { bluesScaleNotes } from './bluesScale.js';
 import { hd110067Notes } from './hd110067.js';
+import { earthModesNotes } from './earthModes.js';
+import { schumannNotes } from './schumann.js';
 import { equalTemperamentNotes } from './equalTemperament.js';
 import { fibonacciNotes } from './fibonacciScale.js';
 import { exploratoryNotes } from './exploratory.js';
@@ -26,6 +28,8 @@ const presets = new Map([
   ['blues', { label: 'Blues', notes: bluesScaleNotes }],
   ['pythagorean', { label: 'Pythagorean', notes: pythagoreanNotes }],
   ['hd110067', { label: 'HD 110067', notes: hd110067Notes }],
+  ['earthModes', { label: 'Earth modes', notes: earthModesNotes }],
+  ['schumann', { label: 'Schumann resonances', notes: schumannNotes }],
   ['exploratory', { label: 'Exploratory', notes: exploratoryNotes }],
   ['fibonacci', { label: 'Fibonacci', notes: fibonacciNotes }],
   ['equalTemperament', { label: 'Equal temperament', notes: equalTemperamentNotes }],
