@@ -434,7 +434,7 @@ console.log('\n11. the rendered signal has no transients — the cue is an offer
   console.log('    from a gain jump or a segment discontinuity would read well above 1x)');
 }
 
-console.log('\n12. drone + breath layer together never approach full scale');
+console.log('\n12. all three layers at full volume never approach full scale');
 {
   // The drone alone is bounded arithmetically by its L1 normalisation. Noise is not,
   // so the total has to be measured rather than proved -- this check is the price of
@@ -442,12 +442,49 @@ console.log('\n12. drone + breath layer together never approach full scale');
   // is the peakiest drone set (dense, crest factor ~7) plus the loudest breath
   // (circular, where airflow is highest).
   const V = cfg.voice, NZ = cfg.noise, SR = 48000, BLOCK = 128;
-  function render(setName, c, drone, noise, seconds) {
+  // Seeded rather than Math.random: pink-noise peaks are stochastic, so an unseeded
+  // run reports a different worst case each time and a threshold near it would pass
+  // or fail at random. A fixed stream makes the number reproducible and the check
+  // meaningful; `out` is then set to leave margin above it rather than to squeak past.
+  let seed = 0x9e3779b9;
+  const rnd = () => {
+    seed ^= seed << 13; seed >>>= 0;
+    seed ^= seed >> 17;
+    seed ^= seed << 5;  seed >>>= 0;
+    return seed / 4294967296;
+  };
+  function render(setName, c, cueLvl, noiseLvl, droneLvl, seconds) {
+    seed = 0x9e3779b9;                            // same stream for every case
     const S = V.sets[setName], ns = S.partials, NP = ns.length;
     const th = new Float64Array(NP);
     for (let i = 0; i < NP; i++) th[i] = 2 * Math.PI * ((i * 0.6180339887) % 1);
     const gp = new Float64Array(NP), sm = new Float64Array(NP), pb = new Float64Array(7);
     let svfLow = 0, svfBand = 0, fcS = NZ.centerEmpty, nS = 0;
+    // reference drone: steady, optionally a pair straddling the pitch
+    const D = cfg.drone;
+    const dTh = [0, 0]; const dFreq = [0, 0], dL = [0, 0], dR = [0, 0];
+    let dVoices = 0;
+    {
+      const f = D.anchor * Math.pow(2, Math.round(D.periodShift));
+      const panOf = (x) => { const a = (Math.max(-1, Math.min(1, x)) + 1) * Math.PI / 4; return [Math.cos(a), Math.sin(a)]; };
+      if (droneLvl > 0) {
+        if (!D.pair) { dVoices = 1; dFreq[0] = f; dL[0] = 1; dR[0] = 1; }
+        else {
+          let ratio = D.spreadRatio > 0 ? D.spreadRatio : 1;
+          if (ratio < 1) ratio = 1 / ratio;
+          ratio = Math.min(ratio, D.maxSpreadRatio ?? 2);
+          const half = Math.sqrt(ratio), hz = Math.abs(D.spreadHz || 0);
+          const lo = f / half - hz / 2, hi = f * half + hz / 2;
+          if (lo < 20 || hi > 20000) { dVoices = 1; dFreq[0] = f; dL[0] = 1; dR[0] = 1; }
+          else {
+            dVoices = 2; dFreq[0] = lo; dFreq[1] = hi;
+            [dL[0], dR[0]] = panOf(D.lowerPan); [dL[1], dR[1]] = panOf(D.upperPan);
+          }
+        }
+      }
+    }
+    const dScaled = droneLvl * (D.gain ?? 1);
+    const dG = dVoices === 2 ? dScaled / Math.SQRT2 : dScaled;
     const total = c[0] + c[1] + c[2] + c[3];
     let u = 0, sumSq = 0, cnt = 0, peak = 0;
     const blockDt = BLOCK / SR;
@@ -472,30 +509,38 @@ console.log('\n12. drone + breath layer together never approach full scale');
       for (let i = 0; i < NP; i++) { g[i] *= norm * amp; sm[i] += (g[i] - sm[i]) * sc; g[i] = sm[i]; }
       const fcT = NZ.centerEmpty * Math.pow(NZ.centerFull / NZ.centerEmpty, open)
         * (seg === 'inhale' ? NZ.inhaleTilt : seg === 'exhale' ? NZ.exhaleTilt : 1);
-      const nT = noise * Math.pow(Math.min(1, Math.abs(flow) / NZ.flowRef), NZ.flowGamma) * NZ.gain;
+      const nT = noiseLvl * Math.pow(Math.min(1, Math.abs(flow) / NZ.flowRef), NZ.flowGamma) * NZ.gain;
       fcS += (fcT - fcS) * sc; const n0 = nS; nS += (nT - nS) * sc;
       const f = Math.min(0.9, 2 * Math.sin(Math.PI * fcS / SR)), q = 1 / NZ.Q;
       for (let s = 0; s < BLOCK; s++) {
-        const mix = (s + 1) / BLOCK; let v = 0;
-        if (drone) for (let i = 0; i < NP; i++) {
+        const mix = (s + 1) / BLOCK; let vl = 0, vr = 0;
+        if (cueLvl) for (let i = 0; i < NP; i++) {
           const gi = gp[i] + (g[i] - gp[i]) * mix;
           th[i] += 2 * Math.PI * V.f0 * ns[i] / SR;
           if (th[i] > 2 * Math.PI) th[i] -= 2 * Math.PI;
-          v += Math.sin(th[i]) * gi;
+          vl += Math.sin(th[i]) * gi;
         }
-        v *= drone;
+        vl *= cueLvl; vr = vl;
+        for (let i = 0; i < dVoices; i++) {
+          dTh[i] += 2 * Math.PI * dFreq[i] / SR;
+          if (dTh[i] > 2 * Math.PI) dTh[i] -= 2 * Math.PI;
+          const dv = Math.sin(dTh[i]) * dG;
+          vl += dv * dL[i]; vr += dv * dR[i];
+        }
         const nAmp = n0 + (nS - n0) * mix;
         if (nAmp > 1e-6) {
-          const w = Math.random() * 2 - 1;
+          const w = rnd() * 2 - 1;
           pb[0] = 0.99886 * pb[0] + w * 0.0555179; pb[1] = 0.99332 * pb[1] + w * 0.0750759;
           pb[2] = 0.96900 * pb[2] + w * 0.1538520; pb[3] = 0.86650 * pb[3] + w * 0.3104856;
           pb[4] = 0.55000 * pb[4] + w * 0.5329522; pb[5] = -0.7616 * pb[5] - w * 0.0168980;
           const pink = (pb[0] + pb[1] + pb[2] + pb[3] + pb[4] + pb[5] + pb[6] + w * 0.5362) * 0.11;
           pb[6] = w * 0.115926;
           svfLow += f * svfBand; const high = pink - svfLow - q * svfBand; svfBand += f * high;
-          v += svfBand * nAmp;
+          vl += svfBand * nAmp; vr += svfBand * nAmp;
         }
-        v *= V.out; sumSq += v * v; cnt++; peak = Math.max(peak, Math.abs(v));
+        vl *= V.out; vr *= V.out;
+        sumSq += (vl * vl + vr * vr) / 2; cnt++;
+        peak = Math.max(peak, Math.abs(vl), Math.abs(vr));
       }
       for (let i = 0; i < NP; i++) gp[i] = g[i];
       u += blockDt / total; while (u >= 1) u -= 1;
@@ -505,12 +550,14 @@ console.log('\n12. drone + breath layer together never approach full scale');
   const circ = [1.2, 0, 1.2, 0], reso = [4, 0, 6, 0];
   let worstPeak = 0;
   for (const set of Object.keys(V.sets)) {
-    const r = render(set, circ, 1, 1, 30);
+    const r = render(set, circ, 1, 1, 1, 30);       // all three layers at FULL volume
     worstPeak = Math.max(worstPeak, r.peak);
-    console.log(`   ${set.padEnd(9)} + breath, circular   peak ${r.peak.toFixed(3)}  RMS ${(20 * Math.log10(r.rms)).toFixed(1)} dBFS`);
+    console.log(`   ${set.padEnd(9)} + breath + drone, all at 100%   peak ${r.peak.toFixed(3)}  RMS ${(20 * Math.log10(r.rms)).toFixed(1)} dBFS`);
   }
-  const nr = render('balanced', reso, 0, 1, 30);
-  const nc = render('balanced', circ, 0, 1, 30);
+  const nr = render('balanced', reso, 0, 1, 0, 30);
+  const nc = render('balanced', circ, 0, 1, 0, 30);
+  const dOnly = render('balanced', reso, 0, 0, 1, 20);
+  console.log(`   drone only, 100%             peak ${dOnly.peak.toFixed(3)}  RMS ${(20 * Math.log10(dOnly.rms)).toFixed(1)} dBFS`);
   console.log(`   breath only, resonance       peak ${nr.peak.toFixed(3)}  RMS ${(20 * Math.log10(nr.rms)).toFixed(1)} dBFS`);
   console.log(`   breath only, circular        peak ${nc.peak.toFixed(3)}  RMS ${(20 * Math.log10(nc.rms)).toFixed(1)} dBFS`);
   const effort = 20 * Math.log10(nc.rms / nr.rms);
@@ -519,7 +566,46 @@ console.log('\n12. drone + breath layer together never approach full scale');
   console.log('   (airflow drives the level, so faster breathing is genuinely louder — intended)');
 }
 
-console.log('\n13. wiring — the page hands the processor every config section it reads');
+console.log('\n13. the ported drone — pair arithmetic, beat rate, and no step when it switches on');
+{
+  const D = cfg.drone, f = D.anchor * Math.pow(2, Math.round(D.periodShift));
+  const pairAt = (ratio, hz) => {
+    let r = ratio > 0 ? ratio : 1; if (r < 1) r = 1 / r;
+    r = Math.min(r, D.maxSpreadRatio ?? 2);
+    const half = Math.sqrt(r), h = Math.abs(hz);
+    return { lower: f / half - h / 2, upper: f * half + h / 2 };
+  };
+  console.log(`   anchor ${D.anchor} Hz shifted ${D.periodShift} periods -> ${f.toFixed(1)} Hz`
+    + `  ${check(Math.abs(f - D.anchor * Math.pow(2, D.periodShift)) < 1e-9, 'period shift is not a power of the period ratio')}`);
+
+  // geometric spread: the ratio between the voices is exactly the ratio asked for,
+  // and the pitch they straddle is unmoved
+  const g = pairAt(1.5, 0);
+  const gmean = Math.sqrt(g.lower * g.upper);
+  console.log(`   ratio 3/2, 0 Hz   ${g.lower.toFixed(3)} / ${g.upper.toFixed(3)} Hz`
+    + `   interval ${(g.upper / g.lower).toFixed(6)}  centre ${gmean.toFixed(3)} Hz`);
+  console.log(`     interval is exactly 3/2: ${check(Math.abs(g.upper / g.lower - 1.5) < 1e-9, 'geometric spread is not exact')}`);
+  console.log(`     pitch unmoved:           ${check(Math.abs(gmean - f) < 1e-9, 'the pair does not straddle its own pitch')}`);
+
+  // arithmetic spread: the beat is exactly the hertz asked for
+  for (const hz of [0.1, 1.5, 6]) {
+    const a = pairAt(1, hz);
+    const beat = a.upper - a.lower, mean = (a.lower + a.upper) / 2;
+    console.log(`   ratio 1, ${String(hz).padStart(4)} Hz   beat ${beat.toFixed(6)} Hz (${(1 / beat).toFixed(2)} s)  centre ${mean.toFixed(3)} Hz`
+      + `  ${check(Math.abs(beat - hz) < 1e-9 && Math.abs(mean - f) < 1e-9, 'arithmetic spread is not exact or moves the pitch')}`);
+  }
+  console.log('     (0.1 Hz beats once per 10 s — one beat per breath at 6/min, which is');
+  console.log('      the same trick v1 used to generate its clock from two detuned tones)');
+
+  // switching the pair on must not be a step: single voice bypasses the panner,
+  // pair voices are volume/sqrt(2) each and centre-pan back to the same level
+  const single = 1.0;                                  // no panner
+  const pairPerChannel = 2 * (1 / Math.SQRT2) * Math.cos(Math.PI / 4);
+  console.log(`   single voice per channel ${single.toFixed(4)}, centred pair ${pairPerChannel.toFixed(4)}`
+    + `  ${check(Math.abs(single - pairPerChannel) < 1e-9, 'switching the pair on changes the level')}`);
+}
+
+console.log('\n14. wiring — the page hands the processor every config section it reads');
 {
   // This one exists because everything above it passed while the instrument was
   // completely silent. The checks replicate the processor's LOGIC; none of them touch

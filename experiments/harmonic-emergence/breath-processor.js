@@ -105,7 +105,23 @@ class BreathProcessor extends AudioWorkletProcessor {
       centerEmpty: 320, centerFull: 1500, inhaleTilt: 1, exhaleTilt: 1,
       Q: 1.2, flowRef: 1.3, flowGamma: 0.8, gain: 0
     };
-    this.layers = { drone: cfg.layers?.drone ?? 1, noise: cfg.layers?.noise ?? 0 };
+    const L = cfg.layers ?? {};
+    this.layers = {
+      cue:    { on: L.cue?.on    ?? true,  volume: L.cue?.volume    ?? 1 },
+      breath: { on: L.breath?.on ?? true,  volume: L.breath?.volume ?? 1 },
+      drone:  { on: L.drone?.on  ?? false, volume: L.drone?.volume  ?? 0.3 }
+    };
+
+    // Reference drone, ported from the musical system generator. Unlike the cue it
+    // does not move with the breath -- it is a fixed pitch for the moving spectrum to
+    // move against. Two oscillators because it can sound as a PAIR straddling its
+    // pitch rather than as one voice on it, and a pair beats at its hertz spread.
+    this.drone = cfg.drone ?? {
+      anchor: 36, periodShift: 3, gain: 0.20, pair: false, spreadRatio: 1, spreadHz: 0,
+      lowerPan: -0.35, upperPan: 0.35, maxSpreadHz: 30, maxSpreadRatio: 2
+    };
+    this.dTheta = [0, 0];
+    this.dGain = [0, 0];
     this.pb = new Float64Array(7);
     this.svfLow = 0; this.svfBand = 0;
     this.fcSmooth = this.noise.centerEmpty;
@@ -130,9 +146,17 @@ class BreathProcessor extends AudioWorkletProcessor {
       if (m.type === 'load') this.load(m.protocol);
       else if (m.type === 'running') this.running = m.value;
       else if (m.type === 'voice') { if (m.name in this.sets) this.active = m.name; }
-      else if (m.type === 'layers') {
-        if (typeof m.drone === 'number') this.layers.drone = m.drone;
-        if (typeof m.noise === 'number') this.layers.noise = m.noise;
+      else if (m.type === 'layer') {
+        const ly = this.layers[m.name];
+        if (ly) {
+          if (typeof m.on === 'boolean') ly.on = m.on;
+          if (typeof m.volume === 'number') ly.volume = Math.max(0, Math.min(1, m.volume));
+        }
+      }
+      else if (m.type === 'drone') {
+        for (const k of ['anchor', 'periodShift', 'spreadRatio', 'spreadHz', 'lowerPan', 'upperPan'])
+          if (typeof m[k] === 'number') this.drone[k] = m[k];
+        if (typeof m.pair === 'boolean') this.drone.pair = m.pair;
       }
       else if (m.type === 'advance') this.advance();
       else if (m.type === 'extend') this.extend(m.seconds ?? 60);
@@ -229,6 +253,28 @@ class BreathProcessor extends AudioWorkletProcessor {
     ];
     this.qi = 0; this.phaseT = 0; this.pending = false;
     this.aborting = true; this.finished = false;
+  }
+
+  // The pair's two frequencies, symmetric about the drone pitch so the pitch the
+  // drone is *for* stays put even when neither voice sounds it. Ratio applied
+  // geometrically and hertz arithmetically, in that order, which is what makes each
+  // exact in its own terms. Returns null rather than clamping if a voice would fall
+  // out of hearing: clamping one voice and not the other would silently change the
+  // beat rate, which is the one number the setting exists to choose.
+  dronePair() {
+    const D = this.drone;
+    const f = D.anchor * Math.pow(2, Math.round(D.periodShift));
+    if (!Number.isFinite(f) || f <= 0) return null;
+    if (!D.pair) return { single: f };
+    let ratio = Number.isFinite(D.spreadRatio) && D.spreadRatio > 0 ? D.spreadRatio : 1;
+    if (ratio < 1) ratio = 1 / ratio;
+    ratio = Math.min(ratio, D.maxSpreadRatio ?? 2);
+    const half = Math.sqrt(ratio);
+    const hz = Math.abs(Number.isFinite(D.spreadHz) ? D.spreadHz : 0);
+    const lower = f / half - hz / 2;
+    const upper = f * half + hz / 2;
+    if (lower < 20 || upper > 20000) return { single: f };   // collapse, do not distort
+    return { lower, upper };
   }
 
   process(inputs, outputs) {
@@ -346,7 +392,7 @@ class BreathProcessor extends AudioWorkletProcessor {
     const fcBase = NZ.centerEmpty * Math.pow(NZ.centerFull / NZ.centerEmpty, openness);
     const fcTarget = fcBase * (seg === 'inhale' ? NZ.inhaleTilt
                              : seg === 'exhale' ? NZ.exhaleTilt : 1);
-    const nAmpTarget = this.layers.noise
+    const nAmpTarget = (this.layers.breath.on ? this.layers.breath.volume : 0)
       * Math.pow(Math.min(1, Math.abs(flow) / NZ.flowRef), NZ.flowGamma) * NZ.gain;
     // smooth both so a segment boundary cannot step the filter or the level
     const nsc = 1 - Math.exp(-blockDt * 1000 / this.crossfadeMs);
@@ -355,7 +401,39 @@ class BreathProcessor extends AudioWorkletProcessor {
     this.nAmpSmooth += (nAmpTarget - this.nAmpSmooth) * nsc;
     const svfF = Math.min(0.9, 2 * Math.sin(Math.PI * this.fcSmooth / sampleRate));
     const svfQ = 1 / NZ.Q;
-    const droneLvl = this.layers.drone;
+    const cueLvl = this.layers.cue.on ? this.layers.cue.volume : 0;
+
+    // ---- reference drone ---------------------------------------------------
+    // Steady: nothing here reads openness or flow. A pair splits the level so the two
+    // voices arrive at what the single voice had -- volume/sqrt(2) each, which through
+    // equal-power centre panning sums to exactly volume, so switching the pair on is
+    // not a step and a beating pair peaks at the drone's level rather than above it.
+    const dLvl = this.layers.drone.on ? this.layers.drone.volume : 0;
+    const dp = this.dronePair();
+    const dFreq = [0, 0], dL = [0, 0], dR = [0, 0];
+    let dVoices = 0;
+    if (dp && dLvl > 0) {
+      const pan = (x) => {
+        const a = (Math.max(-1, Math.min(1, x)) + 1) * Math.PI / 4;
+        return [Math.cos(a), Math.sin(a)];
+      };
+      if (dp.single !== undefined) {
+        // No panner at all, exactly as the app does it: a single voice that went
+        // through a centred panner would be 3 dB down on the pair, and switching the
+        // pair on would be an audible step rather than a change of texture.
+        dVoices = 1; dFreq[0] = dp.single;
+        dL[0] = 1; dR[0] = 1;
+      } else {
+        dVoices = 2;
+        dFreq[0] = dp.lower; dFreq[1] = dp.upper;
+        [dL[0], dR[0]] = pan(this.drone.lowerPan);
+        [dL[1], dR[1]] = pan(this.drone.upperPan);
+      }
+    }
+    const dScaled = dLvl * (this.drone.gain ?? 1);
+    const dTarget = dVoices === 2 ? dScaled / Math.SQRT2 : dScaled;
+    const dGain0 = [this.dGain[0], this.dGain[1]];
+    for (let i = 0; i < 2; i++) this.dGain[i] += ((i < dVoices ? dTarget : 0) - this.dGain[i]) * sc;
 
     // per-sample linear ramp from last block's gains: no steps, no zipper noise
     const step = 1 / n;
@@ -370,7 +448,16 @@ class BreathProcessor extends AudioWorkletProcessor {
         l += val * this.gL[i];
         r += val * this.gR[i];
       }
-      l *= droneLvl; r *= droneLvl;
+      l *= cueLvl; r *= cueLvl;
+
+      for (let i = 0; i < 2; i++) {
+        const gi = dGain0[i] + (this.dGain[i] - dGain0[i]) * mix;
+        if (gi <= 1e-7 && dFreq[i] === 0) continue;
+        this.dTheta[i] += 2 * Math.PI * dFreq[i] * dt;
+        if (this.dTheta[i] > 2 * Math.PI) this.dTheta[i] -= 2 * Math.PI;
+        const val = Math.sin(this.dTheta[i]) * gi;
+        l += val * dL[i]; r += val * dR[i];
+      }
 
       const nAmp = nAmp0 + (this.nAmpSmooth - nAmp0) * mix;
       if (nAmp > 1e-6) {
@@ -403,7 +490,9 @@ class BreathProcessor extends AudioWorkletProcessor {
         phaseT: this.phaseT, phaseSeconds: cur ? cur.seconds : 0,
         untilUserInput: cur ? cur.untilUserInput : false,
         segment: seg, openness, flow, cycle: c, total, u: this.u, voice: this.active,
-        layers: this.layers,
+        layers: this.layers, droneVoices: dVoices,
+        droneFreq: dVoices === 2 ? [dFreq[0], dFreq[1]] : dVoices === 1 ? [dFreq[0]] : [],
+        droneBeatHz: dVoices === 2 ? Math.abs(dFreq[1] - dFreq[0]) : 0,
         breaths: this.breaths, elapsed: this.elapsed,
         finished: this.finished, aborting: this.aborting, pending: this.pending
       });

@@ -342,7 +342,56 @@ Claim 12 in `verify-breath.js` renders every drone-set × layer combination and 
 any approaches full scale. That check is the replacement for the guarantee this layer
 cost, and it is why the guarantee being lost is acceptable rather than merely regrettable.
 
-## 9. The cue
+## 9. The reference drone, ported
+
+A third layer, brought over from the musical system generator with its arithmetic
+intact: a pitch that is an anchor shifted by whole periods, sounding as one voice on
+that pitch or as a **pair** straddling it. Nothing in it says octave — the shift goes
+through a period ratio, which is where a system repeating at something else would enter.
+
+Unlike the other two layers it does not respond to the breath at all, and that is its
+function: something fixed for a moving spectrum to move against. Anchored to the same
+36 Hz the cue's partials are drawn from, so consonance is structural rather than lucky —
+`periodShift` 3 puts it at 288 Hz, which is partial 8 of the lattice.
+
+The spread is the part that stops being a straight port. Ratio is applied geometrically
+and hertz arithmetically, in that order, so each is exact in its own terms — verified:
+3/2 gives an interval of exactly 1.500000 with the straddled pitch unmoved, and a 6 Hz
+spread beats at exactly 6.000000 Hz. **And a pair beats at its hertz spread, while breath
+rates live in the same range.** Six breaths a minute is 0.1 Hz, so a spread of 0.1 beats
+once per breath. v1 built its entire clock this way — two tones 1.5 cents apart beating at
+0.5 Hz, every later event timed by that interference — and the control reaches down there
+deliberately.
+
+Two things went wrong in the port and both were caught by writing the check rather than
+by reading the code.
+
+**The single voice was 3 dB quiet.** In the app a single drone voice bypasses the panner
+entirely, and only pair voices go through one; that is precisely what makes `volume/√2`
+per voice sum back to the single voice's level, so switching the pair on is a change of
+texture rather than a step in loudness. I had centre-panned the single voice, which
+attenuated it by 1/√2 and turned the toggle into a 3 dB jump. Verified now: single voice
+1.0000 per channel, centred pair 1.0000.
+
+**The three layer sliders did not mean the same thing.** At volume 1.0 the drone measured
+−9.8 dBFS against the cue's −20.8 — eleven decibels louder for the same nominal setting,
+which makes a per-layer volume control actively misleading. A `gain` trim of 0.20 brings
+100% on any of the three to roughly the same amount of sound.
+
+### What three layers cost the peak budget
+
+Adding a third layer with user-controllable levels means the worst case is now every
+layer at 100% simultaneously, which measured **0.962** — clipping. `out` came down from
+0.65 to 0.60, and with the gain trim the worst combination (dense cue + breath + drone,
+all at full) now measures 0.785.
+
+That check was also **flaky before it was useful**: pink-noise peaks are stochastic, so
+each run reported a different worst case and a threshold near it would pass or fail at
+random. The noise in `verify-breath.js` is now driven by a seeded xorshift, so the number
+is reproducible across runs and `out` is set to leave margin above it rather than to
+squeak past it.
+
+## 10. The cue
 
 One control value, `openness`, 0 = empty and 1 = full. Everything audible is a function of it.
 Brightness is a smooth low-pass in partial-index space whose cutoff tracks openness, so full is

@@ -6,7 +6,7 @@
     "f0": 36.0,
     "widthEmpty": 0.12,
     "widthFull": 0.62,
-    "out": 0.65,
+    "out": 0.60,
     "default": "balanced",
     "crossfadeMs": 25,
 
@@ -54,8 +54,39 @@
   },
 
   "layers": {
-    "drone": 1.0,
-    "noise": 1.0
+    "cue":    { "on": true,  "volume": 1.00 },
+    "breath": { "on": true,  "volume": 1.00 },
+    "drone":  { "on": false, "volume": 0.50 }
+  },
+
+  "layerNotes": {
+    "naming": "Three independent layers, each with its own switch and level. `cue` is the harmonic stack whose brightness follows the breath -- it was called `drone` until a real drone arrived, which was a bad name for it: it is the pacing cue and it never stops moving. `breath` is the pink-noise airflow layer. `drone` is the steady reference tone ported from the musical system generator, and unlike the other two it does not respond to the breath at all.",
+    "levels": "Per-layer volume multiplies into each layer's own gain, so switching a layer off and back on returns it to exactly where it was and the A/B stays honest. The peak budget is measured rather than proved -- see voiceNotes.out -- and claim 12 renders every combination at full volume to confirm nothing approaches full scale.",
+    "droneDefault": "Off by default, and quieter than the others when on. It is a reference rather than a cue: it gives the moving spectrum something fixed to move against, and at cue level it would dominate the thing it is supposed to support."
+  },
+
+  "drone": {
+    "anchor": 36.0,
+    "periodShift": 3,
+    "gain": 0.20,
+    "pair": false,
+    "spreadRatio": 1.0,
+    "spreadHz": 0.0,
+    "lowerPan": -0.35,
+    "upperPan": 0.35,
+    "maxSpreadHz": 30,
+    "maxSpreadRatio": 2,
+    "minPeriodShift": -3,
+    "maxPeriodShift": 5
+  },
+
+  "droneNotes": {
+    "ported": "The same drone the musical system generator has, with the same arithmetic: a pitch that is an anchor shifted by whole periods, optionally sounding as a PAIR of voices straddling that pitch rather than one on it. Nothing here says octave -- the shift goes through a period ratio of 2, which is where a system repeating at something else would come in.",
+    "anchor": "36 Hz, the same unsounded fundamental the cue's partials are drawn from, so the drone is harmonically consonant with them by construction rather than by luck. periodShift 3 puts it at 288 Hz, which is partial 8 of the lattice.",
+    "spread": "The ratio is applied geometrically and the hertz offset arithmetically, in that order, which is what makes each exact in its own terms: lower = f / sqrt(ratio) - Hz/2, upper = f * sqrt(ratio) + Hz/2. A ratio of 3/2 puts precisely a just fifth between the voices; a spread of 6 Hz puts precisely 6 Hz between them and beats at 6 Hz.",
+    "spreadAndBreathing": "Worth knowing, because it is the one place this port stops being a port. A pair beats at its hertz spread, and breath rates live in the same range: 6 breaths/min is 0.1 Hz, so a spread of 0.1 Hz beats once per breath. v1 built its entire clock this way -- two tones 1.5 cents apart beating at 0.5 Hz, and every later event timed by it. The control goes down that far deliberately.",
+    "gain": "Level trim so the drone's slider is comparable to the other two. Measured at volume 1.0 with no trim, the drone came out -9.8 dBFS against the cue's -20.8 -- eleven decibels louder for the same nominal setting, which makes three sliders that do not mean the same thing. 0.20 brings volume 1.0 onto the cue's level (it was 0.28 until the single voice stopped going through a centre panner, which made it 3 dB louder), so 100 percent means roughly the same amount of sound whichever layer it is on. Re-measure if the anchor, register or pair settings change materially.",
+    "pairVolume": "Each voice of a pair sounds at volume/sqrt(2). Two coincident voices at that level through equal-power centre panning arrive at exactly the single voice's level, so switching the pair on is not a step up, and a beating pair peaks at the drone's level rather than above it. Panning them apart is not compensated for: each ear then hears one voice 3 dB down, and making that up would put the beat peak above the drone's own level."
   },
 
   "noise": {

@@ -65,8 +65,15 @@ node verify-embedded.js    # v3: segregated-by-default, a genuine threshold, a
                             # a property of the phenomenon (see PLAN-v3.md §7)
 node verify-breath.js      # Breath: segment timing, zero-duration turnarounds,
                             # ramp endpoints, abort from every phase, safety caps,
-                            # openness continuity, and a rendered-audio check that
-                            # the signal has no transients and cannot clip
+                            # openness continuity, partial-set critical-band spacing
+                            # and pitch stability, level-matching across the A/B sets,
+                            # no transients in the rendered audio, the ported drone's
+                            # pair arithmetic, a peak budget across all three layers
+                            # at full volume, and that the page actually wires the
+                            # processor up
+node build-breath.js       # re-embeds breath.json + breath-processor.js into
+                            # breath.html; run it after editing either, or the page
+                            # runs stale code on file:// (verify catches this)
 ```
 
 Each replicates its audio worklet headlessly and takes under a minute.
@@ -93,6 +100,12 @@ eyes. The tone brightens as you breathe in and darkens as you breathe out; that 
 whole interface. Then try **Ramp test** to hear the two ends the cue has to survive —
 a ten-second cycle where every part is slow, accelerating to a 2.4-second circular one
 where the turnaround happens twice a second and there are no holds at all.
+
+Three layers, each with its own switch and level: **c** the cue, **b** the pink-noise
+breath layer, **d** the steady drone ported from the app. The one worth trying
+deliberately is the drone's **pair** with a spread of **0.1 Hz** — two voices that beat
+once every ten seconds, which is one beat per breath at 6/min. That is the same trick v1
+used to generate its clock, pointed at a breath instead of a passage.
 
 ## Before using Breath
 
